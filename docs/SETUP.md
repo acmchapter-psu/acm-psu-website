@@ -87,9 +87,9 @@ granted from **Administration → Grant a role**.
 
 In the Supabase dashboard, **Authentication → URL Configuration**:
 
-1. **Site URL:** `https://acm-psu.shoug-tech.com`
+1. **Site URL:** `https://acmchapter-psu.github.io/acm-psu-website`
 2. **Redirect URLs:** add both of these:
-   - `https://acm-psu.shoug-tech.com/portal/auth-callback.html`
+   - `https://acmchapter-psu.github.io/acm-psu-website/portal/auth-callback.html`
    - `http://localhost:8000/portal/auth-callback.html`
 3. Click **Save**.
 

@@ -18,6 +18,6 @@ where slug = 'ai-programming-jam-2026'
   and external_url is null;
 
 update public.projects
-set external_url = 'https://ctf-psu.shoug-tech.com/'
+set external_url = 'https://acmchapter-psu.github.io/ACM-CTF-3.0.//'
 where slug = 'ctf-3-0'
   and external_url is null;

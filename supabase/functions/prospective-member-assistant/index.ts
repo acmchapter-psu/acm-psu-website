@@ -1,7 +1,7 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 const ALLOWED_ORIGINS = new Set([
-  'https://acm-psu.shoug-tech.com',
+  'https://acmchapter-psu.github.io/acm-psu-website',
   'http://localhost:8000',
   'http://127.0.0.1:8000',
 ]);

@@ -340,7 +340,7 @@
             events.filter(function (event) {
                 return event.starts_on && (event.status === 'active' || event.status === 'planning');
             }).forEach(function (event) {
-                var url = event.external_url || (event.site_path ? 'https://acm-psu.shoug-tech.com' + event.site_path : 'https://acm-psu.shoug-tech.com/projects.html');
+                var url = event.external_url || (event.site_path ? 'https://acmchapter-psu.github.io/acm-psu-website' + event.site_path : 'https://acmchapter-psu.github.io/acm-psu-website/projects.html');
                 graph.push({
                     '@type': 'Event',
                     name: event.title,
@@ -359,7 +359,7 @@
                             addressCountry: 'SA'
                         }
                     },
-                    organizer: { '@id': 'https://acm-psu.shoug-tech.com/#chapter' }
+                    organizer: { '@id': 'https://acmchapter-psu.github.io/acm-psu-website/#chapter' }
                 });
             });
             data['@graph'] = graph;

@@ -15,4 +15,4 @@ Disallow: /projects/ctf-2.0/
 Disallow: /portal/
 Disallow: /admin/
 
-Sitemap: https://acm-psu.shoug-tech.com/sitemap.xml
+Sitemap: https://acmchapter-psu.github.io/acm-psu-website/sitemap.xml

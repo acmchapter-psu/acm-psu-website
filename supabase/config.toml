@@ -17,11 +17,11 @@ major_version = 17
 
 [auth]
 enabled = true
-site_url = "https://acm-psu.shoug-tech.com"
+site_url = "https://acmchapter-psu.github.io/acm-psu-website"
 additional_redirect_urls = [
-  "https://acm-psu.shoug-tech.com/portal/auth-callback.html",
-  "https://acm-psu.shoug-tech.com/portal/reset.html",
-  "https://acm-psu.shoug-tech.com/portal/",
+  "https://acmchapter-psu.github.io/acm-psu-website/portal/auth-callback.html",
+  "https://acmchapter-psu.github.io/acm-psu-website/portal/reset.html",
+  "https://acmchapter-psu.github.io/acm-psu-website/portal/",
   "http://localhost:8000/portal/auth-callback.html",
   "http://localhost:8000/portal/reset.html",
   "http://localhost:8000/portal/"

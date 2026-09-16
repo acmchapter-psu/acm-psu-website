@@ -61,7 +61,7 @@ function writeEnvModule() {
         'window.ACM_ENV = ' + JSON.stringify({
             supabaseUrl: url,
             supabaseAnonKey: anon,
-            siteUrl: pick('PUBLIC_SITE_URL') || 'https://acm-psu.shoug-tech.com'
+            siteUrl: pick('PUBLIC_SITE_URL') || 'https://acmchapter-psu.github.io/acm-psu-website'
         }, null, 2) + ';\n'
     );
 }

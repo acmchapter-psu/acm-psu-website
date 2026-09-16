@@ -57,17 +57,17 @@ begin
              'Organized ACM/CyberTech CTF 3.0',
              'CTF Organizer',
              'Leads event planning and coordination for the joint ACM/CyberTech competition.',
-             array['https://ctf-psu.shoug-tech.com/organizers.html']::text[]),
+             array['https://acmchapter-psu.github.io/ACM-CTF-3.0.//organizers.html']::text[]),
             ('ctf-3-0', 'website-development',
              'Developed the CTF 3.0 competition website',
              'Website Developer',
              'Develops the public competition website and its event information systems.',
-             array['https://ctf-psu.shoug-tech.com/']::text[]),
+             array['https://acmchapter-psu.github.io/ACM-CTF-3.0.//']::text[]),
             ('ctf-3-0', 'technical-support',
              'Supported CTF 3.0 technical preparation',
              'Technical Preparation Support',
              'Supports technical preparation of the competition environment and event delivery.',
-             array['https://ctf-psu.shoug-tech.com/organizers.html']::text[])
+             array['https://acmchapter-psu.github.io/ACM-CTF-3.0.//organizers.html']::text[])
         ) as work(project_slug, type_slug, title, role_text, description, links)
     loop
         select id into current_project_id from public.projects where slug = item.project_slug;
