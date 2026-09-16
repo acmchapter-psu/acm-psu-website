@@ -13,7 +13,7 @@
 -- touched, so an admin-set value is never overwritten.
 
 update public.projects
-set external_url = 'https://ai-programming-jam.shoug-tech.com/'
+set external_url = 'http://acmchapter-psu.github.io/acm-webforge-2026/'
 where slug = 'ai-programming-jam-2026'
   and external_url is null;
 
