@@ -14,7 +14,7 @@
         var stored = JSON.parse(raw);
         var session = stored && (stored.currentSession || stored.session || stored);
         if (session && session.access_token && session.refresh_token) {
-            window.location.replace('/portal/index.html');
+            window.location.replace(new URL('portal/index.html', document.baseURI).href);
         }
     } catch (_) {
         /* Invalid or unavailable storage: treat the visitor as signed out. */

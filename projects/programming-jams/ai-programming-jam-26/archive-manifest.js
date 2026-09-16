@@ -3,7 +3,7 @@ window.PROJECT_ARCHIVE = {
   rootName: 'AI-PROGRAMMING-JAM',
   pinned: ['official-site', 'lesson-day-1', 'handout-day-2', 'event-banner'],
   items: [
-    { id:'official-site', parent:'root', name:'Official Website', type:'link', section:'workshops', kind:'External website', updated:'2026', size:'External', state:'Published', url:'http://acmchapter-psu.github.io/acm-webforge-2026/', description:'The public JAM.26 event website.' },
+    { id:'official-site', parent:'root', name:'Official Website', type:'link', section:'workshops', kind:'External website', updated:'2026', size:'External', state:'Published', url:'https://acmchapter-psu.github.io/acm-webforge-2026/', description:'The public JAM.26 event website.' },
     { id:'workshops', parent:'root', name:'Workshops', type:'folder', section:'workshops', kind:'Folder', updated:'29 AUG 2026', state:'Published', description:'Three published workshop lessons.' },
     { id:'handouts', parent:'root', name:'Handouts', type:'folder', section:'documents', kind:'Folder', updated:'29 AUG 2026', state:'Published', description:'Participant checklists for each workshop day.' },
     { id:'planning', parent:'root', name:'Planning', type:'folder', section:'documents', kind:'Folder', updated:'29 AUG 2026', state:'Working archive', description:'Filled instructor plans, grouped by version.' },

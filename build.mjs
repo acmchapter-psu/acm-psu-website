@@ -18,6 +18,7 @@ import { join } from 'node:path';
 const WATCH = process.argv.includes('--watch');
 const OUT_DIR = 'assets/js/app';
 const PAGE_DIR = 'platform/pages';
+const SITE_BASE = '/acm-psu-website/';
 
 /* ---------------------------------------------------------------------------
  * Public runtime configuration.
@@ -61,7 +62,8 @@ function writeEnvModule() {
         'window.ACM_ENV = ' + JSON.stringify({
             supabaseUrl: url,
             supabaseAnonKey: anon,
-            siteUrl: pick('PUBLIC_SITE_URL') || 'https://acmchapter-psu.github.io/acm-psu-website'
+            siteUrl: pick('PUBLIC_SITE_URL') || 'https://acmchapter-psu.github.io/acm-psu-website',
+            siteBase: SITE_BASE
         }, null, 2) + ';\n'
     );
 }

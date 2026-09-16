@@ -126,15 +126,11 @@ One-time setup in the GitHub repository settings:
 
 1. **Settings → Pages → Build and deployment → Source:** select
    **GitHub Actions**.
-2. **Settings → Pages → Custom domain:** enter `acm-psu.shoug-tech.com`, then
-   tick **Enforce HTTPS** once the certificate finishes provisioning.
-3. **Settings → Secrets and variables → Actions → Variables:** add
+2. **Settings → Secrets and variables → Actions → Variables:** add
    `PUBLIC_SUPABASE_URL` and `PUBLIC_SUPABASE_ANON_KEY`.
-4. Add this DNS record at the `shoug-tech.com` registrar:
 
-   | Type  | Name      | Value                        |
-   |-------|-----------|------------------------------|
-   | CNAME | `acm-psu` | `shoug-alomran.github.io.`   |
+The public site is served at
+`https://acmchapter-psu.github.io/acm-psu-website/`.
 
 ---
 

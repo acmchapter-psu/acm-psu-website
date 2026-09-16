@@ -232,7 +232,7 @@
             return;
         }
         var script = document.createElement('script');
-        script.src = '/assets/js/app/env.js?v=20260905-1';
+        script.src = new URL('assets/js/app/env.js?v=20260905-1', document.baseURI).href;
         script.dataset.acmEnvLoader = 'true';
         script.addEventListener('load', function () { if (window.ACM_ENV) callback(window.ACM_ENV); }, { once: true });
         document.head.appendChild(script);

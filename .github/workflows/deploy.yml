@@ -116,6 +116,8 @@ jobs:
             --exclude '_site' \
             ./ _site/
 
+          node scripts/prepare-pages.mjs _site
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v6
 

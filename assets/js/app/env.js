@@ -2,5 +2,6 @@
 window.ACM_ENV = {
   "supabaseUrl": "https://cpcivikfjuutbbtxzlyj.supabase.co",
   "supabaseAnonKey": "sb_publishable_4sbkHLRyTZG4WaJrEreTGg_OC22IvwA",
-  "siteUrl": "https://acmchapter-psu.github.io/acm-psu-website"
+  "siteUrl": "https://acmchapter-psu.github.io/acm-psu-website",
+  "siteBase": "/acm-psu-website/"
 };
