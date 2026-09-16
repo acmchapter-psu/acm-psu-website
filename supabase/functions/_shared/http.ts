@@ -11,7 +11,7 @@
 import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 
 const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGINS') ??
-  'https://acmchapter-psu.github.io/acm-psu-website,http://localhost:8000,http://127.0.0.1:8000')
+  'https://acmchapter-psu.github.io,https://acm-psu.shoug-tech.com,http://localhost:8000,http://127.0.0.1:8000')
   .split(',')
   .map((o) => o.trim());
 
