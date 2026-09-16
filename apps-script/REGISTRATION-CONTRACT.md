@@ -37,7 +37,7 @@ verified in a browser.
 
 Unchanged URL in both config files:
 
-`https://script.google.com/macros/s/AKfycby-JG2gKExXqhLTcK_a8kSAIB7fIL9JD1q0WbejcqSbaIE9gEC9TboORCTUkHwW-D12/exec`
+`https://script.google.com/macros/s/AKfycbwaTHKGlYWYXKk8Jd3b_9LXRksiTaZiw-jNwIKgfj7UzkqnxY9yFfQrGe4BhLnKMOq5/exec`
 
 Normal `POST`, `application/x-www-form-urlencoded`, targeted to a fresh hidden
 iframe. No fetch/no-cors registration path. One form submit listener per page.

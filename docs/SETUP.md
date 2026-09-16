@@ -209,7 +209,7 @@ Public event signups (Programming Jam, CTF) are collected by the Apps Script in
 `ACM PSU — Club Records` workbook** you set up in step 5:
 
 ```
-1WtNGmVYO8hk_w3I37n1T6wS9_z_dTyTPW4fTHZ4lW3s
+1wXP3WvqcjnDEOe_sDSGXR-Z6HKvjnufarA4r-CovVEU
 ```
 
 There is no separate registration file and nothing extra to share — the service

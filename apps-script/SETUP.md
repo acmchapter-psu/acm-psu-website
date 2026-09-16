@@ -13,8 +13,8 @@ there must be one definition of each entrypoint. `PositionsSeed.gs` is retained 
 data, not part of the event integration. Do not paste the retired Jam
 repository's `apps-script.gs` as a backend.
 
-Web app writes use `SpreadsheetApp.openById` with workbook ID
-`1WtNGmVYO8hk_w3I37n1T6wS9_z_dTyTPW4fTHZ4lW3s`. Setup uses the bound workbook.
+Web app writes use `SpreadsheetApp.openById` with the official club workbook ID
+`1wXP3WvqcjnDEOe_sDSGXR-Z6HKvjnufarA4r-CovVEU`. Setup uses the bound workbook.
 
 ## Google deployment steps
 

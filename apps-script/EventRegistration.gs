@@ -1,5 +1,5 @@
 /** Canonical public event intake. Load alongside Code.gs; no other doPost/doGet. */
-var REGISTRATION_SPREADSHEET_ID = '1WtNGmVYO8hk_w3I37n1T6wS9_z_dTyTPW4fTHZ4lW3s';
+var REGISTRATION_SPREADSHEET_ID = '1wXP3WvqcjnDEOe_sDSGXR-Z6HKvjnufarA4r-CovVEU';
 var REGISTRATION_VERSION = '2026-09-05.1';
 var REGISTRATION_SOURCE = 'acm-event-registration';
 

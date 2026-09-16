@@ -16,7 +16,7 @@ function fixture(properties = {}) {
     Utilities: {DigestAlgorithm: {SHA_256:'sha256'}, computeDigest: (_,s) => createHash('sha256').update(s).digest(), base64EncodeWebSafe: b => b.toString('base64url')},
     HtmlService: {XFrameOptionsMode:{ALLOWALL:'ALLOWALL'}, createHtmlOutput: html => ({html, setXFrameOptionsMode(mode){this.mode=mode;return this;}})},
     ContentService: {MimeType:{JSON:'json'},createTextOutput: text => ({text,setMimeType(){return this;}})},
-    SpreadsheetApp: {openById(id){assert.equal(id,'1WtNGmVYO8hk_w3I37n1T6wS9_z_dTyTPW4fTHZ4lW3s');return {getSheetByName:n=>sheets[n]};}, flush(){flushed++;}}
+    SpreadsheetApp: {openById(id){assert.equal(id,'1wXP3WvqcjnDEOe_sDSGXR-Z6HKvjnufarA4r-CovVEU');return {getSheetByName:n=>sheets[n]};}, flush(){flushed++;}}
   });
   vm.runInContext(sources, context);
   function sheet(rows) {return {rows, getLastColumn:()=>Math.max(0,...rows.map(r=>r.length)), getLastRow:()=>rows.length,
