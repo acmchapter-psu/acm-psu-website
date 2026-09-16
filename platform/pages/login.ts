@@ -25,6 +25,7 @@ import {
   supabase,
   requireClient,
   readableError,
+  sitePath,
 } from '../lib/supabase.js';
 
 import {
@@ -189,10 +190,8 @@ async function start(): Promise<void> {
     } else if (
       data.session
     ) {
-      window.location.replace(
-        safeNext() ??
-        await landingFor(),
-      );
+      const destination = safeNext() ?? await landingFor();
+      window.location.replace(sitePath(destination));
 
       return;
     }
@@ -364,9 +363,7 @@ async function start(): Promise<void> {
           safeNext() ??
           await landingFor();
 
-        window.location.replace(
-          destination,
-        );
+        window.location.replace(sitePath(destination));
       } catch (error) {
         console.error(
           'Sign-in request failed:',

@@ -11,6 +11,7 @@
  */
 import { h, render, type Child } from './dom.js';
 import { daysSince, enumLabel, initials } from './format.js';
+import { sitePath } from './supabase.js';
 import { signOut, isClubAdmin, isReviewer, isSuperAdmin, isStaff, isMember,
          isAdvisoryInstructor, isInstructor, displayName, type Viewer } from './session.js';
 
@@ -110,7 +111,7 @@ export function shell(viewer: Viewer, area: 'member' | 'admin', title: string): 
   const content = h('div', { class: 'portal-content', id: 'portal-content' });
 
   const sidebar = h('aside', { class: 'portal-sidebar', id: 'portal-navigation' },
-    h('a', { class: 'nav-logo portal-brand', href: '/index.html' },
+    h('a', { class: 'nav-logo portal-brand', href: sitePath('/index.html') },
       h('img', { src: '/assets/img/acm.png', alt: '' }),
       h('span', 'ACM'), h('span', { class: 'divider' }, '/'), h('span', 'PSU'),
     ),
@@ -127,7 +128,7 @@ export function shell(viewer: Viewer, area: 'member' | 'admin', title: string): 
     // Staff move between the two areas constantly; keep the hop one click away.
     instructorOnly
       ? h('nav', { class: 'portal-nav portal-nav--secondary' },
-          h('a', { href: '/index.html' }, 'Public website'))
+          h('a', { href: sitePath('/index.html') }, 'Public website'))
       : (isStaff(viewer) || isAdvisoryInstructor(viewer))
       ? h('nav', { class: 'portal-nav portal-nav--secondary' },
           h('a', { href: area === 'admin' ? '/portal/index.html'
@@ -136,9 +137,9 @@ export function shell(viewer: Viewer, area: 'member' | 'admin', title: string): 
             area === 'admin' ? '← Personal portal'
               : isAdvisoryInstructor(viewer) && !isReviewer(viewer)
                 ? 'Instructor workspace →' : 'Admin console →'),
-          h('a', { href: '/index.html' }, 'Public website'))
+          h('a', { href: sitePath('/index.html') }, 'Public website'))
       : h('nav', { class: 'portal-nav portal-nav--secondary' },
-          h('a', { href: '/index.html' }, 'Public website')),
+          h('a', { href: sitePath('/index.html') }, 'Public website')),
     h('div', { class: 'portal-account' },
       h('div', { class: 'portal-avatar' }, initials(displayName(viewer))),
       h('div', { class: 'portal-account-text' },
@@ -685,7 +686,7 @@ export function setupNotice(): HTMLElement {
  */
 export function authShell(title: string, subtitle: string, ...body: Child[]): HTMLElement {
   const card = h('div', { class: 'auth-card' },
-    h('a', { class: 'auth-brand', href: '/index.html', 'aria-label': 'ACM PSU — home' },
+    h('a', { class: 'auth-brand', href: sitePath('/index.html'), 'aria-label': 'ACM PSU — home' },
       h('img', { src: '/assets/img/acm.png', alt: '' }),
       h('span', 'ACM'), h('span', { class: 'divider dim-text' }, '/'), h('span', 'PSU')),
     h('div', {},

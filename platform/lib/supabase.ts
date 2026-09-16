@@ -13,6 +13,7 @@ interface RuntimeEnv {
   supabaseUrl: string;
   supabaseAnonKey: string;
   siteUrl: string;
+  siteBase?: string;
 }
 
 declare global {
@@ -24,6 +25,20 @@ const env: RuntimeEnv = window.ACM_ENV ?? { supabaseUrl: '', supabaseAnonKey: ''
 export const isConfigured = Boolean(env.supabaseUrl && env.supabaseAnonKey);
 
 export const siteUrl = env.siteUrl || window.location.origin;
+
+const siteBase = env.siteBase || (() => {
+  try {
+    const pathname = new URL(siteUrl).pathname;
+    return pathname.endsWith('/') ? pathname : `${pathname}/`;
+  } catch {
+    return '/';
+  }
+})();
+
+export function sitePath(path: string): string {
+  if (path.startsWith(siteBase)) return path;
+  return new URL(path.replace(/^\/+/, ''), new URL(siteBase, window.location.origin)).href;
+}
 
 /**
  * Null when the platform has not been configured yet, so a page can show a

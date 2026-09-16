@@ -21,6 +21,7 @@ import {
 import {
   isConfigured,
   supabase,
+  sitePath,
 } from '../lib/supabase.js';
 
 import {
@@ -149,7 +150,7 @@ async function start(): Promise<void> {
 
   if (isRecovery) {
     window.location.replace(
-      '/portal/reset.html' +
+      sitePath('/portal/reset.html') +
       window.location.search +
       window.location.hash,
     );
@@ -240,8 +241,8 @@ async function start(): Promise<void> {
       )
     ) {
       window.location.replace(
-        isAdvisoryInstructor(viewer) && !isReviewer(viewer)
-          ? '/admin/advisor.html' : '/admin/index.html',
+        sitePath(isAdvisoryInstructor(viewer) && !isReviewer(viewer)
+          ? '/admin/advisor.html' : '/admin/index.html'),
       );
 
       return;
@@ -252,9 +253,7 @@ async function start(): Promise<void> {
         viewer,
       )
     ) {
-      window.location.replace(
-        '/portal/index.html',
-      );
+      window.location.replace(sitePath('/portal/index.html'));
 
       return;
     }
@@ -263,7 +262,7 @@ async function start(): Promise<void> {
     // staff, alumni and other university affiliates keep a valid account and
     // can be assigned the appropriate club access by an administrator.
     if (viewer?.user.university_role !== 'student') {
-      window.location.replace('/portal/status.html');
+      window.location.replace(sitePath('/portal/status.html'));
       return;
     }
 
@@ -301,11 +300,9 @@ async function start(): Promise<void> {
       );
     }
 
-    window.location.replace(
-      application
-        ? '/portal/status.html'
-        : '/portal/apply.html',
-    );
+    window.location.replace(sitePath(application
+      ? '/portal/status.html'
+      : '/portal/apply.html'));
   } catch (error) {
     console.error(
       'Authentication callback failed:',

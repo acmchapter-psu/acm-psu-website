@@ -7,7 +7,7 @@
  * Both exist because a member should not be shown a button that will fail, and
  * an attacker should not get anywhere by removing one.
  */
-import { supabase, isConfigured, requireClient } from './supabase.js';
+import { supabase, isConfigured, requireClient, sitePath } from './supabase.js';
 import type { AdminRole, AppUser, Membership, MemberProfile } from './types.js';
 
 export interface Viewer {
@@ -122,7 +122,8 @@ export function displayName(v: Viewer | null): string {
 
 function redirect(to: string): void {
   const back = encodeURIComponent(window.location.pathname + window.location.search);
-  window.location.replace(`${to}${to.includes('?') ? '&' : '?'}next=${back}`);
+  const destination = sitePath(to);
+  window.location.replace(`${destination}${to.includes('?') ? '&' : '?'}next=${back}`);
 }
 
 /**
@@ -133,7 +134,7 @@ export async function requireSignedIn(): Promise<Viewer> {
   const viewer = await loadViewer();
   if (!viewer) { redirect('/portal/login.html'); return new Promise<Viewer>(() => {}); }
   if (viewer.user.account_state === 'disabled') {
-    window.location.replace('/portal/disabled.html');
+    window.location.replace(sitePath('/portal/disabled.html'));
     return new Promise<Viewer>(() => {});
   }
   return viewer;
@@ -143,7 +144,7 @@ export async function requireSignedIn(): Promise<Viewer> {
 export async function requireMember(): Promise<Viewer> {
   const viewer = await requireSignedIn();
   if (!isMember(viewer) && !isStaff(viewer)) {
-    window.location.replace('/portal/status.html');
+    window.location.replace(sitePath('/portal/status.html'));
     return new Promise<Viewer>(() => {});
   }
   return viewer;
@@ -153,8 +154,8 @@ export async function requireMember(): Promise<Viewer> {
 export async function requireParticipant(): Promise<Viewer> {
   const viewer = await requireMember();
   if (isInstructor(viewer)) {
-    window.location.replace(isAdvisoryInstructor(viewer)
-      ? '/admin/advisor.html' : '/portal/index.html');
+    window.location.replace(sitePath(isAdvisoryInstructor(viewer)
+      ? '/admin/advisor.html' : '/portal/index.html'));
     return new Promise<Viewer>(() => {});
   }
   return viewer;
@@ -170,7 +171,7 @@ export async function requireAdmin(
     : isReviewer(viewer);
 
   if (!ok) {
-    window.location.replace('/portal/index.html?denied=1');
+    window.location.replace(sitePath('/portal/index.html?denied=1'));
     return new Promise<Viewer>(() => {});
   }
   return viewer;
