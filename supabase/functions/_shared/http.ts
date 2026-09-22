@@ -80,9 +80,18 @@ export function clientForRequest(req: Request): SupabaseClient | null {
 }
 
 /**
- * Confirms the caller holds one of the given roles. Reads admin_assignments
- * through the user's own client, which its RLS policy permits for the caller's
- * own row, so no elevated key is needed to answer "who am I".
+ * Confirms the caller holds one of the given roles.
+ *
+ * This asks the database's own has_admin_role(), rather than reading
+ * admin_assignments directly. Reading the table answers "is there an
+ * unrevoked row", which is not the same question: has_admin_role() also
+ * requires the account to be active and not deleted, exactly as every RLS
+ * policy does. Without that, disabling an account left its holder with the
+ * service-role-backed powers behind these functions until their JWT expired
+ * — up to three idle days. See SEC-04 in the September 2026 audit.
+ *
+ * The RPC is SECURITY DEFINER and re-checks the caller internally, so calling
+ * it on the user's own client is safe and needs no elevated key.
  */
 export async function requireRole(
   supabase: SupabaseClient,
@@ -93,16 +102,18 @@ export async function requireRole(
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) return null;
 
-  const { data, error } = await supabase
-    .from("admin_assignments")
-    .select("role")
-    .eq("user_id", auth.user.id)
-    .is("revoked_at", null);
-
-  if (error || !data?.length) return null;
-  const held = new Set(data.map((r) => r.role as string));
   // Roles are hierarchical: a super admin satisfies every check.
-  if (held.has("super_admin")) return { userId: auth.user.id };
-  if (roles.some((r) => held.has(r))) return { userId: auth.user.id };
+  const wanted = [...new Set<string>(["super_admin", ...roles])];
+  const results = await Promise.all(
+    wanted.map((role) => supabase.rpc("has_admin_role", { required: role })),
+  );
+
+  for (const result of results) {
+    if (result.error) {
+      console.error("Role check failed:", result.error.message);
+      return null;
+    }
+    if (result.data === true) return { userId: auth.user.id };
+  }
   return null;
 }

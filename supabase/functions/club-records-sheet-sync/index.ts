@@ -875,12 +875,27 @@ const COLLECT: Record<SheetKey, (client: SupabaseClient) => Promise<Matrix>> = {
  * A failure to reach the limiter denies the request. This path is a
  * convenience refresh that an admin can always repeat, so failing closed
  * costs nothing an applicant would notice.
+ *
+ * The counter is taken on a service-role client, not the caller's. EXECUTE on
+ * rate_limit_take() is service_role only, because its arguments name the
+ * bucket and the ceiling: a browser that could call it could spend anyone's
+ * budget, including the public assistant's. See SEC-03 in the September 2026
+ * audit and 20260923091000_rate_limit_take_service_only.sql.
  */
-async function applicantSyncThrottled(
-  caller: SupabaseClient,
-  userId: string,
-): Promise<boolean> {
-  const { data, error } = await caller.rpc("rate_limit_take", {
+async function applicantSyncThrottled(userId: string): Promise<boolean> {
+  const url = Deno.env.get("SUPABASE_URL");
+  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!url || !key) {
+    console.error(
+      "Could not check the applicant sync rate limit: Supabase credentials are unavailable.",
+    );
+    return true;
+  }
+  const limiter = createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+
+  const { data, error } = await limiter.rpc("rate_limit_take", {
     bucket_key: `sheet_sync:application_submitted:${userId}`,
     window_seconds: 900,
     max_hits: 3,
@@ -952,7 +967,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
         403,
         origin,
       );
-    const throttled = await applicantSyncThrottled(caller, auth.user.id);
+    const throttled = await applicantSyncThrottled(auth.user.id);
     if (throttled)
       return fail(
         "This refresh was already requested recently. Try again shortly.",
