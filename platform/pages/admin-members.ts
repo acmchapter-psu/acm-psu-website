@@ -28,6 +28,7 @@ import {
 } from "../lib/ui.js";
 
 import { historyPanel } from "../lib/history.js";
+import { ACADEMIC_YEARS } from "../lib/membership.js";
 
 import { requireAdmin, isSuperAdmin } from "../lib/session.js";
 
@@ -36,6 +37,7 @@ import {
   setMembershipStatus,
   setAccountState,
   grantPosition,
+  updateMemberDetails,
   type MemberRow,
 } from "../lib/admin.js";
 
@@ -190,6 +192,70 @@ async function start(): Promise<void> {
       }),
     ) as HTMLFormElement;
 
+    /*
+     * Student ID, major and name are administrative fields: the database
+     * refuses them to the account holder, and approve_application() only fills
+     * a student ID for someone who arrived through an approved application.
+     * Anyone else — the founding committee, any seeded account — had no way to
+     * get one recorded at all until this form existed.
+     */
+    const detailsForm = h(
+      "form",
+      {
+        class: "portal-form",
+        novalidate: true,
+      },
+
+      field({
+        label: "Full name",
+        name: "full_name",
+        required: true,
+        maxlength: 120,
+        value: member.full_name,
+      }),
+
+      h(
+        "div",
+        {
+          class: "field-pair",
+        },
+
+        field({
+          label: "Student ID",
+          name: "student_id",
+          value: member.student_id ?? null,
+          maxlength: 12,
+          placeholder: "e.g. 202012345",
+          hint: "6 to 12 digits. Leave empty if they do not have one.",
+        }),
+
+        field({
+          label: "Academic year",
+          name: "academic_year",
+          type: "select",
+          value: member.profile?.academic_year ?? "",
+
+          options: [
+            { value: "", label: "Not recorded" },
+            ...ACADEMIC_YEARS,
+          ],
+        }),
+      ),
+
+      field({
+        label: "Major",
+        name: "major",
+        value: member.major ?? null,
+        maxlength: 120,
+      }),
+
+      field({
+        label: "Reason",
+        name: "details_reason",
+        hint: "Recorded on the member's history. Say where the detail came from.",
+      }),
+    ) as HTMLFormElement;
+
     const statusForm = h(
       "form",
       {
@@ -296,6 +362,87 @@ async function start(): Promise<void> {
         ),
 
         historyPanel("member", member.id, member.id),
+
+        panel(
+          "Member details",
+
+          detailsForm,
+
+          h(
+            "p",
+            {
+              class: "mono-meta dim-text",
+            },
+            "Email address is changed by the member from their own profile, " +
+              "so sign-in and the record never disagree.",
+          ),
+
+          h(
+            "div",
+            {
+              class: "button-row",
+            },
+
+            action(
+              "Save details",
+
+              async () => {
+                if (!detailsForm.reportValidity()) {
+                  return;
+                }
+
+                const values = formValues(detailsForm);
+                const fullName = textOf(values, "full_name").trim();
+
+                if (!fullName) {
+                  toast("A member needs a name.", "err");
+                  return;
+                }
+
+                const studentId = textOf(values, "student_id").trim();
+
+                /* The same rule the database enforces, said before the round
+                 * trip so a typo is caught where it was made. */
+                if (studentId && !/^[0-9]{6,12}$/.test(studentId)) {
+                  toast(
+                    "A student ID is 6 to 12 digits, with nothing else in it.",
+                    "err",
+                  );
+                  return;
+                }
+
+                try {
+                  await updateMemberDetails(
+                    member.id,
+                    {
+                      fullName,
+                      studentId: studentId || null,
+                      major: textOf(values, "major").trim() || null,
+                      academicYear:
+                        textOf(values, "academic_year").trim() || null,
+                    },
+                    textOf(values, "details_reason").trim() || null,
+                  );
+
+                  modal.close();
+
+                  toast("Details saved.");
+
+                  await draw();
+                } catch (error) {
+                  console.error("Could not update member details:", error);
+
+                  toast(
+                    `Could not save details: ${errorMessage(error)}`,
+                    "err",
+                  );
+                }
+              },
+
+              "primary",
+            ),
+          ),
+        ),
 
         panel(
           "Grant a position",

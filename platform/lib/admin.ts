@@ -405,6 +405,38 @@ export async function setAccountState(
   });
 }
 
+/**
+ * Correct a member's details.
+ *
+ * These are administrative fields — guard_app_users_columns() refuses them to
+ * the account holder — so this is the only way a student ID gets recorded for
+ * anyone who did not arrive through an approved application. The RPC
+ * re-checks the role, validates the values and writes one audit entry.
+ */
+export async function updateMemberDetails(
+  userId: string,
+  details: {
+    fullName: string;
+    studentId: string | null;
+    major: string | null;
+    academicYear: string | null;
+  },
+  reason: string | null,
+): Promise<void> {
+  const { error } = await requireClient().rpc("admin_update_member_details", {
+    target_user: userId,
+    new_full_name: details.fullName,
+    new_student_id: details.studentId,
+    new_major: details.major,
+    new_academic_year: details.academicYear,
+    reason,
+  });
+  if (error) throw new Error(error.message);
+  void bestEffortFunctionSync("club-records-sheet-sync", {
+    sheets: ["people", "members"],
+  });
+}
+
 export async function grantPosition(
   userId: string,
   positionId: string,
