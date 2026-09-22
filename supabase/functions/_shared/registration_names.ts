@@ -52,7 +52,7 @@ export function sheetNameProblem(name: string): string | null {
   if (!SHEET_NAME_PATTERN.test(value)) {
     return (
       "Use 3–41 characters: letters, digits, underscore or hyphen, " +
-      "starting with a letter. For example: Hackathon261."
+      "starting with a letter. For example: Team3_261."
     );
   }
   if (
@@ -69,35 +69,19 @@ export function sheetNameProblem(name: string): string | null {
 }
 
 /**
- * The worksheet name suggested for an event.
- *
- * Aims at the shape the club already uses — a short word plus the PSU term
- * code, like hackathon261 — by taking the leading words of the title and
- * appending the term. It is only a suggestion: the form lets it be edited
- * before anything is created, because only a human knows what the event will
- * be called in conversation.
+ * The worksheet name suggested for a registration form: the template's
+ * prefix and the PSU term, numbered when already taken — Individual_261,
+ * Team3_261, Team3_261_2. Named by what the list is, not by the event.
+ * Mirrors suggestSheetName in platform/lib/registration-setup.ts.
  */
-export function suggestSheetName(title: string, term?: string | null): string {
-  const words = String(title ?? "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ")
-    .split(" ")
-    .filter(
-      (word) =>
-        word &&
-        !["acm", "psu", "club", "the", "and", "of", "term"].includes(word),
-    );
-
-  // Digits already in the title are usually the year or edition, and the term
-  // code carries that better, so they are dropped from the word part.
-  const stem =
-    words
-      .filter((word) => !/^\d+$/.test(word))
-      .join("")
-      .slice(0, 28) || "event";
-  const suffix = String(term ?? "")
-    .replace(/[^0-9]/g, "")
-    .slice(0, 4);
-  const name = `${stem}${suffix}`;
-  return SHEET_NAME_PATTERN.test(name) ? name : `${stem}form`.slice(0, 41);
+export function suggestSheetName(
+  prefix: string | null | undefined,
+  term: string,
+  taken: string[] = [],
+): string {
+  const stem = `${prefix || "Registration"}_${term}`;
+  const used = new Set(taken.map((name) => name.toLowerCase()));
+  let name = stem;
+  for (let n = 2; used.has(name.toLowerCase()); n += 1) name = `${stem}_${n}`;
+  return name.slice(0, 41);
 }

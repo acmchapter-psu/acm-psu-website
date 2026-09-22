@@ -203,7 +203,7 @@ async function start(): Promise<void> {
           existing: registration,
           locked: registrationLocked,
           title: existing?.title ?? "",
-          term: existing?.chapter_year,
+          startsOn: existing?.starts_on,
           projectId: existing?.id ?? null,
         })
       : null;

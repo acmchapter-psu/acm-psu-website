@@ -12,6 +12,7 @@
 import { h } from "./dom.js";
 import { field, notice } from "./ui.js";
 import { requireClient, callFunction, readableError } from "./supabase.js";
+import { currentTerm, termForDate } from "./terms.js";
 
 export interface RegistrationTemplate {
   template_key: string;
@@ -19,6 +20,8 @@ export interface RegistrationTemplate {
   description: string;
   headers: string[];
   is_selectable: boolean;
+  /** Start of the suggested worksheet name, e.g. "Team3" → Team3_261. */
+  sheet_prefix: string | null;
 }
 
 export interface RegistrationForm {
@@ -69,7 +72,7 @@ export function sheetNameProblem(name: string): string | null {
   if (!SHEET_NAME_PATTERN.test(value)) {
     return (
       "Use 3–41 characters: letters, digits, underscore or hyphen, " +
-      "starting with a letter. For example: Hackathon261."
+      "starting with a letter. For example: Team3_261."
     );
   }
   if (CANONICAL_WORKSHEETS.includes(value.toLowerCase())) {
@@ -78,33 +81,45 @@ export function sheetNameProblem(name: string): string | null {
   return null;
 }
 
-/** The worksheet name suggested for an event — a starting point, not a rule. */
-export function suggestSheetName(title: string, term?: string | null): string {
-  const words = String(title ?? "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ")
-    .split(" ")
-    .filter(
-      (word) =>
-        word &&
-        !["acm", "psu", "club", "the", "and", "of", "term"].includes(word),
-    );
-  const stem =
-    words
-      .filter((word) => !/^\d+$/.test(word))
-      .join("")
-      .slice(0, 28) || "event";
-  const suffix = String(term ?? "")
-    .replace(/[^0-9]/g, "")
-    .slice(0, 4);
-  const name = `${stem}${suffix}`;
-  return SHEET_NAME_PATTERN.test(name) ? name : `${stem}form`.slice(0, 41);
+/**
+ * The worksheet name suggested for a registration form.
+ *
+ * Named by what the list is — the template's prefix — and when it runs — the
+ * PSU term — rather than by the event's title: Individual_261, Team2_261,
+ * Team3_261. A worksheet still belongs to one event, so a name already in use
+ * gets a number: Team3_261_2. Compared without case, like Google does. It is
+ * only a suggestion; the admin can type anything valid.
+ */
+export function suggestSheetName(
+  prefix: string | null | undefined,
+  term: string | null | undefined,
+  taken: string[] = [],
+): string {
+  const stem = `${prefix || "Registration"}_${term || currentTerm().code}`;
+  const used = new Set(taken.map((name) => name.toLowerCase()));
+  let name = stem;
+  for (let n = 2; used.has(name.toLowerCase()); n += 1) name = `${stem}_${n}`;
+  return name.slice(0, 41);
+}
+
+/**
+ * Worksheet names already claimed by other events' forms. Best effort: the
+ * server refuses a clash either way, this only keeps the suggestion clean.
+ */
+async function takenSheetNames(projectId: string | null): Promise<string[]> {
+  const { data, error } = await requireClient()
+    .from("event_registration_forms")
+    .select("sheet_name, project_id");
+  if (error) return [];
+  return (data ?? [])
+    .filter((row) => row.project_id !== projectId)
+    .map((row) => String(row.sheet_name));
 }
 
 export async function registrationTemplates(): Promise<RegistrationTemplate[]> {
   const { data, error } = await requireClient()
     .from("registration_templates")
-    .select("template_key, label, description, headers, is_selectable")
+    .select("template_key, label, description, headers, is_selectable, sheet_prefix")
     .order("rank");
   if (error) throw new Error(readableError(error));
   return (data ?? []) as RegistrationTemplate[];
@@ -166,7 +181,8 @@ export function registrationSection(options: {
   existing: RegistrationForm | null;
   locked: boolean;
   title: string;
-  term?: string | null;
+  /** The event's start date; its PSU term goes into the suggested name. */
+  startsOn?: string | null;
   /** Absent while creating: registration is set up after the event exists. */
   projectId?: string | null;
 }): {
@@ -203,15 +219,15 @@ export function registrationSection(options: {
   const sheetField = field({
     label: "Registration worksheet",
     name: "registration_sheet",
-    value:
-      existing?.sheet_name ?? suggestSheetName(options.title, options.term),
+    value: existing?.sheet_name ?? "",
     disabled: locked,
     maxlength: 41,
     hint: locked
       ? "Locked: registrations have already been recorded in this worksheet."
       : "A tab in the ACM PSU — Club Records workbook. Letters, digits, " +
-        "underscore or hyphen — for example Hackathon261. Created automatically if it does not exist. " +
-        "Capitals are kept, but Google treats Hackathon261 and hackathon261 as the same tab.",
+        "underscore or hyphen. Suggested from the template and PSU term, e.g. Team3_261; " +
+        "edit it if you like. Created automatically if it does not exist. " +
+        "Capitals are kept, but Google treats Team3_261 and team3_261 as the same tab.",
   });
   const sheetControl = sheetField.querySelector("input") as HTMLInputElement;
 
@@ -241,6 +257,30 @@ export function registrationSection(options: {
   }
   paintColumns();
   templateControl.addEventListener("change", paintColumns);
+
+  /*
+   * The suggested worksheet name follows the template until the admin types
+   * their own. An existing form keeps the name it already has.
+   */
+  const term = termForDate(options.startsOn)?.code ?? currentTerm().code;
+  let taken: string[] = [];
+  let typedByHand = Boolean(existing?.sheet_name);
+  function suggest(): void {
+    if (typedByHand || locked) return;
+    const chosen = templates.find(
+      (t) => t.template_key === templateControl.value,
+    );
+    sheetControl.value = suggestSheetName(chosen?.sheet_prefix, term, taken);
+  }
+  sheetControl.addEventListener("input", () => {
+    typedByHand = sheetControl.value.trim() !== "";
+  });
+  templateControl.addEventListener("change", suggest);
+  suggest();
+  void takenSheetNames(options.projectId ?? null).then((names) => {
+    taken = names;
+    suggest();
+  });
 
   const details = h(
     "div",

@@ -132,16 +132,16 @@
     PROJECT_ID: "رقم_المشروع",
     COMPETITION_DAY: "يوم_المسابقة",
     "ACM Programming Jam 2026": "معسكر ACM للبرمجة 2026",
-    "An AI-assisted web engineering competition. Every team receives the same application brief, then plans it in Excalidraw, designs it, builds it with AI assistants and Firebase, ships it to Vercel behind a real domain, absorbs a mid-competition change request, and presents the result. Three preparation workshop days run 15–17 September; the brief stays locked until competition day.":
-      "مسابقة في هندسة الويب بمساعدة الذكاء الاصطناعي. يستلم كل فريق الوصف نفسه للتطبيق المطلوب، ثم يخطّط له في Excalidraw، ويصمّمه، ويبنيه بأدوات الذكاء الاصطناعي وFirebase، وينشره على Vercel تحت نطاق حقيقي، ويستوعب طلب تغيير في منتصف المسابقة، ثم يقدّم النتيجة. تسبقها ثلاثة أيام من الورش التحضيرية من 15 إلى 17 سبتمبر، ويبقى وصف المشروع سريًا حتى يوم المسابقة.",
+    "An AI-assisted web engineering competition. Every team receives the same application brief, then plans it in Excalidraw, designs it, builds it with AI assistants and Firebase, ships it to Vercel behind a real domain, absorbs a mid-competition change request, and presents the result. Three preparation workshop days run 11, 12 and 14 October; the brief stays locked until competition day.":
+      "مسابقة في هندسة الويب بمساعدة الذكاء الاصطناعي. يستلم كل فريق الوصف نفسه للتطبيق المطلوب، ثم يخطّط له في Excalidraw، ويصمّمه، ويبنيه بأدوات الذكاء الاصطناعي وFirebase، وينشره على Vercel تحت نطاق حقيقي، ويستوعب طلب تغيير في منتصف المسابقة، ثم يقدّم النتيجة. تسبقها ثلاثة أيام من الورش التحضيرية في 11 و12 و14 أكتوبر، ويبقى وصف المشروع سريًا حتى يوم المسابقة.",
     "Case Study": "دراسة الحالة",
     "Event Guide": "دليل الفعالية",
     "Event Site": "موقع الفعالية",
     "ACM/CyberTech CTF 3.0": "مسابقة ACM/CyberTech CTF 3.0",
     "A three-hour jeopardy-style Capture The Flag run jointly with the CyberTech Club. Four attack vectors — cryptography, web, forensics and OSINT — scaled from Very Easy to Insane. Teams of two to three submit flags in":
       "مسابقة التقاط الأعلام على مدى ثلاث ساعات بنظام Jeopardy، تُقام بالشراكة مع نادي CyberTech. أربعة مسارات — التشفير، والويب، والتحليل الجنائي، والاستخبارات مفتوحة المصدر — بمستويات صعوبة تتدرّج من السهل جدًا إلى الجنوني. تتنافس فرق من فردين إلى ثلاثة بإرسال الأعلام بصيغة",
-    "format for points on a live scoreboard. Saturday 24 October 2026, 10:00–13:00, Auditorium B105.":
-      "لكسب النقاط على لوحة نتائج مباشرة. السبت 24 أكتوبر 2026، من 10:00 إلى 13:00، قاعة B105.",
+    "format for points on a live scoreboard. Saturday 14 November 2026, 10:00–13:00, Auditorium B105.":
+      "لكسب النقاط على لوحة نتائج مباشرة. السبت 14 نوفمبر 2026، من 10:00 إلى 13:00، قاعة B105.",
     "CTF 2.0 Results": "نتائج CTF 2.0",
 
     "Club Collaborations": "التعاون مع الأندية",
@@ -167,7 +167,7 @@
     "04 TRAINING TRACKS + CAPTURE THE FLAG":
       "04 مسارات تدريبية + مسابقة التقاط الأعلام",
     COMPETITION: "المسابقة",
-    "24 OCT 2026 // AUDITORIUM B105": "24 أكتوبر 2026 // قاعة B105",
+    "14 NOV 2026 // AUDITORIUM B105": "14 نوفمبر 2026 // قاعة B105",
     ACTIVE: "نشط",
     "The Collaboration": "الشراكة",
     "A continuing joint series": "سلسلة مشتركة مستمرة",
@@ -304,11 +304,11 @@
     WORKSHOPS: "الورش",
     "Search projects": "ابحث في المشاريع",
     "grep search_projects...": "grep ابحث_في_المشاريع...",
-    "COMPETITION: 19 SEP 2026": "المسابقة: 19 سبتمبر 2026",
-    "COMPETITION: 24 OCT 2026": "المسابقة: 24 أكتوبر 2026",
+    "COMPETITION: 17 OCT 2026": "المسابقة: 17 أكتوبر 2026",
+    "COMPETITION: 14 NOV 2026": "المسابقة: 14 نوفمبر 2026",
     "STATUS: RESULTS VERIFIED": "الحالة: النتائج موثّقة",
-    "RUNS: 15–17 SEP 2026": "تُقام: 15–17 سبتمبر 2026",
-    "RUNS: 21–22 OCT 2026": "تُقام: 21–22 أكتوبر 2026",
+    "RUNS: 11, 12 & 14 OCT 2026": "تُقام: 11 و12 و14 أكتوبر 2026",
+    "RUNS: 8, 9 & 11 NOV 2026": "تُقام: 8 و9 و11 نوفمبر 2026",
     "An AI-assisted web engineering competition. Every team gets the same brief, then plans, designs, builds, deploys and presents a working application — and adapts to a requirement change mid-competition. Scored out of 100 across seven categories.":
       "مسابقة في هندسة الويب بمساعدة الذكاء الاصطناعي. يستلم كل فريق الوصف نفسه، ثم يخطّط ويصمّم ويبني وينشر ويقدّم تطبيقًا يعمل فعليًا، مع التعامل مع تغيير في المتطلبات أثناء المسابقة. التقييم من 100 درجة موزّعة على سبعة معايير.",
     "Three hours, four attack vectors: cryptography, web, forensics and OSINT. Teams of two to three, difficulty scaled Very Easy through Insane, flags submitted as":
@@ -833,8 +833,8 @@
     "Open the event scoreboard": "افتح لوحة نتائج المسابقة",
     "SYS.MSG: NEXT EDITION SCHEDULED": "رسالة_النظام: النسخة القادمة مجدولة",
     "CTF 3.0 Is Open.": "باب CTF 3.0 مفتوح.",
-    "Saturday 24 October 2026, 10:00 to 13:00, Auditorium B105. Teams of two to three, three hours, four attack vectors. Registration is open now.":
-      "السبت 24 أكتوبر 2026، من 10:00 حتى 13:00، قاعة B105. فرق من فردين إلى ثلاثة، ثلاث ساعات، أربعة مسارات. التسجيل مفتوح الآن.",
+    "Saturday 14 November 2026, 10:00 to 13:00, Auditorium B105. Teams of two to three, three hours, four attack vectors. Registration is open now.":
+      "السبت 14 نوفمبر 2026، من 10:00 حتى 13:00، قاعة B105. فرق من فردين إلى ثلاثة، ثلاث ساعات، أربعة مسارات. التسجيل مفتوح الآن.",
     "Register for CTF 3.0": "سجّل في CTF 3.0",
     "RESULTS:": "النتائج:",
     VERIFIED: "موثّقة",
@@ -888,8 +888,8 @@
     SCORE: "النقاط",
     "Workshops & Readiness": "الورش والاستعداد",
     "Preparation workshops": "ورش التحضير",
-    "Public workshops are scheduled by category before the competition: web and cryptography on 21 October; forensics and OSINT on 22 October. Session times, locations, instructors and detailed prerequisites have not yet been announced.":
-      "تُعقد ورش عامة حسب الفئة قبل المسابقة: الويب والتشفير في 21 أكتوبر، والتحليل الجنائي والاستخبارات مفتوحة المصدر في 22 أكتوبر. لم تُعلن بعد أوقات الجلسات وأماكنها ومقدّموها والمتطلبات التفصيلية.",
+    "Public preparation workshops run on 8, 9 and 11 November, before the competition. Session times, locations, instructors and detailed prerequisites have not yet been announced.":
+      "تُعقد ورش التحضير العامة في 8 و9 و11 نوفمبر قبل المسابقة. لم تُعلن بعد أوقات الجلسات وأماكنها ومقدّموها والمتطلبات التفصيلية.",
     "Check workshop updates": "تابع تحديثات الورش",
     "What to bring": "ما الذي تحضره",
     "Every participant must bring a personal laptop and charger. Organizers provide network access on site. Any workshop-specific software or virtual-machine requirements will be announced with the workshop details.":
@@ -1187,8 +1187,8 @@
     "Guides, references and troubleshooting": "الأدلة، والمراجع، وحل المشكلات",
     "SYS.MSG: CHALLENGE LOCKED UNTIL COMPETITION DAY": "رسالة_النظام: التحدي مقفل حتى يوم المسابقة",
     "You Won't Know What You're Building.": "لن تعرف ما الذي ستبنيه.",
-    "Workshops 15–17 September 2026. Competition 19 September 2026. Register your team, learn the workflow, then build without the tutorial.":
-      "الورش 15–17 سبتمبر 2026. المسابقة 19 سبتمبر 2026. سجّل فريقك، وتعلّم مسار العمل، ثم ابنِ دون دليل.",
+    "Workshops 11, 12 and 14 October 2026. Competition 17 October 2026. Register your team, learn the workflow, then build without the tutorial.":
+      "الورش 11 و12 و14 أكتوبر 2026. المسابقة 17 أكتوبر 2026. سجّل فريقك، وتعلّم مسار العمل، ثم ابنِ دون دليل.",
     "Register a Team": "سجّل فريقًا",
     "BRIEF:": "الوصف:",
     LOCKED: "مقفل",

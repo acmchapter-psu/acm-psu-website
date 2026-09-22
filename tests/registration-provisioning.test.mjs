@@ -338,18 +338,24 @@ await test("a canonical worksheet name is refused outright", async () => {
   assert.match(names.sheetNameProblem("contributions"), /mirror worksheets/);
 });
 
-await test("suggested names are usable and event-shaped", async () => {
+await test("suggested names describe the list, not the event", async () => {
+  assert.equal(names.suggestSheetName("Individual", "261"), "Individual_261");
+  assert.equal(names.suggestSheetName("Team2", "261"), "Team2_261");
+  assert.equal(names.suggestSheetName("Team3", "261"), "Team3_261");
+  // Taken names get a number, compared without case like Google does.
   assert.equal(
-    names.suggestSheetName("ACM Club Hackathon — Term 261", "261"),
-    "hackathon261",
+    names.suggestSheetName("Team3", "261", ["team3_261"]),
+    "Team3_261_2",
   );
-  assert.equal(names.suggestSheetName("Security Day", "261"), "securityday261");
-  assert.equal(names.suggestSheetName("ACM PSU Club", null), "event");
-  for (const title of ["", "2026", "!!!", "ACM"]) {
+  assert.equal(
+    names.suggestSheetName("Team3", "261", ["Team3_261", "Team3_261_2"]),
+    "Team3_261_3",
+  );
+  for (const prefix of ["Individual", "Team2", "Team3", "TeamCaptain", null]) {
     assert.equal(
-      names.sheetNameProblem(names.suggestSheetName(title, "261")),
+      names.sheetNameProblem(names.suggestSheetName(prefix, "261")),
       null,
-      `a suggestion for "${title}" must itself be valid`,
+      `a suggestion for "${prefix}" must itself be valid`,
     );
   }
 });
@@ -965,12 +971,8 @@ await test("ACCEPTANCE: the Hackathon gets registration with no new code", async
     ctf30: [TEAM_STRUCTURED_3, ["2026-09-05", "Existing team"]],
   });
 
-  const suggested = names.suggestSheetName(HACKATHON.title, "261");
-  assert.equal(
-    suggested,
-    "hackathon261",
-    "the UI suggests the documented name",
-  );
+  // An existing worksheet name is still accepted as typed.
+  const suggested = "hackathon261";
 
   const { status, payload } = await call({
     project_id: HACKATHON.id,
