@@ -29,7 +29,10 @@
 import { createClient, type SupabaseClient } from "jsr:@supabase/supabase-js@2";
 import { clientForRequest, corsHeaders, fail, json } from "../_shared/http.ts";
 import { ensureEventWorksheet } from "../_shared/google_sheets.ts";
-import { sheetNameProblem } from "../_shared/registration_names.ts";
+import {
+  sameSheetName,
+  sheetNameProblem,
+} from "../_shared/registration_names.ts";
 
 type Template = {
   template_key: string;
@@ -219,22 +222,28 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const problem = sheetNameProblem(sheetName);
   if (problem) return fail(problem, 400, origin);
 
-  // Another event's worksheet. The unique constraint would catch this too;
-  // catching it here names the event instead of raising a constraint error.
-  const { data: clash, error: clashError } = await service
+  // Another event's worksheet. The unique index would catch this too;
+  // catching it here names the clash instead of raising a constraint error.
+  // Compared without case, because Google treats "Hackathon261" and
+  // "hackathon261" as the same tab. The table holds one row per event, so
+  // reading the names is cheaper than escaping them for ILIKE.
+  const { data: forms, error: clashError } = await service
     .from("event_registration_forms")
-    .select("event_key, project_id")
-    .eq("sheet_name", sheetName)
-    .maybeSingle();
+    .select("event_key, project_id, sheet_name");
   if (clashError)
     return fail(
       `Worksheet names could not be checked: ${clashError.message}`,
       500,
       origin,
     );
-  if (clash && clash.project_id !== projectId) {
+  const clash = (forms ?? []).find(
+    (form) =>
+      form.project_id !== projectId && sameSheetName(form.sheet_name, sheetName),
+  );
+  if (clash) {
     return fail(
-      `The worksheet "${sheetName}" is already used by another event's registration form.`,
+      `The worksheet "${clash.sheet_name}" is already used by another event's registration form` +
+        (clash.sheet_name === sheetName ? "." : `, and Google treats "${sheetName}" as the same name.`),
       409,
       origin,
     );
@@ -275,7 +284,24 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   const label = String(body.label ?? "").trim() || project.title;
-  const eventKey = existing?.event_key ?? sheetName;
+  // The key is permanent and lowercase (event_registration_forms_key_shape);
+  // the worksheet name may carry capitals.
+  const eventKey = existing?.event_key ?? sheetName.toLowerCase();
+
+  // A new form must never take over another event's key: the upsert below
+  // would otherwise overwrite that event's form.
+  if (
+    !existing &&
+    (forms ?? []).some(
+      (form) => form.event_key === eventKey && form.project_id !== projectId,
+    )
+  ) {
+    return fail(
+      `The registration key "${eventKey}" already belongs to another event. Choose another worksheet name.`,
+      409,
+      origin,
+    );
+  }
 
   // The row first: a form recorded without its worksheet is recoverable by
   // pressing the button again, an orphaned worksheet is not.

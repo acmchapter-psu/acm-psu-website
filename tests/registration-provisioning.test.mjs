@@ -301,10 +301,12 @@ await test("worksheet names are validated, not trusted", async () => {
   assert.equal(names.sheetNameProblem("hackathon261"), null);
   assert.equal(names.sheetNameProblem("workshop_261"), null);
   assert.equal(names.sheetNameProblem("security-day-261"), null);
+  // Capitals are allowed; Google keeps them as typed.
+  assert.equal(names.sheetNameProblem("Hackathon261"), null);
+  assert.equal(names.sheetNameProblem("WebForge_2026"), null);
   for (const bad of [
     "",
     "ab",
-    "Hackathon261",
     "261hack",
     "hack athon",
     "hack!",
@@ -672,10 +674,91 @@ await test("a worksheet name already used by another event is refused", async ()
   assert.equal(book.tabs.ctf30.length, 2, "the other event keeps its rows");
 });
 
+await test("a name differing only in case is the same worksheet", async () => {
+  const db = fixture({
+    forms: [
+      {
+        event_key: "ctf30",
+        project_id: "proj-ctf",
+        sheet_name: "ctf30",
+        template_key: "TEAM_STRUCTURED_3",
+        headers: TEAM_STRUCTURED_3,
+        label: "CTF 3.0",
+        is_active: true,
+      },
+    ],
+  });
+  const book = workbook({ ctf30: [TEAM_STRUCTURED_3, ["a", "registration"]] });
+  const { status, payload } = await call({
+    project_id: "proj-hack",
+    enabled: true,
+    template_key: "TEAM_STRUCTURED_3",
+    sheet_name: "CTF30",
+  });
+  assert.equal(status, 409);
+  assert.match(payload.error, /already used by another event/);
+  assert.match(payload.error, /same name/);
+  assert.equal(db.tables.event_registration_forms.length, 1);
+  assert.equal(book.tabs.ctf30.length, 2, "the other event keeps its rows");
+});
+
+await test("a capitalised worksheet name is kept; the key is lowercase", async () => {
+  const db = fixture();
+  const book = workbook({});
+  const { status } = await call({
+    project_id: "proj-hack",
+    enabled: true,
+    template_key: "TEAM_BASIC",
+    sheet_name: "Hackathon261",
+  });
+  assert.equal(status, 200);
+  const form = db.tables.event_registration_forms[0];
+  assert.equal(form.sheet_name, "Hackathon261");
+  assert.equal(form.event_key, "hackathon261");
+  assert.deepEqual(book.tabs.Hackathon261, [TEAM_BASIC]);
+});
+
+await test("an existing tab in another case is reported, never renamed", async () => {
+  fixture();
+  const book = workbook({ hackathon261: [TEAM_BASIC, ["kept", "row"]] });
+  await assert.rejects(
+    () => sheets.ensureEventWorksheet(SPREADSHEET, "Hackathon261", TEAM_BASIC),
+    /already has a worksheet called "hackathon261"/,
+  );
+  assert.deepEqual(Object.keys(book.tabs), ["hackathon261"]);
+  assert.equal(book.tabs.hackathon261.length, 2, "rows untouched");
+});
+
+await test("a new form cannot take over another event's key", async () => {
+  const db = fixture({
+    forms: [
+      {
+        event_key: "hackathon261",
+        project_id: "proj-ctf",
+        sheet_name: "renamed_tab",
+        template_key: "TEAM_BASIC",
+        headers: TEAM_BASIC,
+        label: "Other event",
+        is_active: true,
+      },
+    ],
+  });
+  workbook({});
+  const { status, payload } = await call({
+    project_id: "proj-hack",
+    enabled: true,
+    template_key: "TEAM_BASIC",
+    sheet_name: "Hackathon261",
+  });
+  assert.equal(status, 409);
+  assert.match(payload.error, /already belongs to another event/);
+  assert.equal(db.tables.event_registration_forms[0].project_id, "proj-ctf");
+});
+
 await test("an invalid worksheet name never reaches Google", async () => {
   const db = fixture();
   const book = workbook({});
-  for (const bad of ["People", "Hack261", "hack 261", "x"]) {
+  for (const bad of ["People", "261Hack", "hack 261", "x"]) {
     const { status } = await call({
       project_id: "proj-hack",
       enabled: true,

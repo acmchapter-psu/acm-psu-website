@@ -593,17 +593,33 @@ export async function submissionAi(
 
 /* ------------------------------------------------------------ opportunities */
 
+/**
+ * The member board: openings that can actually be taken right now.
+ *
+ * An opening is live only while its event is planning or active, the event is
+ * not deleted, and the closing date has not passed — the same rule
+ * register_event_position_application() enforces, so the board never offers
+ * a role the database would refuse. is_open alone is not enough: archiving an
+ * event leaves its openings' flags untouched.
+ */
 export async function openOpportunities(): Promise<
   Array<EventPositionAvailability & { project: Project | null }>
 > {
-  return (
+  const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD, local
+  const rows: Array<EventPositionAvailability & { project: Project | null }> =
     unwrap(
       await requireClient()
         .from("event_position_availability")
         .select("*, project:projects(*)")
         .eq("is_open", true)
         .order("title"),
-    ) ?? []
+    ) ?? [];
+  return rows.filter(
+    (row) =>
+      row.project !== null &&
+      !row.project.deleted_at &&
+      (row.project.status === "planning" || row.project.status === "active") &&
+      (row.closes_on === null || row.closes_on >= today),
   );
 }
 

@@ -299,6 +299,7 @@
     "Filter projects by category": "تصفية المشاريع حسب التصنيف",
     ALL: "الكل",
     JAM: "المعسكر",
+    "WEB DEVELOPMENT": "تطوير الويب",
     CTF: "CTF",
     WORKSHOPS: "الورش",
     "Search projects": "ابحث في المشاريع",
@@ -1046,7 +1047,7 @@
     CONCLUDED: "انتهت",
 
     /* --- WebForge (JAM.26) archive --- */
-    "DIR: /PROJECTS/PROGRAMMING-JAMS/AI-PROGRAMMING-JAM": "المسار: /المشاريع/معسكرات-البرمجة/AI-PROGRAMMING-JAM",
+    "DIR: /PROJECTS/WEB-DEVELOPMENT/WEBFORGE-2026": "المسار: /المشاريع/تطوير-الويب/WEBFORGE-2026",
     "STATUS: ACTIVE": "الحالة: نشط",
     "The working library behind JAM.26: participant lessons and checklists, instructor planning records, reusable project templates, and event media. Version folders preserve older files without overwriting them.":
       "المكتبة العملية خلف JAM.26: دروس المشاركين وقوائم التحقق، وسجلات تخطيط المدربين، وقوالب مشاريع قابلة لإعادة الاستخدام، ووسائط الفعالية. تحفظ مجلدات الإصدارات الملفات القديمة دون الكتابة فوقها.",

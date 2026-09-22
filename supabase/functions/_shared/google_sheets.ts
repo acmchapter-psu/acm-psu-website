@@ -502,7 +502,18 @@ export async function ensureEventWorksheet(
   const meta = (await sheetsRequest(token, spreadsheetId, "")) as {
     sheets?: Array<{ properties: { title: string; sheetId: number } }>;
   };
-  let sheet = meta.sheets?.find((s) => s.properties.title === tabName);
+  // Google refuses a new tab whose name differs from an existing one only in
+  // case, so look without case — and never rename someone's tab to match.
+  const sameName = meta.sheets?.find(
+    (s) => s.properties.title.toLowerCase() === tabName.toLowerCase(),
+  );
+  if (sameName && sameName.properties.title !== tabName) {
+    throw new Error(
+      `The workbook already has a worksheet called "${sameName.properties.title}". Google treats ` +
+        `"${tabName}" as the same name, so use "${sameName.properties.title}" exactly or choose another name.`,
+    );
+  }
+  let sheet = sameName;
   let status: "created" | "seeded" | "verified";
 
   if (!sheet) {

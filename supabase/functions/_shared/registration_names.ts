@@ -24,10 +24,19 @@ const CANONICAL_WORKSHEETS = [
 ];
 
 /**
- * Lowercase, starts with a letter, then letters/digits/underscore/hyphen.
- * 3–41 characters. Matches event_registration_forms_sheet_shape.
+ * Starts with a letter, then letters (either case), digits, underscore or
+ * hyphen. 3–41 characters. Matches event_registration_forms_sheet_shape.
+ *
+ * Google Sheets compares tab names without regard to case, so "Hackathon261"
+ * and "hackathon261" are the same worksheet: every comparison of an existing
+ * name must lower-case both sides (see sameSheetName).
  */
-export const SHEET_NAME_PATTERN = /^[a-z][a-z0-9_-]{2,40}$/;
+export const SHEET_NAME_PATTERN = /^[A-Za-z][A-Za-z0-9_-]{2,40}$/;
+
+/** Whether two worksheet names refer to the same Google Sheets tab. */
+export function sameSheetName(a: string, b: string): boolean {
+  return String(a ?? "").toLowerCase() === String(b ?? "").toLowerCase();
+}
 
 /**
  * Why this name cannot be used, or null when it can.
@@ -42,8 +51,8 @@ export function sheetNameProblem(name: string): string | null {
     return "A worksheet name cannot start or end with a space.";
   if (!SHEET_NAME_PATTERN.test(value)) {
     return (
-      "Use 3–41 characters: lowercase letters, digits, underscore or hyphen, " +
-      "starting with a letter. For example: hackathon261."
+      "Use 3–41 characters: letters, digits, underscore or hyphen, " +
+      "starting with a letter. For example: Hackathon261."
     );
   }
   if (

@@ -3737,6 +3737,19 @@
   gap: 0.9rem;
 }
 
+/* One sentence on what the chosen template is for, directly under the choice.
+   Sentence case rather than the mono caps of the hints, so it reads as
+   guidance instead of another label. */
+.registration-template-note {
+  margin: -0.35rem 0 0;
+  padding: 0.5rem 0.75rem;
+  border-left: 2px solid var(--accent-blue);
+  background: var(--bg-surface-hover);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
 /* The columns a template will create, shown before anything is written: they
    are the part that cannot be changed once registrations exist. */
 .registration-columns {
@@ -3745,4 +3758,119 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+/* Portal walkthrough (platform/lib/tour.ts). ------------------------------ */
+
+.portal-tour-link {
+  align-self: flex-start;
+  margin-top: auto;
+}
+
+.tour-blocker {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+}
+
+/* Steps with nothing to point at dim the page themselves. */
+.tour-blocker--dim {
+  background: light-dark(rgba(15, 23, 42, 0.35), rgba(0, 0, 0, 0.6));
+}
+
+.tour-spotlight {
+  position: fixed;
+  z-index: 201;
+  border: 2px solid var(--accent-blue);
+  border-radius: 6px;
+  box-shadow: 0 0 0 9999px light-dark(rgba(15, 23, 42, 0.35), rgba(0, 0, 0, 0.6));
+  pointer-events: none;
+  transition:
+    top 0.2s ease,
+    left 0.2s ease,
+    width 0.2s ease,
+    height 0.2s ease;
+}
+
+.tour-card,
+.tour-offer {
+  position: fixed;
+  z-index: 202;
+  width: min(340px, calc(100vw - 24px));
+  padding: 1.1rem 1.2rem 1rem;
+  border: 1px solid var(--border-strong);
+  border-top: 3px solid var(--accent-blue);
+  border-radius: 6px;
+  background: var(--bg-surface);
+  color: var(--text-main);
+  box-shadow: 0 18px 50px light-dark(rgba(15, 23, 42, 0.18), rgba(0, 0, 0, 0.55));
+}
+
+.tour-count {
+  color: var(--text-dark);
+  font-size: 0.65rem;
+}
+
+.tour-title {
+  margin: 0.35rem 0 0.4rem;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+}
+
+.tour-text,
+.tour-offer p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.tour-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.tour-nav {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tour-actions .btn-blue,
+.tour-actions .btn-ghost {
+  flex: 0 0 auto;
+  padding: 0.5rem 0.9rem;
+}
+
+.tour-back:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.tour-offer {
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 150;
+}
+
+.tour-offer strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-family: var(--font-display);
+}
+
+@media (max-width: 640px) {
+  .tour-offer {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    width: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-spotlight {
+    transition: none;
+  }
 }

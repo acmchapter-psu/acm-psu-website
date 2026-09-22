@@ -16,7 +16,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 const OUT = 'supabase/functions/prospective-member-assistant/knowledge.ts';
 
 /* Order matters a little: the model weighs what comes first. The workshop
- * handouts under ai-programming-jam-26/workshop-content are teaching material
+ * handouts under webforge-2026/workshop-content are teaching material
  * thousands of words long; the guide links to them instead of reciting them. */
 const PAGES = [
   ['/index.html', 'index.html'],
@@ -32,7 +32,7 @@ const PAGES = [
   ['/projects/ctfs/ctf-2.0/results/presentation/index.html', 'projects/ctfs/ctf-2.0/results/presentation/index.html'],
   ['/projects/hackathons/psu-ai-hackathon-2.0/index.html', 'projects/hackathons/psu-ai-hackathon-2.0/index.html'],
   ['/projects/hackathons/psu-ai-hackathon-2.0/event-site.html', 'projects/hackathons/psu-ai-hackathon-2.0/event-site.html'],
-  ['/projects/programming-jams/ai-programming-jam-26/index.html', 'projects/programming-jams/ai-programming-jam-26/index.html'],
+  ['/projects/web-development/webforge-2026/index.html', 'projects/web-development/webforge-2026/index.html'],
 ];
 
 const ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', mdash: '—', ndash: '–', hellip: '…', rarr: '→', larr: '←', copy: '©',

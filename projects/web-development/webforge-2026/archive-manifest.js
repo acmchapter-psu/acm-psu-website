@@ -81,7 +81,7 @@ window.PROJECT_ARCHIVE = {
       updated: "29 AUG 2026",
       size: "Lesson",
       state: "Published",
-      url: "/projects/programming-jams/ai-programming-jam-26/workshop-content/day-1-planning-development-workflow.html",
+      url: "/projects/web-development/webforge-2026/workshop-content/day-1-planning-development-workflow.html",
       description: "Planning, requirements, and development workflow.",
     },
     {
@@ -94,7 +94,7 @@ window.PROJECT_ARCHIVE = {
       updated: "29 AUG 2026",
       size: "Lesson",
       state: "Published",
-      url: "/projects/programming-jams/ai-programming-jam-26/workshop-content/day-2-full-stack-development-debugging.html",
+      url: "/projects/web-development/webforge-2026/workshop-content/day-2-full-stack-development-debugging.html",
       description: "Full-stack implementation and systematic debugging.",
     },
     {
@@ -107,7 +107,7 @@ window.PROJECT_ARCHIVE = {
       updated: "29 AUG 2026",
       size: "Lesson",
       state: "Published",
-      url: "/projects/programming-jams/ai-programming-jam-26/workshop-content/day-3-deployment-discovery-optimization.html",
+      url: "/projects/web-development/webforge-2026/workshop-content/day-3-deployment-discovery-optimization.html",
       description: "Deployment, domains, discovery, and performance.",
     },
     {
@@ -120,7 +120,7 @@ window.PROJECT_ARCHIVE = {
       updated: "29 AUG 2026",
       size: "5 pages",
       state: "Published",
-      url: "/projects/programming-jams/ai-programming-jam-26/workshop-content/handouts/day-1-handout.pdf",
+      url: "/projects/web-development/webforge-2026/workshop-content/handouts/day-1-handout.pdf",
       description: "Participant checklist for workshop day one.",
     },
     {
@@ -133,7 +133,7 @@ window.PROJECT_ARCHIVE = {
       updated: "29 AUG 2026",
       size: "5 pages",
       state: "Published",
-      url: "/projects/programming-jams/ai-programming-jam-26/workshop-content/handouts/day-2-handout.pdf",
+      url: "/projects/web-development/webforge-2026/workshop-content/handouts/day-2-handout.pdf",
       description: "Participant checklist for workshop day two.",
     },
     {
@@ -146,7 +146,7 @@ window.PROJECT_ARCHIVE = {
       updated: "29 AUG 2026",
       size: "6 pages",
       state: "Published",
-      url: "/projects/programming-jams/ai-programming-jam-26/workshop-content/handouts/day-3-handout.pdf",
+      url: "/projects/web-development/webforge-2026/workshop-content/handouts/day-3-handout.pdf",
       description: "Participant checklist for workshop day three.",
     },
     {
@@ -181,7 +181,7 @@ window.PROJECT_ARCHIVE = {
       updated: "29 AUG 2026",
       size: "16 pages",
       state: "Working draft",
-      url: "/projects/programming-jams/ai-programming-jam-26/workshop-content/workshop-notion-template/filled-version/day-1.pdf",
+      url: "/projects/web-development/webforge-2026/workshop-content/workshop-notion-template/filled-version/day-1.pdf",
       description: "Completed planning record for day one.",
     },
     {
@@ -194,7 +194,7 @@ window.PROJECT_ARCHIVE = {
       updated: "29 AUG 2026",
       size: "18 pages",
       state: "Working draft",
-      url: "/projects/programming-jams/ai-programming-jam-26/workshop-content/workshop-notion-template/filled-version/day-2.pdf",
+      url: "/projects/web-development/webforge-2026/workshop-content/workshop-notion-template/filled-version/day-2.pdf",
       description: "Completed planning record for day two.",
     },
     {
@@ -207,7 +207,7 @@ window.PROJECT_ARCHIVE = {
       updated: "29 AUG 2026",
       size: "22 pages",
       state: "Working draft",
-      url: "/projects/programming-jams/ai-programming-jam-26/workshop-content/workshop-notion-template/filled-version/day-3.pdf",
+      url: "/projects/web-development/webforge-2026/workshop-content/workshop-notion-template/filled-version/day-3.pdf",
       description: "Completed planning record for day three.",
     },
     {
@@ -242,7 +242,7 @@ window.PROJECT_ARCHIVE = {
       updated: "29 AUG 2026",
       size: "6 pages",
       state: "Blank template",
-      url: "/projects/programming-jams/ai-programming-jam-26/workshop-content/workshop-notion-template/notion-workshop-template.pdf",
+      url: "/projects/web-development/webforge-2026/workshop-content/workshop-notion-template/notion-workshop-template.pdf",
       description: "Reusable workshop planning template.",
     },
     {
@@ -255,7 +255,7 @@ window.PROJECT_ARCHIVE = {
       updated: "29 AUG 2026",
       size: "12 pages",
       state: "Blank template",
-      url: "/projects/programming-jams/ai-programming-jam-26/workshop-content/workshop-notion-template/notion-judging-template.pdf",
+      url: "/projects/web-development/webforge-2026/workshop-content/workshop-notion-template/notion-judging-template.pdf",
       description: "Reusable judging workflow and rubric template.",
     },
     {
@@ -268,7 +268,7 @@ window.PROJECT_ARCHIVE = {
       updated: "29 AUG 2026",
       size: "11 pages",
       state: "Blank template",
-      url: "/projects/programming-jams/ai-programming-jam-26/workshop-content/workshop-notion-template/notion-challange-template.pdf",
+      url: "/projects/web-development/webforge-2026/workshop-content/workshop-notion-template/notion-challange-template.pdf",
       description: "Reusable competition challenge template.",
     },
     {
@@ -281,7 +281,7 @@ window.PROJECT_ARCHIVE = {
       updated: "29 AUG 2026",
       size: "3 pages",
       state: "Blank template",
-      url: "/projects/programming-jams/ai-programming-jam-26/workshop-content/workshop-notion-template/notion-organizer-template.pdf",
+      url: "/projects/web-development/webforge-2026/workshop-content/workshop-notion-template/notion-organizer-template.pdf",
       description: "Reusable organizer operations template.",
     },
     {
@@ -294,7 +294,7 @@ window.PROJECT_ARCHIVE = {
       updated: "29 AUG 2026",
       size: "3 pages",
       state: "Blank template",
-      url: "/projects/programming-jams/ai-programming-jam-26/workshop-content/workshop-notion-template/notion-supplemental-resource.pdf",
+      url: "/projects/web-development/webforge-2026/workshop-content/workshop-notion-template/notion-supplemental-resource.pdf",
       description: "Reusable supplemental learning resource template.",
     },
     {
@@ -308,7 +308,7 @@ window.PROJECT_ARCHIVE = {
       updated: "29 AUG 2026",
       size: "1200 × 630",
       state: "Published",
-      url: "/projects/programming-jams/ai-programming-jam-26/workshop-content/assests/banner.png",
+      url: "/projects/web-development/webforge-2026/workshop-content/assests/banner.png",
       description: "Official JAM.26 event banner.",
     },
     {
@@ -322,7 +322,7 @@ window.PROJECT_ARCHIVE = {
       updated: "29 AUG 2026",
       size: "Image",
       state: "Published",
-      url: "/projects/programming-jams/ai-programming-jam-26/workshop-content/assests/excalidraw-diagram-example.jpeg",
+      url: "/projects/web-development/webforge-2026/workshop-content/assests/excalidraw-diagram-example.jpeg",
       description: "Architecture diagram example used during the workshop.",
     },
   ],

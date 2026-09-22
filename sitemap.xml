@@ -11,11 +11,11 @@
   <url><loc>https://acmchapter-psu.github.io/acm-psu-website/team.html</loc><priority>0.8</priority></url>
   <url><loc>https://acmchapter-psu.github.io/acm-psu-website/join.html</loc><priority>0.8</priority></url>
   <url><loc>https://acmchapter-psu.github.io/acm-psu-website/contact.html</loc><priority>0.7</priority></url>
-  <url><loc>https://acmchapter-psu.github.io/acm-psu-website/projects/programming-jams/ai-programming-jam-26/</loc><priority>0.7</priority></url>
-  <url><loc>https://acmchapter-psu.github.io/acm-psu-website/projects/programming-jams/ai-programming-jam-26/archive.html</loc><priority>0.8</priority></url>
+  <url><loc>https://acmchapter-psu.github.io/acm-psu-website/projects/web-development/webforge-2026/</loc><priority>0.7</priority></url>
+  <url><loc>https://acmchapter-psu.github.io/acm-psu-website/projects/web-development/webforge-2026/archive.html</loc><priority>0.8</priority></url>
   <url><loc>https://acmchapter-psu.github.io/acm-psu-website/projects/ctfs/ctf-3.0/workshops.html</loc><priority>0.6</priority></url>
   <url><loc>https://acmchapter-psu.github.io/acm-psu-website/projects/ctfs/ctf-2.0/archive.html</loc><priority>0.7</priority></url>
-  <url><loc>https://acmchapter-psu.github.io/acm-psu-website/projects/programming-jams/ai-programming-jam-26/workshop-content/day-1-planning-development-workflow.html</loc><priority>0.7</priority></url>
-  <url><loc>https://acmchapter-psu.github.io/acm-psu-website/projects/programming-jams/ai-programming-jam-26/workshop-content/day-2-full-stack-development-debugging.html</loc><priority>0.7</priority></url>
-  <url><loc>https://acmchapter-psu.github.io/acm-psu-website/projects/programming-jams/ai-programming-jam-26/workshop-content/day-3-deployment-discovery-optimization.html</loc><priority>0.7</priority></url>
+  <url><loc>https://acmchapter-psu.github.io/acm-psu-website/projects/web-development/webforge-2026/workshop-content/day-1-planning-development-workflow.html</loc><priority>0.7</priority></url>
+  <url><loc>https://acmchapter-psu.github.io/acm-psu-website/projects/web-development/webforge-2026/workshop-content/day-2-full-stack-development-debugging.html</loc><priority>0.7</priority></url>
+  <url><loc>https://acmchapter-psu.github.io/acm-psu-website/projects/web-development/webforge-2026/workshop-content/day-3-deployment-discovery-optimization.html</loc><priority>0.7</priority></url>
 </urlset>

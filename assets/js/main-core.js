@@ -635,14 +635,14 @@
         detailAr: "المسابقات والورش والأعمال التقنية",
       },
       {
-        href: "projects/programming-jams/ai-programming-jam-26/archive.html",
+        href: "projects/web-development/webforge-2026/archive.html",
         en: "JAM.26 Resource Archive",
         ar: "أرشيف موارد JAM.26",
         detailEn: "Lessons, handouts, planning records and templates",
         detailAr: "الدروس والنشرات وسجلات التخطيط والقوالب",
       },
       {
-        href: "projects/programming-jams/ai-programming-jam-26/",
+        href: "projects/web-development/webforge-2026/",
         slug: "ai-programming-jam-2026",
         en: "WebForge 2026",
         ar: "WebForge 2026",

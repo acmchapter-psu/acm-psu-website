@@ -12,6 +12,7 @@
 import { h, render, type Child } from "./dom.js";
 import { daysSince, enumLabel, initials } from "./format.js";
 import { sitePath } from "./supabase.js";
+import { offerTour, startTour, type TourArea } from "./tour.js";
 import {
   signOut,
   isClubAdmin,
@@ -138,6 +139,7 @@ export function shell(
       ? "?view=responsibilities"
       : "");
   const content = h("div", { class: "portal-content", id: "portal-content" });
+  const tourArea: TourArea = instructorOnly ? "instructor" : area;
 
   const sidebar = h(
     "aside",
@@ -218,6 +220,15 @@ export function shell(
             { class: "portal-nav portal-nav--secondary" },
             h("a", { href: sitePath("/index.html") }, "Public website"),
           ),
+    h(
+      "button",
+      {
+        type: "button",
+        class: "link-button mono-meta portal-tour-link",
+        onclick: () => startTour(tourArea, viewer.userId),
+      },
+      "TAKE THE TOUR",
+    ),
     h(
       "div",
       { class: "portal-account" },
@@ -306,6 +317,7 @@ export function shell(
   );
 
   document.title = `${title} — ACM PSU`;
+  offerTour(tourArea, viewer.userId);
   return content;
 }
 

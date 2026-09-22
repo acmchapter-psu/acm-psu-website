@@ -48,7 +48,7 @@ export interface ProvisionResult {
  * before a round trip. The server checks the same thing and is the authority;
  * this is a courtesy, never a gate.
  */
-export const SHEET_NAME_PATTERN = /^[a-z][a-z0-9_-]{2,40}$/;
+export const SHEET_NAME_PATTERN = /^[A-Za-z][A-Za-z0-9_-]{2,40}$/;
 
 const CANONICAL_WORKSHEETS = [
   "people",
@@ -68,8 +68,8 @@ export function sheetNameProblem(name: string): string | null {
   if (!value) return "Enter a worksheet name.";
   if (!SHEET_NAME_PATTERN.test(value)) {
     return (
-      "Use 3–41 characters: lowercase letters, digits, underscore or hyphen, " +
-      "starting with a letter. For example: hackathon261."
+      "Use 3–41 characters: letters, digits, underscore or hyphen, " +
+      "starting with a letter. For example: Hackathon261."
     );
   }
   if (CANONICAL_WORKSHEETS.includes(value.toLowerCase())) {
@@ -209,8 +209,9 @@ export function registrationSection(options: {
     maxlength: 41,
     hint: locked
       ? "Locked: registrations have already been recorded in this worksheet."
-      : "A tab in the ACM PSU — Club Records workbook. Lowercase letters, digits, " +
-        "underscore or hyphen — for example hackathon261. Created automatically if it does not exist.",
+      : "A tab in the ACM PSU — Club Records workbook. Letters, digits, " +
+        "underscore or hyphen — for example Hackathon261. Created automatically if it does not exist. " +
+        "Capitals are kept, but Google treats Hackathon261 and hackathon261 as the same tab.",
   });
   const sheetControl = sheetField.querySelector("input") as HTMLInputElement;
 
@@ -218,6 +219,7 @@ export function registrationSection(options: {
   // anything is created, because the columns are the part that cannot be
   // changed later without exporting and starting again.
   const columns = h("div", { class: "registration-columns" });
+  const templateNote = h("p", { class: "registration-template-note" });
   function paintColumns(): void {
     const chosen = templates.find(
       (t) => t.template_key === templateControl.value,
@@ -232,11 +234,10 @@ export function registrationSection(options: {
         ),
       ),
     ];
-    if (chosen?.description)
-      parts.push(
-        h("p", { class: "field-hint mono-meta dim-text" }, chosen.description),
-      );
     columns.replaceChildren(...parts);
+    // What the template is for, right under the choice it explains.
+    templateNote.textContent = chosen?.description ?? "";
+    templateNote.hidden = !chosen?.description;
   }
   paintColumns();
   templateControl.addEventListener("change", paintColumns);
@@ -245,6 +246,7 @@ export function registrationSection(options: {
     "div",
     { class: "registration-details" },
     templateSelect,
+    templateNote,
     sheetField,
     columns,
   );
