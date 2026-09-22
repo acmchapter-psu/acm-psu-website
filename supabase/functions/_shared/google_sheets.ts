@@ -29,15 +29,18 @@
  */
 
 /** The single workbook every worksheet lives in. */
-export const WORKBOOK_NAME = 'ACM PSU — Club Records';
+export const WORKBOOK_NAME = "ACM PSU — Club Records";
 
-const TOKEN_URL = 'https://oauth2.googleapis.com/token';
-const SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
+const TOKEN_URL = "https://oauth2.googleapis.com/token";
+const SCOPE = "https://www.googleapis.com/auth/spreadsheets";
 
 function base64url(bytes: Uint8Array): string {
-  let binary = '';
+  let binary = "";
   for (const byte of bytes) binary += String.fromCharCode(byte);
-  return btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
+  return btoa(binary)
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
+    .replaceAll("=", "");
 }
 
 function encodeJson(value: unknown): string {
@@ -47,53 +50,56 @@ function encodeJson(value: unknown): string {
 /** Turns a PEM private key into a Web Crypto signing key. */
 async function importPrivateKey(pem: string): Promise<CryptoKey> {
   const body = pem
-    .replace(/\\n/g, '\n')                       // survive single-line .env storage
-    .replace(/-----(BEGIN|END) PRIVATE KEY-----/g, '')
-    .replace(/\s+/g, '');
+    .replace(/\\n/g, "\n") // survive single-line .env storage
+    .replace(/-----(BEGIN|END) PRIVATE KEY-----/g, "")
+    .replace(/\s+/g, "");
 
   const der = Uint8Array.from(atob(body), (c) => c.charCodeAt(0));
 
   return crypto.subtle.importKey(
-    'pkcs8',
+    "pkcs8",
     der,
-    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
     false,
-    ['sign'],
+    ["sign"],
   );
 }
 
 async function accessToken(): Promise<string> {
-  const email = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_EMAIL');
-  const key = Deno.env.get('GOOGLE_PRIVATE_KEY');
+  const email = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_EMAIL");
+  const key = Deno.env.get("GOOGLE_PRIVATE_KEY");
 
   if (!email || !key) {
     throw new Error(
-      'Google Sheets export is not configured. Set GOOGLE_SERVICE_ACCOUNT_EMAIL and ' +
-      'GOOGLE_PRIVATE_KEY as Edge Function secrets — see docs/SETUP.md step 5. ' +
-      'CSV and XLSX export work without this.',
+      "Google Sheets export is not configured. Set GOOGLE_SERVICE_ACCOUNT_EMAIL and " +
+        "GOOGLE_PRIVATE_KEY as Edge Function secrets — see docs/SETUP.md step 5. " +
+        "CSV and XLSX export work without this.",
     );
   }
 
   const now = Math.floor(Date.now() / 1000);
-  const claim = encodeJson({ alg: 'RS256', typ: 'JWT' }) + '.' + encodeJson({
-    iss: email,
-    scope: SCOPE,
-    aud: TOKEN_URL,
-    iat: now,
-    exp: now + 3600,
-  });
+  const claim =
+    encodeJson({ alg: "RS256", typ: "JWT" }) +
+    "." +
+    encodeJson({
+      iss: email,
+      scope: SCOPE,
+      aud: TOKEN_URL,
+      iat: now,
+      exp: now + 3600,
+    });
 
   const signature = await crypto.subtle.sign(
-    'RSASSA-PKCS1-v1_5',
+    "RSASSA-PKCS1-v1_5",
     await importPrivateKey(key),
     new TextEncoder().encode(claim),
   );
 
   const response = await fetch(TOKEN_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
-      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
       assertion: `${claim}.${base64url(new Uint8Array(signature))}`,
     }),
   });
@@ -119,14 +125,16 @@ async function sheetsRequest(
       ...init,
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         ...(init.headers ?? {}),
       },
     },
   );
   const payload = await response.json();
   if (!response.ok) {
-    throw new Error(payload?.error?.message ?? `Sheets API error ${response.status}`);
+    throw new Error(
+      payload?.error?.message ?? `Sheets API error ${response.status}`,
+    );
   }
   return payload;
 }
@@ -149,7 +157,7 @@ async function sheetsRequest(
  * Status column still says the same thing in words, so the colour is a second
  * signal and never the only one.
  */
-export type RowTint = 'new' | 'interview';
+export type RowTint = "new" | "interview";
 
 const TINTS: Record<RowTint, { red: number; green: number; blue: number }> = {
   new: { red: 0.85, green: 0.92, blue: 1 },
@@ -167,9 +175,16 @@ const TINTS: Record<RowTint, { red: number; green: number; blue: number }> = {
  * so a mistake upstream should fail here rather than run.
  */
 const CANONICAL_TABS = new Set([
-  'People', 'Membership Applications', 'Members', 'Club Positions',
-  'Opportunity Positions', 'Position Applications', 'Event Participation',
-  'Contributions', 'Inquiries', 'University Export Log',
+  "People",
+  "Membership Applications",
+  "Members",
+  "Club Positions",
+  "Opportunity Positions",
+  "Position Applications",
+  "Event Participation",
+  "Contributions",
+  "Inquiries",
+  "University Export Log",
 ]);
 
 /**
@@ -193,14 +208,16 @@ const CANONICAL_TABS = new Set([
  * than something a sync has to install.
  */
 async function applyPresentation(
-  token: string, spreadsheetId: string, tabName: string,
+  token: string,
+  spreadsheetId: string,
+  tabName: string,
   requests: Array<Record<string, unknown>>,
 ): Promise<void> {
   if (!requests.length) return;
 
   const send = (batch: Array<Record<string, unknown>>) =>
-    sheetsRequest(token, spreadsheetId, ':batchUpdate', {
-      method: 'POST',
+    sheetsRequest(token, spreadsheetId, ":batchUpdate", {
+      method: "POST",
       body: JSON.stringify({ requests: batch }),
     });
 
@@ -208,17 +225,21 @@ async function applyPresentation(
     await send(requests);
     return;
   } catch (error) {
-    console.warn(`${tabName}: formatting was rejected as one batch ` +
-      `(${error instanceof Error ? error.message : String(error)}). ` +
-      'Retrying step by step; the exported data is already written and is unaffected.');
+    console.warn(
+      `${tabName}: formatting was rejected as one batch ` +
+        `(${error instanceof Error ? error.message : String(error)}). ` +
+        "Retrying step by step; the exported data is already written and is unaffected.",
+    );
   }
 
   for (const request of requests) {
     try {
       await send([request]);
     } catch (error) {
-      console.warn(`${tabName}: skipped one formatting step — ` +
-        `${error instanceof Error ? error.message : String(error)}`);
+      console.warn(
+        `${tabName}: skipped one formatting step — ` +
+          `${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 }
@@ -235,34 +256,47 @@ export async function pushToGoogleSheet(
   if (!CANONICAL_TABS.has(tabName)) {
     throw new Error(
       `Refusing to write "${tabName}": only Supabase mirror worksheets may be replaced. ` +
-      'Public event registration tabs are owned by Apps Script and are never snapshot targets.',
+        "Public event registration tabs are owned by Apps Script and are never snapshot targets.",
     );
   }
 
-  const spreadsheetId = Deno.env.get('GOOGLE_SHEETS_SPREADSHEET_ID');
+  const spreadsheetId = Deno.env.get("GOOGLE_SHEETS_SPREADSHEET_ID");
   if (!spreadsheetId) {
-    throw new Error('GOOGLE_SHEETS_SPREADSHEET_ID is not set — see docs/SETUP.md step 5.');
+    throw new Error(
+      "GOOGLE_SHEETS_SPREADSHEET_ID is not set — see docs/SETUP.md step 5.",
+    );
   }
 
   const token = await accessToken();
 
-  const meta = await sheetsRequest(token, spreadsheetId, '') as {
+  const meta = (await sheetsRequest(token, spreadsheetId, "")) as {
     properties?: { title?: string };
     sheets?: Array<{ properties: { title: string; sheetId: number } }>;
   };
   let existing = meta.sheets?.find((s) => s.properties.title === tabName);
 
   if (!existing) {
-    const created = await sheetsRequest(token, spreadsheetId, ':batchUpdate', {
-      method: 'POST',
-      body: JSON.stringify({ requests: [{ addSheet: { properties: { title: tabName } } }] }),
-    }) as { replies?: Array<{ addSheet?: { properties: { title: string; sheetId: number } } }> };
+    const created = (await sheetsRequest(token, spreadsheetId, ":batchUpdate", {
+      method: "POST",
+      body: JSON.stringify({
+        requests: [{ addSheet: { properties: { title: tabName } } }],
+      }),
+    })) as {
+      replies?: Array<{
+        addSheet?: { properties: { title: string; sheetId: number } };
+      }>;
+    };
     const props = created.replies?.[0]?.addSheet?.properties;
     if (props) existing = { properties: props };
   } else {
-    await sheetsRequest(token, spreadsheetId, `/values/${encodeURIComponent(tabName)}:clear`, {
-      method: 'POST',
-    });
+    await sheetsRequest(
+      token,
+      spreadsheetId,
+      `/values/${encodeURIComponent(tabName)}:clear`,
+      {
+        method: "POST",
+      },
+    );
   }
 
   await sheetsRequest(
@@ -270,10 +304,12 @@ export async function pushToGoogleSheet(
     spreadsheetId,
     `/values/${encodeURIComponent(tabName)}!A1?valueInputOption=RAW`,
     {
-      method: 'PUT',
+      method: "PUT",
       // RAW means Sheets stores every cell verbatim, so a value beginning with
       // "=" stays text rather than becoming a formula.
-      body: JSON.stringify({ values: matrix.map((row) => row.map((c) => c ?? '')) }),
+      body: JSON.stringify({
+        values: matrix.map((row) => row.map((c) => c ?? "")),
+      }),
     },
   );
 
@@ -281,43 +317,89 @@ export async function pushToGoogleSheet(
   // changes only structure/formatting; Apps Script never supplies the data.
   if (existing && matrix.length && matrix[0].length) {
     const requests: Array<Record<string, unknown>> = [
-      { repeatCell: {
-        range: { sheetId: existing.properties.sheetId, startRowIndex: 0, endRowIndex: 1,
-          startColumnIndex: 0, endColumnIndex: matrix[0].length },
-        cell: { userEnteredFormat: { backgroundColor: { red: 0.08, green: 0.13, blue: 0.20 },
-          textFormat: { bold: true, foregroundColor: { red: 1, green: 1, blue: 1 } } } },
-        fields: 'userEnteredFormat(backgroundColor,textFormat)',
-      } },
-      { updateSheetProperties: { properties: { sheetId: existing.properties.sheetId,
-        gridProperties: { frozenRowCount: 1 } }, fields: 'gridProperties.frozenRowCount' } },
-      { autoResizeDimensions: { dimensions: { sheetId: existing.properties.sheetId,
-        dimension: 'COLUMNS', startIndex: 0, endIndex: matrix[0].length } } },
+      {
+        repeatCell: {
+          range: {
+            sheetId: existing.properties.sheetId,
+            startRowIndex: 0,
+            endRowIndex: 1,
+            startColumnIndex: 0,
+            endColumnIndex: matrix[0].length,
+          },
+          cell: {
+            userEnteredFormat: {
+              backgroundColor: { red: 0.08, green: 0.13, blue: 0.2 },
+              textFormat: {
+                bold: true,
+                foregroundColor: { red: 1, green: 1, blue: 1 },
+              },
+            },
+          },
+          fields: "userEnteredFormat(backgroundColor,textFormat)",
+        },
+      },
+      {
+        updateSheetProperties: {
+          properties: {
+            sheetId: existing.properties.sheetId,
+            gridProperties: { frozenRowCount: 1 },
+          },
+          fields: "gridProperties.frozenRowCount",
+        },
+      },
+      {
+        autoResizeDimensions: {
+          dimensions: {
+            sheetId: existing.properties.sheetId,
+            dimension: "COLUMNS",
+            startIndex: 0,
+            endIndex: matrix[0].length,
+          },
+        },
+      },
     ];
 
     // Clear any previous highlighting first: the rows are rewritten every
     // sync, so a colour left over from the last snapshot would point at
     // whoever now happens to occupy that row.
-    requests.push({ repeatCell: {
-      range: { sheetId: existing.properties.sheetId, startRowIndex: 1,
-        startColumnIndex: 0, endColumnIndex: matrix[0].length },
-      cell: { userEnteredFormat: { backgroundColor: { red: 1, green: 1, blue: 1 } } },
-      fields: 'userEnteredFormat.backgroundColor',
-    } });
+    requests.push({
+      repeatCell: {
+        range: {
+          sheetId: existing.properties.sheetId,
+          startRowIndex: 1,
+          startColumnIndex: 0,
+          endColumnIndex: matrix[0].length,
+        },
+        cell: {
+          userEnteredFormat: { backgroundColor: { red: 1, green: 1, blue: 1 } },
+        },
+        fields: "userEnteredFormat.backgroundColor",
+      },
+    });
 
     // Contiguous runs of the same tint go out as one request rather than one
     // per row, which keeps a few hundred applicants to a handful of requests.
     for (let i = 0; i < tints.length;) {
       const tint = tints[i];
-      if (!tint) { i += 1; continue; }
+      if (!tint) {
+        i += 1;
+        continue;
+      }
       let end = i;
       while (end + 1 < tints.length && tints[end + 1] === tint) end += 1;
-      requests.push({ repeatCell: {
-        range: { sheetId: existing.properties.sheetId,
-          startRowIndex: i + 1, endRowIndex: end + 2,
-          startColumnIndex: 0, endColumnIndex: matrix[0].length },
-        cell: { userEnteredFormat: { backgroundColor: TINTS[tint] } },
-        fields: 'userEnteredFormat.backgroundColor',
-      } });
+      requests.push({
+        repeatCell: {
+          range: {
+            sheetId: existing.properties.sheetId,
+            startRowIndex: i + 1,
+            endRowIndex: end + 2,
+            startColumnIndex: 0,
+            endColumnIndex: matrix[0].length,
+          },
+          cell: { userEnteredFormat: { backgroundColor: TINTS[tint] } },
+          fields: "userEnteredFormat.backgroundColor",
+        },
+      });
       i = end + 1;
     }
 
@@ -329,8 +411,10 @@ export async function pushToGoogleSheet(
   }
 
   const gid = existing?.properties.sheetId;
-  return `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit` +
-    (gid !== undefined ? `#gid=${gid}` : '');
+  return (
+    `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit` +
+    (gid !== undefined ? `#gid=${gid}` : "")
+  );
 }
 
 /**
@@ -349,20 +433,24 @@ export async function pushToGoogleSheet(
  * has not been created yet simply has no registrations.
  */
 export async function readGoogleSheet(
-  spreadsheetId: string, tabName: string,
+  spreadsheetId: string,
+  tabName: string,
 ): Promise<string[][]> {
   const token = await accessToken();
   const range = `${encodeURIComponent(tabName)}!A1:ZZ`;
-  const payload = await sheetsRequest(
-    token, spreadsheetId,
+  const payload = (await sheetsRequest(
+    token,
+    spreadsheetId,
     `/values/${range}?valueRenderOption=UNFORMATTED_VALUE&dateTimeRenderOption=FORMATTED_STRING`,
   ).catch((error: unknown) => {
     const message = error instanceof Error ? error.message : String(error);
     if (/Unable to parse range|not found/i.test(message)) return { values: [] };
     throw error;
-  }) as { values?: unknown[][] };
+  })) as { values?: unknown[][] };
 
-  return (payload.values ?? []).map((row) => row.map((cell) => String(cell ?? '')));
+  return (payload.values ?? []).map((row) =>
+    row.map((cell) => String(cell ?? "")),
+  );
 }
 
 /**
@@ -392,87 +480,126 @@ export async function readGoogleSheet(
  * is created or removed.
  */
 export async function ensureEventWorksheet(
-  spreadsheetId: string, tabName: string, headers: string[],
-): Promise<{ status: 'created' | 'seeded' | 'verified'; warnings: string[] }> {
-  if (!headers.length) throw new Error('A registration worksheet needs at least one column.');
+  spreadsheetId: string,
+  tabName: string,
+  headers: string[],
+): Promise<{ status: "created" | "seeded" | "verified"; warnings: string[] }> {
+  if (!headers.length)
+    throw new Error("A registration worksheet needs at least one column.");
 
   // The inverse of pushToGoogleSheet's guard. A registration tab must never be
   // a canonical mirror name, because the snapshot sync clears those.
   if (CANONICAL_TABS.has(tabName)) {
     throw new Error(
       `"${tabName}" is a Supabase mirror worksheet and is rebuilt on every records sync. ` +
-      'Choose a different registration worksheet name.',
+        "Choose a different registration worksheet name.",
     );
   }
 
   const token = await accessToken();
   const warnings: string[] = [];
 
-  const meta = await sheetsRequest(token, spreadsheetId, '') as {
+  const meta = (await sheetsRequest(token, spreadsheetId, "")) as {
     sheets?: Array<{ properties: { title: string; sheetId: number } }>;
   };
   let sheet = meta.sheets?.find((s) => s.properties.title === tabName);
-  let status: 'created' | 'seeded' | 'verified';
+  let status: "created" | "seeded" | "verified";
 
   if (!sheet) {
-    const created = await sheetsRequest(token, spreadsheetId, ':batchUpdate', {
-      method: 'POST',
-      body: JSON.stringify({ requests: [{ addSheet: { properties: { title: tabName } } }] }),
-    }) as { replies?: Array<{ addSheet?: { properties: { title: string; sheetId: number } } }> };
+    const created = (await sheetsRequest(token, spreadsheetId, ":batchUpdate", {
+      method: "POST",
+      body: JSON.stringify({
+        requests: [{ addSheet: { properties: { title: tabName } } }],
+      }),
+    })) as {
+      replies?: Array<{
+        addSheet?: { properties: { title: string; sheetId: number } };
+      }>;
+    };
     const props = created.replies?.[0]?.addSheet?.properties;
-    if (!props) throw new Error(`Google did not report creating the worksheet "${tabName}".`);
+    if (!props)
+      throw new Error(
+        `Google did not report creating the worksheet "${tabName}".`,
+      );
     sheet = { properties: props };
-    status = 'created';
+    status = "created";
   } else {
     // Read row 1 only. Nothing below it is read, compared or touched.
-    const existing = await sheetsRequest(
-      token, spreadsheetId,
+    const existing = (await sheetsRequest(
+      token,
+      spreadsheetId,
       `/values/${encodeURIComponent(tabName)}!1:1?valueRenderOption=FORMATTED_VALUE`,
-    ) as { values?: unknown[][] };
-    const row = (existing.values?.[0] ?? []).map((cell) => String(cell ?? '').trim());
+    )) as { values?: unknown[][] };
+    const row = (existing.values?.[0] ?? []).map((cell) =>
+      String(cell ?? "").trim(),
+    );
     // Trailing empty cells are how Sheets represents an unused column.
-    while (row.length && row[row.length - 1] === '') row.pop();
+    while (row.length && row[row.length - 1] === "") row.pop();
 
     if (!row.length) {
-      status = 'seeded';
-    } else if (row.length === headers.length && row.every((cell, i) => cell === headers[i])) {
-      return { status: 'verified', warnings };
+      status = "seeded";
+    } else if (
+      row.length === headers.length &&
+      row.every((cell, i) => cell === headers[i])
+    ) {
+      return { status: "verified", warnings };
     } else {
       throw new Error(
         `The worksheet "${tabName}" already exists with different columns, so it was left ` +
-        `untouched. In the sheet: ${row.join(' | ')}. Expected: ${headers.join(' | ')}. ` +
-        'Resolve the worksheet with an organizer, or choose another worksheet name.',
+          `untouched. In the sheet: ${row.join(" | ")}. Expected: ${headers.join(" | ")}. ` +
+          "Resolve the worksheet with an organizer, or choose another worksheet name.",
       );
     }
   }
 
   // Only ever row 1, and only on a worksheet proven to have none.
   await sheetsRequest(
-    token, spreadsheetId,
+    token,
+    spreadsheetId,
     `/values/${encodeURIComponent(tabName)}!A1?valueInputOption=RAW`,
-    { method: 'PUT', body: JSON.stringify({ values: [headers] }) },
+    { method: "PUT", body: JSON.stringify({ values: [headers] }) },
   );
 
   const sheetId = sheet.properties.sheetId;
   for (const request of [
-    { repeatCell: {
-      range: { sheetId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: headers.length },
-      cell: { userEnteredFormat: { backgroundColor: { red: 0.11, green: 0.23, blue: 0.18 },
-        textFormat: { bold: true, foregroundColor: { red: 1, green: 1, blue: 1 } } } },
-      fields: 'userEnteredFormat(backgroundColor,textFormat)',
-    } },
-    { updateSheetProperties: {
-      properties: { sheetId, gridProperties: { frozenRowCount: 1 } },
-      fields: 'gridProperties.frozenRowCount',
-    } },
+    {
+      repeatCell: {
+        range: {
+          sheetId,
+          startRowIndex: 0,
+          endRowIndex: 1,
+          startColumnIndex: 0,
+          endColumnIndex: headers.length,
+        },
+        cell: {
+          userEnteredFormat: {
+            backgroundColor: { red: 0.11, green: 0.23, blue: 0.18 },
+            textFormat: {
+              bold: true,
+              foregroundColor: { red: 1, green: 1, blue: 1 },
+            },
+          },
+        },
+        fields: "userEnteredFormat(backgroundColor,textFormat)",
+      },
+    },
+    {
+      updateSheetProperties: {
+        properties: { sheetId, gridProperties: { frozenRowCount: 1 } },
+        fields: "gridProperties.frozenRowCount",
+      },
+    },
   ]) {
     try {
-      await sheetsRequest(token, spreadsheetId, ':batchUpdate', {
-        method: 'POST', body: JSON.stringify({ requests: [request] }),
+      await sheetsRequest(token, spreadsheetId, ":batchUpdate", {
+        method: "POST",
+        body: JSON.stringify({ requests: [request] }),
       });
     } catch (error) {
-      warnings.push(`${tabName}: header styling was not applied — ` +
-        `${error instanceof Error ? error.message : String(error)}`);
+      warnings.push(
+        `${tabName}: header styling was not applied — ` +
+          `${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 

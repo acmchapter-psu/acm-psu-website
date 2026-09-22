@@ -21,7 +21,7 @@ gitignored.
 7. Click **Create new project** and wait about two minutes.
 8. In the left sidebar go to **Project Settings → Data API**.
 9. Copy **Project URL**.
-10. Copy the **anon / public** key (the long one labelled `anon`, *not*
+10. Copy the **anon / public** key (the long one labelled `anon`, _not_
     `service_role`).
 11. In **Project Settings → General**, copy the **Reference ID**.
 12. In the repository, copy `.env.local.example` to `.env.local` and fill in:
@@ -98,10 +98,10 @@ In the Supabase dashboard, **Authentication → URL Configuration**:
 In the GitHub repository, **Settings → Secrets and variables → Actions →
 Variables → New repository variable**, add:
 
-| Name                       | Value                       |
-|----------------------------|-----------------------------|
-| `PUBLIC_SUPABASE_URL`      | your Project URL            |
-| `PUBLIC_SUPABASE_ANON_KEY` | your anon key               |
+| Name                       | Value            |
+| -------------------------- | ---------------- |
+| `PUBLIC_SUPABASE_URL`      | your Project URL |
+| `PUBLIC_SUPABASE_ANON_KEY` | your anon key    |
 
 Push to `main` and the site deploys with the portal connected.
 
@@ -115,7 +115,7 @@ works without it. The assistant only suggests; it can never publish.
 1. Go to <https://dash.cloudflare.com> and sign in.
 2. On the right of the overview page, copy your **Account ID**.
 3. In the left sidebar click **Manage Account → Account API Tokens**.
-4. Click **Create Token**, then **Get started** next to *Create Custom Token*.
+4. Click **Create Token**, then **Get started** next to _Create Custom Token_.
 5. Name it `acm-psu-workers-ai`.
 6. Under **Permissions** choose: `Account` → `Workers AI` → `Read`.
 7. Click **Continue to summary**, then **Create Token**.
@@ -162,6 +162,7 @@ Sheet.
     Participation, Contributions and Inquiries. Each tab is created
     automatically the first time you export to it. Do not make a spreadsheet
     per dataset.
+
 11. Click **Share**, paste the `client_email` from step 9, give it **Editor**,
     and untick "Notify people". Click **Share**.
 12. Copy the spreadsheet ID out of its URL — the long string between
@@ -219,7 +220,7 @@ only the ten canonical worksheets and has never written a cell of `jam26` or
 `ctf30`. Those two tabs stay the intake surface and nothing here changes them.
 
 This step gives the signups a second home in Supabase, so they appear in
-**Admin → Records Backup** under *Events / Registrations* and survive anything
+**Admin → Records Backup** under _Events / Registrations_ and survive anything
 that happens to the spreadsheet. Without it, registration still works exactly
 as before — it simply stays Google-only.
 
@@ -245,10 +246,10 @@ as before — it simply stays Google-only.
 3. Give the same secret to the Apps Script. In the Apps Script editor:
    **Project Settings → Script Properties → Add script property**, twice:
 
-   | Property | Value |
-   |---|---|
-   | `PLATFORM_INTAKE_URL` | `https://<project-ref>.supabase.co/functions/v1/event-registration-intake` |
-   | `PLATFORM_INTAKE_TOKEN` | the secret from step 1 |
+   | Property                | Value                                                                      |
+   | ----------------------- | -------------------------------------------------------------------------- |
+   | `PLATFORM_INTAKE_URL`   | `https://<project-ref>.supabase.co/functions/v1/event-registration-intake` |
+   | `PLATFORM_INTAKE_TOKEN` | the secret from step 1                                                     |
 
    The secret is a credential and `apps-script/` is public in this repository,
    so it lives in Script Properties and never in a `.gs` file. With either

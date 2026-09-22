@@ -8,21 +8,11 @@
  * token fragment out of the address bar on the way.
  */
 
-import {
-  authShell,
-  notice,
-  loading,
-} from '../lib/ui.js';
+import { authShell, notice, loading } from "../lib/ui.js";
 
-import {
-  h,
-} from '../lib/dom.js';
+import { h } from "../lib/dom.js";
 
-import {
-  isConfigured,
-  supabase,
-  sitePath,
-} from '../lib/supabase.js';
+import { isConfigured, supabase, sitePath } from "../lib/supabase.js";
 
 import {
   loadViewer,
@@ -30,28 +20,24 @@ import {
   isMember,
   isAdvisoryInstructor,
   isReviewer,
-} from '../lib/session.js';
+} from "../lib/session.js";
 
-import {
-  applySignupMetadata,
-} from '../lib/signup-profile.js';
+import { applySignupMetadata } from "../lib/signup-profile.js";
 
-function errorMessage(
-  error: unknown,
-): string {
+function errorMessage(error: unknown): string {
   if (error instanceof Error) {
     return error.message;
   }
 
   if (
-    typeof error === 'object' &&
+    typeof error === "object" &&
     error !== null &&
-    'message' in error &&
+    "message" in error &&
     typeof (
       error as {
         message?: unknown;
       }
-    ).message === 'string'
+    ).message === "string"
   ) {
     return (
       error as {
@@ -60,73 +46,56 @@ function errorMessage(
     ).message;
   }
 
-  return 'An unknown error occurred.';
+  return "An unknown error occurred.";
 }
 
-function showFailure(
-  title: string,
-  message: string,
-): void {
+function showFailure(title: string, message: string): void {
   authShell(
     title,
     message,
 
     h(
-      'div',
+      "div",
       {
-        class: 'button-row',
+        class: "button-row",
       },
 
       h(
-        'a',
+        "a",
         {
-          class: 'btn-ghost',
-          href: '/portal/login.html',
+          class: "btn-ghost",
+          href: "/portal/login.html",
         },
-        'Go to sign in',
+        "Go to sign in",
       ),
 
       h(
-        'button',
+        "button",
         {
-          type: 'button',
-          class: 'btn-ghost',
+          type: "button",
+          class: "btn-ghost",
 
-          onclick:
-            () =>
-              window.location.reload(),
+          onclick: () => window.location.reload(),
         },
-        'Try again',
+        "Try again",
       ),
     ),
   );
 }
 
 async function start(): Promise<void> {
-  if (
-    !isConfigured ||
-    !supabase
-  ) {
+  if (!isConfigured || !supabase) {
     authShell(
-      'Confirming',
-      '',
+      "Confirming",
+      "",
 
-      notice(
-        'warn',
-        'The portal is not connected to a database yet.',
-      ),
+      notice("warn", "The portal is not connected to a database yet."),
     );
 
     return;
   }
 
-  authShell(
-    'Confirming your account',
-    '',
-    loading(
-      'VERIFYING',
-    ),
-  );
+  authShell("Confirming your account", "", loading("VERIFYING"));
 
   /*
    * Recovery links must go to the password reset page rather than being routed
@@ -135,56 +104,41 @@ async function start(): Promise<void> {
    * Supabase may represent auth data in either the hash or query string
    * depending on the flow, so check both.
    */
-  const params =
-    new URLSearchParams(
-      window.location.search,
-    );
+  const params = new URLSearchParams(window.location.search);
 
   const isRecovery =
-    window.location.hash.includes(
-      'type=recovery',
-    ) ||
-    params.get(
-      'type',
-    ) === 'recovery';
+    window.location.hash.includes("type=recovery") ||
+    params.get("type") === "recovery";
 
   if (isRecovery) {
     window.location.replace(
-      sitePath('/portal/reset.html') +
-      window.location.search +
-      window.location.hash,
+      sitePath("/portal/reset.html") +
+        window.location.search +
+        window.location.hash,
     );
 
     return;
   }
 
   try {
-    const {
-      data,
-      error,
-    } =
-      await supabase.auth.getSession();
+    const { data, error } = await supabase.auth.getSession();
 
     if (error) {
-      throw new Error(
-        error.message,
-      );
+      throw new Error(error.message);
     }
 
-    if (
-      !data.session
-    ) {
+    if (!data.session) {
       authShell(
-        'Link could not be used',
-        'It may have already been used, or it may have expired.',
+        "Link could not be used",
+        "It may have already been used, or it may have expired.",
 
         h(
-          'a',
+          "a",
           {
-            class: 'btn-ghost',
-            href: '/portal/login.html',
+            class: "btn-ghost",
+            href: "/portal/login.html",
           },
-          'Go to sign in',
+          "Go to sign in",
         ),
       );
 
@@ -195,11 +149,7 @@ async function start(): Promise<void> {
      * Remove confirmation/auth parameters before doing any further requests.
      * This prevents tokens from remaining visible in browser history.
      */
-    history.replaceState(
-      null,
-      '',
-      window.location.pathname,
-    );
+    history.replaceState(null, "", window.location.pathname);
 
     /*
      * The sign-up form's optional answers were parked in the auth user's
@@ -211,18 +161,15 @@ async function start(): Promise<void> {
     let viewer;
 
     try {
-      viewer =
-        await loadViewer(
-          true,
-        );
+      viewer = await loadViewer(true);
     } catch (error) {
       console.error(
-        'Account confirmed but viewer profile could not load:',
+        "Account confirmed but viewer profile could not load:",
         error,
       );
 
       showFailure(
-        'Account confirmed',
+        "Account confirmed",
         `Your account was verified, but the portal could not load your profile: ${errorMessage(error)}`,
       );
 
@@ -235,25 +182,20 @@ async function start(): Promise<void> {
      * If an administrator is also represented as an active member, the admin
      * assignment is the more privileged and useful destination after sign-in.
      */
-    if (
-      isStaff(
-        viewer,
-      )
-    ) {
+    if (isStaff(viewer)) {
       window.location.replace(
-        sitePath(isAdvisoryInstructor(viewer) && !isReviewer(viewer)
-          ? '/admin/advisor.html' : '/admin/index.html'),
+        sitePath(
+          isAdvisoryInstructor(viewer) && !isReviewer(viewer)
+            ? "/admin/advisor.html"
+            : "/admin/index.html",
+        ),
       );
 
       return;
     }
 
-    if (
-      isMember(
-        viewer,
-      )
-    ) {
-      window.location.replace(sitePath('/portal/index.html'));
+    if (isMember(viewer)) {
+      window.location.replace(sitePath("/portal/index.html"));
 
       return;
     }
@@ -261,8 +203,8 @@ async function start(): Promise<void> {
     // Membership applications collect student-specific information. Faculty,
     // staff, alumni and other university affiliates keep a valid account and
     // can be assigned the appropriate club access by an administrator.
-    if (viewer?.user.university_role !== 'student') {
-      window.location.replace(sitePath('/portal/status.html'));
+    if (viewer?.user.university_role !== "student") {
+      window.location.replace(sitePath("/portal/status.html"));
       return;
     }
 
@@ -272,45 +214,25 @@ async function start(): Promise<void> {
      * Only inspect this user's application. Do not rely on a generic
      * applications SELECT that could accidentally depend on broader RLS access.
      */
-    const {
-      data: application,
-      error: applicationError,
-    } =
-      await supabase
-        .from(
-          'applications',
-        )
-        .select(
-          'id',
-        )
-        .eq(
-          'user_id',
-          data.session.user.id,
-        )
-        .limit(
-          1,
-        )
-        .maybeSingle();
+    const { data: application, error: applicationError } = await supabase
+      .from("applications")
+      .select("id")
+      .eq("user_id", data.session.user.id)
+      .limit(1)
+      .maybeSingle();
 
-    if (
-      applicationError
-    ) {
-      throw new Error(
-        applicationError.message,
-      );
+    if (applicationError) {
+      throw new Error(applicationError.message);
     }
 
-    window.location.replace(sitePath(application
-      ? '/portal/status.html'
-      : '/portal/apply.html'));
-  } catch (error) {
-    console.error(
-      'Authentication callback failed:',
-      error,
+    window.location.replace(
+      sitePath(application ? "/portal/status.html" : "/portal/apply.html"),
     );
+  } catch (error) {
+    console.error("Authentication callback failed:", error);
 
     showFailure(
-      'Could not finish signing you in',
+      "Could not finish signing you in",
       `Your authentication link was processed, but the portal could not finish loading your account: ${errorMessage(error)}`,
     );
   }

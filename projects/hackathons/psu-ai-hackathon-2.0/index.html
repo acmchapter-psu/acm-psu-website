@@ -1,381 +1,577 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <base href="/">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <base href="/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PSU AI Hackathon 2.0 — ACM PSU</title>
-    <meta name="description"
-        content="The complete PSU AI Hackathon 2.0 event guide: four AI themes, the four-stage competition format, team rules, the judging rubric and more than SAR 9,000 in prizes. Term 252, 12 April – 2 May 2026.">
-    <link rel="canonical" href="https://acmchapter-psu.github.io/acm-psu-website/projects/hackathons/psu-ai-hackathon-2.0/">
-    <link rel="icon" href="/assets/img/favicon.ico" sizes="any">
-    <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
-    <link rel="mask-icon" href="/assets/img/safari-pinned-tab.svg?v=20260916-1" color="#5bbad5">
-    <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png?v=20260916">
-    <link rel="manifest" href="/site.webmanifest">
-    <meta name="theme-color" content="#050507">
-    <meta property="og:type" content="website">
-    <meta property="og:site_name" content="ACM PSU">
-    <meta property="og:title" content="PSU AI Hackathon 2.0 — ACM PSU">
-    <meta property="og:description"
-        content="Students, Alumni and COOP teams under one call. Themes, format, team rules, judging rubric and prizes for the term 252 edition.">
-    <meta property="og:url" content="https://acmchapter-psu.github.io/acm-psu-website/projects/hackathons/psu-ai-hackathon-2.0/">
-    <meta property="og:image" content="https://acmchapter-psu.github.io/acm-psu-website/assets/img/acm-banner.png">
-    <meta name="twitter:card" content="summary_large_image">
-    <link rel="stylesheet" href="assets/css/main.css?v=20260908-3">
+    <meta name="acm-project" content="psu-ai-hackathon-2-0" data-title-suffix=" — ACM PSU" data-title-suffix-ar=" — ACM جامعة الأمير سلطان" />
+    <meta
+      name="description"
+      content="The complete PSU AI Hackathon 2.0 event guide: four AI themes, the four-stage competition format, team rules, the judging rubric and more than SAR 9,000 in prizes. Term 252, 12 April – 2 May 2026."
+    />
+    <link
+      rel="canonical"
+      href="https://acmchapter-psu.github.io/acm-psu-website/projects/hackathons/psu-ai-hackathon-2.0/"
+    />
+    <link rel="icon" href="/assets/img/favicon.ico" sizes="any" />
+    <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml" />
+    <link
+      rel="mask-icon"
+      href="/assets/img/safari-pinned-tab.svg?v=20260916-1"
+      color="#5bbad5"
+    />
+    <link
+      rel="apple-touch-icon"
+      href="/assets/img/apple-touch-icon.png?v=20260916"
+    />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#050507" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ACM PSU" />
+    <meta property="og:title" content="PSU AI Hackathon 2.0 — ACM PSU" />
+    <meta
+      property="og:description"
+      content="Students, Alumni and COOP teams under one call. Themes, format, team rules, judging rubric and prizes for the term 252 edition."
+    />
+    <meta
+      property="og:url"
+      content="https://acmchapter-psu.github.io/acm-psu-website/projects/hackathons/psu-ai-hackathon-2.0/"
+    />
+    <meta
+      property="og:image"
+      content="https://acmchapter-psu.github.io/acm-psu-website/assets/img/acm-banner.png"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script src="assets/js/theme.js?v=20260922-1"></script>
+    <link rel="stylesheet" href="assets/css/main.css?v=20260922-4" />
     <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@graph": [
-        {
-          "@type": "BreadcrumbList",
-          "itemListElement": [
-            { "@type": "ListItem", "position": 1, "name": "ACM PSU", "item": "https://acmchapter-psu.github.io/acm-psu-website/" },
-            { "@type": "ListItem", "position": 2, "name": "Projects", "item": "https://acmchapter-psu.github.io/acm-psu-website/projects.html" },
-            { "@type": "ListItem", "position": 3, "name": "PSU AI Hackathon 2.0", "item": "https://acmchapter-psu.github.io/acm-psu-website/projects/hackathons/psu-ai-hackathon-2.0/" }
-          ]
-        },
-        {
-          "@type": "Event",
-          "name": "PSU AI Hackathon 2.0: Students & Alumni United",
-          "description": "An AI hackathon uniting current Prince Sultan University students with Alumni and COOP students. Teams of up to five submit a proposal against one of four themes — AI in education, AI in healthcare, AI for security, AI for sustainability — then advance through screening, a poster round and a jury pitch.",
-          "startDate": "2026-04-12",
-          "endDate": "2026-05-02",
-          "eventStatus": "https://schema.org/EventScheduled",
-          "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
-          "url": "https://acmchapter-psu.github.io/acm-psu-website/projects/hackathons/psu-ai-hackathon-2.0/",
-          "image": "https://acmchapter-psu.github.io/acm-psu-website/assets/img/acm-banner.png",
-          "isAccessibleForFree": true,
-          "location": {
-            "@type": "Place",
-            "name": "Building 105, Prince Sultan University",
-            "address": {
-              "@type": "PostalAddress",
-              "streetAddress": "Building 105, Prince Sultan University",
-              "addressLocality": "Riyadh",
-              "addressCountry": "SA"
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "ACM PSU",
+                "item": "https://acmchapter-psu.github.io/acm-psu-website/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Projects",
+                "item": "https://acmchapter-psu.github.io/acm-psu-website/projects.html"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "PSU AI Hackathon 2.0",
+                "item": "https://acmchapter-psu.github.io/acm-psu-website/projects/hackathons/psu-ai-hackathon-2.0/"
+              }
+            ]
+          },
+          {
+            "@type": "Event",
+            "name": "PSU AI Hackathon 2.0: Students & Alumni United",
+            "description": "An AI hackathon uniting current Prince Sultan University students with Alumni and COOP students. Teams of up to five submit a proposal against one of four themes — AI in education, AI in healthcare, AI for security, AI for sustainability — then advance through screening, a poster round and a jury pitch.",
+            "startDate": "2026-04-12",
+            "endDate": "2026-05-02",
+            "eventStatus": "https://schema.org/EventScheduled",
+            "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+            "url": "https://acmchapter-psu.github.io/acm-psu-website/projects/hackathons/psu-ai-hackathon-2.0/",
+            "image": "https://acmchapter-psu.github.io/acm-psu-website/assets/img/acm-banner.png",
+            "isAccessibleForFree": true,
+            "location": {
+              "@type": "Place",
+              "name": "Building 105, Prince Sultan University",
+              "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "Building 105, Prince Sultan University",
+                "addressLocality": "Riyadh",
+                "addressCountry": "SA"
+              }
+            },
+            "organizer": {
+              "@type": "Organization",
+              "name": "ACM Student Chapter — Prince Sultan University",
+              "url": "https://acmchapter-psu.github.io/acm-psu-website/"
+            },
+            "superEvent": {
+              "@type": "Organization",
+              "name": "College of Computer and Information Sciences, Prince Sultan University"
             }
-          },
-          "organizer": {
-            "@type": "Organization",
-            "name": "ACM Student Chapter — Prince Sultan University",
-            "url": "https://acmchapter-psu.github.io/acm-psu-website/"
-          },
-          "superEvent": {
-            "@type": "Organization",
-            "name": "College of Computer and Information Sciences, Prince Sultan University"
           }
-        }
-      ]
-    }
+        ]
+      }
     </script>
-</head>
+  </head>
 
-<body>
+  <body>
     <a class="skip-link" href="#main">Skip to content</a>
     <div class="ambient-glow ambient-glow--corner"></div>
     <nav>
-        <div class="container nav-inner">
-            <a class="nav-logo" href="index.html" aria-label="ACM PSU — home">
-                <img src="assets/img/acm.png" alt=""><span>ACM</span><span class="divider">/</span><span>PSU</span>
-            </a>
-            <button class="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false"
-                aria-controls="nav-links">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    aria-hidden="true">
-                    <path d="M4 7h16M4 12h16M4 17h16" />
-                </svg>
-            </button>
-            <div class="nav-links" id="nav-links">
-                <a href="index.html#about">About</a><a href="positions.html">Positions</a><a
-                    href="projects.html">Projects</a><a href="projects.html#workshops">Archive</a><a
-                    href="team.html">Team</a><a href="join.html">Join</a>
-            </div>
-            <div class="nav-meta mono-meta">SYS.ARCHIVE_<span data-current-year>2026</span> // ONLINE</div>
+      <div class="container nav-inner">
+        <a class="nav-logo" href="index.html" aria-label="ACM PSU — home">
+          <img src="assets/img/acm.png" alt="" /><span>ACM</span
+          ><span class="divider">/</span><span>PSU</span>
+        </a>
+        <button
+          class="nav-toggle"
+          type="button"
+          aria-label="Toggle navigation"
+          aria-expanded="false"
+          aria-controls="nav-links"
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+          >
+            <path d="M4 7h16M4 12h16M4 17h16" />
+          </svg>
+        </button>
+        <div class="nav-links" id="nav-links">
+          <a href="index.html#about">About</a
+          ><a href="positions.html">Positions</a
+          ><a href="projects.html">Projects</a
+          ><a href="projects.html#workshops">Archive</a
+          ><a href="team.html">Team</a><a href="join.html">Join</a>
         </div>
+        <div class="nav-meta mono-meta">
+          SYS.ARCHIVE_<span data-current-year>2026</span> // ONLINE
+        </div>
+      </div>
     </nav>
 
     <header class="page-header container">
-        <div class="breadcrumb mono-meta"><span>PROJECTS</span><span class="dim-text">/</span><span>HACKATHON</span><span
-                class="dim-text">/</span><span class="accent-text">AI 2.0</span></div>
-        <h1 class="page-title">PSU AI <br>Hackathon 2.0.</h1>
-        <p class="hero-desc" style="margin-top: 2rem;">Students &amp; Alumni United. Run in term 252 under the patronage
-            of the Dean of CCIS, Dr. Mohammed Ali Alshara, this edition opened the ACM Student Chapter's AI hackathon to
-            Alumni and COOP students alongside current students. Teams built against one of four themes &mdash; AI in
-            education, healthcare, security and sustainability &mdash; and advanced through proposal screening, a poster
-            round and a jury pitch.</p>
-        <div class="hero-ctas" style="margin-top: 2.5rem;">
-            <a href="projects/hackathons/psu-ai-hackathon-2.0/event-site.html" class="btn btn-primary">Open Event
-                Site</a>
-            <a href="https://chat.whatsapp.com/FcV1mNj6ntzBKr3vP3gBAx" class="btn btn-secondary" rel="noopener">Contact
-                on WhatsApp</a>
-        </div>
+      <div class="breadcrumb mono-meta">
+        <span>PROJECTS</span><span class="dim-text">/</span
+        ><span>HACKATHON</span><span class="dim-text">/</span
+        ><span class="accent-text">AI 2.0</span>
+      </div>
+      <h1 class="page-title" data-project-title="psu-ai-hackathon-2-0" data-project-suffix=".">PSU AI Hackathon 2.0.</h1>
+      <p class="hero-desc" style="margin-top: 2rem">
+        Students &amp; Alumni United. Run in term 252 under the patronage of the
+        Dean of CCIS, Dr. Mohammed Ali Alshara, this edition opened the ACM
+        Student Chapter's AI hackathon to Alumni and COOP students alongside
+        current students. Teams built against one of four themes &mdash; AI in
+        education, healthcare, security and sustainability &mdash; and advanced
+        through proposal screening, a poster round and a jury pitch.
+      </p>
+      <div class="hero-ctas" style="margin-top: 2.5rem">
+        <a
+          href="projects/hackathons/psu-ai-hackathon-2.0/event-site.html"
+          class="btn btn-primary"
+          >Open Event Site</a
+        >
+        <a
+          href="https://chat.whatsapp.com/FcV1mNj6ntzBKr3vP3gBAx"
+          class="btn btn-secondary"
+          rel="noopener"
+          >Contact on WhatsApp</a
+        >
+      </div>
     </header>
 
     <main id="main" class="container">
-        <section class="reveal" aria-labelledby="parameters-heading">
-            <div class="section-header">
-                <h2 id="parameters-heading">Event Parameters</h2><span class="mono-meta">TERM 252 // RIYADH</span>
-            </div>
-            <div class="stat-strip">
-                <div class="stat-cell"><span class="stat-value">12 APR</span><span class="stat-label">Call opens</span>
-                </div>
-                <div class="stat-cell"><span class="stat-value">25 APR</span><span class="stat-label">Submission
-                        deadline</span></div>
-                <div class="stat-cell stat-cell--accent"><span class="stat-value">02 MAY</span><span
-                        class="stat-label">Competition &amp; pitch</span></div>
-                <div class="stat-cell"><span class="stat-value">05</span><span class="stat-label">Members per team
-                        (max)</span></div>
-                <div class="stat-cell"><span class="stat-value">B105</span><span class="stat-label">Building, PSU
-                        Riyadh</span></div>
-            </div>
-        </section>
+      <section class="reveal" aria-labelledby="parameters-heading">
+        <div class="section-header">
+          <h2 id="parameters-heading">Event Parameters</h2>
+          <span class="mono-meta">TERM 252 // RIYADH</span>
+        </div>
+        <div class="stat-strip">
+          <div class="stat-cell">
+            <span class="stat-value">12 APR</span
+            ><span class="stat-label">Call opens</span>
+          </div>
+          <div class="stat-cell">
+            <span class="stat-value">25 APR</span
+            ><span class="stat-label">Submission deadline</span>
+          </div>
+          <div class="stat-cell stat-cell--accent">
+            <span class="stat-value">02 MAY</span
+            ><span class="stat-label">Competition &amp; pitch</span>
+          </div>
+          <div class="stat-cell">
+            <span class="stat-value">05</span
+            ><span class="stat-label">Members per team (max)</span>
+          </div>
+          <div class="stat-cell">
+            <span class="stat-value">B105</span
+            ><span class="stat-label">Building, PSU Riyadh</span>
+          </div>
+        </div>
+      </section>
 
-        <section class="reveal" aria-labelledby="themes-heading">
-            <div class="section-header">
-                <h2 id="themes-heading">The Four Themes</h2><span class="mono-meta">SDGs // VISION 2030</span>
-            </div>
-            <div class="note-grid">
-                <div class="note-card">
-                    <h3>AI in Education</h3>
-                    <p>Transform learning experiences, personalise education, widen accessibility and give students and
-                        educators intelligent tools to work with.</p>
-                    <ul>
-                        <li><span>Focus</span><span>EdTech, learning, accessibility</span></li>
-                    </ul>
-                </div>
-                <div class="note-card">
-                    <h3>AI in Healthcare</h3>
-                    <p>Improve patient care and diagnostics, accelerate discovery, and make healthcare more efficient,
-                        accurate and reachable.</p>
-                    <ul>
-                        <li><span>Focus</span><span>MedTech, diagnostics, wellness</span></li>
-                    </ul>
-                </div>
-                <div class="note-card">
-                    <h3>AI for Security</h3>
-                    <p>Strengthen cybersecurity, detect threats in real time, prevent fraud, and protect critical
-                        infrastructure and digital identities.</p>
-                    <ul>
-                        <li><span>Focus</span><span>CyberSec, fraud detection, defence</span></li>
-                    </ul>
-                </div>
-                <div class="note-card">
-                    <h3>AI for Sustainability</h3>
-                    <p>Apply AI to environmental stewardship, efficient resource use, smarter cities and long-term
-                        resilience.</p>
-                    <ul>
-                        <li><span>Focus</span><span>ESG, climate, smart cities</span></li>
-                    </ul>
-                </div>
-            </div>
-            <p class="mono-meta" style="margin-top: 2rem;">TEAMS MAY PICK ONE OR MORE THEMES. A WORKING FINAL YEAR
-                PROJECT MAY BE SUBMITTED IF IT FITS.</p>
-        </section>
+      <section class="reveal" aria-labelledby="themes-heading">
+        <div class="section-header">
+          <h2 id="themes-heading">The Four Themes</h2>
+          <span class="mono-meta">SDGs // VISION 2030</span>
+        </div>
+        <div class="note-grid">
+          <div class="note-card">
+            <h3>AI in Education</h3>
+            <p>
+              Transform learning experiences, personalise education, widen
+              accessibility and give students and educators intelligent tools to
+              work with.
+            </p>
+            <ul>
+              <li>
+                <span>Focus</span><span>EdTech, learning, accessibility</span>
+              </li>
+            </ul>
+          </div>
+          <div class="note-card">
+            <h3>AI in Healthcare</h3>
+            <p>
+              Improve patient care and diagnostics, accelerate discovery, and
+              make healthcare more efficient, accurate and reachable.
+            </p>
+            <ul>
+              <li>
+                <span>Focus</span><span>MedTech, diagnostics, wellness</span>
+              </li>
+            </ul>
+          </div>
+          <div class="note-card">
+            <h3>AI for Security</h3>
+            <p>
+              Strengthen cybersecurity, detect threats in real time, prevent
+              fraud, and protect critical infrastructure and digital identities.
+            </p>
+            <ul>
+              <li>
+                <span>Focus</span
+                ><span>CyberSec, fraud detection, defence</span>
+              </li>
+            </ul>
+          </div>
+          <div class="note-card">
+            <h3>AI for Sustainability</h3>
+            <p>
+              Apply AI to environmental stewardship, efficient resource use,
+              smarter cities and long-term resilience.
+            </p>
+            <ul>
+              <li><span>Focus</span><span>ESG, climate, smart cities</span></li>
+            </ul>
+          </div>
+        </div>
+        <p class="mono-meta" style="margin-top: 2rem">
+          TEAMS MAY PICK ONE OR MORE THEMES. A WORKING FINAL YEAR PROJECT MAY BE
+          SUBMITTED IF IT FITS.
+        </p>
+      </section>
 
-        <section class="reveal" aria-labelledby="format-heading">
-            <div class="section-header">
-                <h2 id="format-heading">Competition Format</h2><span class="mono-meta">SCREEN → POSTER → PITCH →
-                    AWARD</span>
+      <section class="reveal" aria-labelledby="format-heading">
+        <div class="section-header">
+          <h2 id="format-heading">Competition Format</h2>
+          <span class="mono-meta">SCREEN → POSTER → PITCH → AWARD</span>
+        </div>
+        <div class="timeline">
+          <div class="timeline-row">
+            <div class="year">01</div>
+            <div class="timeline-details">
+              <div class="timeline-stat">
+                <span class="meta-label">INITIAL SCREENING</span
+                ><span class="mono-meta meta-value"
+                  >PROPOSALS REVIEWED BY ACM PROFESSIONAL CHAPTER CORE
+                  MEMBERS</span
+                >
+              </div>
             </div>
-            <div class="timeline">
-                <div class="timeline-row">
-                    <div class="year">01</div>
-                    <div class="timeline-details">
-                        <div class="timeline-stat"><span class="meta-label">INITIAL SCREENING</span><span
-                                class="mono-meta meta-value">PROPOSALS REVIEWED BY ACM PROFESSIONAL CHAPTER CORE
-                                MEMBERS</span></div>
-                    </div>
-                    <div class="timeline-status"><span class="tag">SUBMIT</span></div>
-                </div>
-                <div class="timeline-row">
-                    <div class="year">02</div>
-                    <div class="timeline-details">
-                        <div class="timeline-stat"><span class="meta-label">POSTER COMPETITION</span><span
-                                class="mono-meta meta-value">SELECTED TEAMS PRESENT ON FREESTANDING POSTERS; COMMITTEE
-                                MEMBERS VISIT EACH ONE</span></div>
-                    </div>
-                    <div class="timeline-status"><span class="tag">PRESENT</span></div>
-                </div>
-                <div class="timeline-row">
-                    <div class="year">03</div>
-                    <div class="timeline-details">
-                        <div class="timeline-stat"><span class="meta-label">SHORTLISTED PRESENTATIONS</span><span
-                                class="mono-meta meta-value">TOP TEAMS PITCH TO THE JURY IN UP TO FIVE MINUTES</span>
-                        </div>
-                    </div>
-                    <div class="timeline-status"><span class="tag">PITCH</span></div>
-                </div>
-                <div class="timeline-row">
-                    <div class="year">04</div>
-                    <div class="timeline-details">
-                        <div class="timeline-stat"><span class="meta-label">WINNERS ANNOUNCEMENT</span><span
-                                class="mono-meta meta-value">AWARD CEREMONY WITH THE DEAN'S PARTICIPATION</span></div>
-                    </div>
-                    <div class="timeline-status"><span class="tag active">AWARD</span></div>
-                </div>
+            <div class="timeline-status"><span class="tag">SUBMIT</span></div>
+          </div>
+          <div class="timeline-row">
+            <div class="year">02</div>
+            <div class="timeline-details">
+              <div class="timeline-stat">
+                <span class="meta-label">POSTER COMPETITION</span
+                ><span class="mono-meta meta-value"
+                  >SELECTED TEAMS PRESENT ON FREESTANDING POSTERS; COMMITTEE
+                  MEMBERS VISIT EACH ONE</span
+                >
+              </div>
             </div>
-            <p class="mono-meta" style="margin-top: 2rem;">SHORTLISTING HAPPENS AT THE END OF EVERY STAGE; ONLY FINAL
-                SHORTLISTED TEAMS COMPETE ON SITE.</p>
-        </section>
+            <div class="timeline-status"><span class="tag">PRESENT</span></div>
+          </div>
+          <div class="timeline-row">
+            <div class="year">03</div>
+            <div class="timeline-details">
+              <div class="timeline-stat">
+                <span class="meta-label">SHORTLISTED PRESENTATIONS</span
+                ><span class="mono-meta meta-value"
+                  >TOP TEAMS PITCH TO THE JURY IN UP TO FIVE MINUTES</span
+                >
+              </div>
+            </div>
+            <div class="timeline-status"><span class="tag">PITCH</span></div>
+          </div>
+          <div class="timeline-row">
+            <div class="year">04</div>
+            <div class="timeline-details">
+              <div class="timeline-stat">
+                <span class="meta-label">WINNERS ANNOUNCEMENT</span
+                ><span class="mono-meta meta-value"
+                  >AWARD CEREMONY WITH THE DEAN'S PARTICIPATION</span
+                >
+              </div>
+            </div>
+            <div class="timeline-status">
+              <span class="tag active">AWARD</span>
+            </div>
+          </div>
+        </div>
+        <p class="mono-meta" style="margin-top: 2rem">
+          SHORTLISTING HAPPENS AT THE END OF EVERY STAGE; ONLY FINAL SHORTLISTED
+          TEAMS COMPETE ON SITE.
+        </p>
+      </section>
 
-        <section class="reveal" aria-labelledby="teams-heading">
-            <div class="section-header">
-                <h2 id="teams-heading">Who Can Join</h2><span class="mono-meta">STUDENTS × ALUMNI × COOP</span>
-            </div>
-            <div class="note-grid">
-                <div class="note-card">
-                    <h3>Team composition</h3>
-                    <p>Every team is led by a current PSU student and must include at least one Alumni or COOP member.
-                        Alumni and COOP participants are encouraged to join student-led teams rather than compete
-                        separately.</p>
-                    <ul>
-                        <li><span>Team size</span><span>Maximum 5 members</span></li>
-                        <li><span>Team leader</span><span>Current PSU student</span></li>
-                        <li><span>Required</span><span>At least one Alumni or COOP member</span></li>
-                    </ul>
-                </div>
-                <div class="note-card">
-                    <h3>Eligible submissions</h3>
-                    <p>Projects must fit one or more of the four hackathon themes. A working final year project is
-                        eligible if it aligns with a theme and meets the competition requirements.</p>
-                </div>
-                <div class="note-card">
-                    <h3>Built on 2025</h3>
-                    <p>ACM PSU AI Hackathon 2025 drew 19 teams and produced award-winning work in healthcare,
-                        education, assistive technology and smart cities. Edition 2.0 widens that base by bringing
-                        Alumni and COOP students into the same call.</p>
-                </div>
-                <div class="note-card">
-                    <h3>On the day</h3>
-                    <p>The final competition and pitch ran on 2 May 2026 at 11:00 in Building 105, Prince Sultan
-                        University. Light snacks, tea and water were provided on site.</p>
-                </div>
-            </div>
-        </section>
+      <section class="reveal" aria-labelledby="teams-heading">
+        <div class="section-header">
+          <h2 id="teams-heading">Who Can Join</h2>
+          <span class="mono-meta">STUDENTS × ALUMNI × COOP</span>
+        </div>
+        <div class="note-grid">
+          <div class="note-card">
+            <h3>Team composition</h3>
+            <p>
+              Every team is led by a current PSU student and must include at
+              least one Alumni or COOP member. Alumni and COOP participants are
+              encouraged to join student-led teams rather than compete
+              separately.
+            </p>
+            <ul>
+              <li><span>Team size</span><span>Maximum 5 members</span></li>
+              <li><span>Team leader</span><span>Current PSU student</span></li>
+              <li>
+                <span>Required</span
+                ><span>At least one Alumni or COOP member</span>
+              </li>
+            </ul>
+          </div>
+          <div class="note-card">
+            <h3>Eligible submissions</h3>
+            <p>
+              Projects must fit one or more of the four hackathon themes. A
+              working final year project is eligible if it aligns with a theme
+              and meets the competition requirements.
+            </p>
+          </div>
+          <div class="note-card">
+            <h3>Built on 2025</h3>
+            <p>
+              ACM PSU AI Hackathon 2025 drew 19 teams and produced award-winning
+              work in healthcare, education, assistive technology and smart
+              cities. Edition 2.0 widens that base by bringing Alumni and COOP
+              students into the same call.
+            </p>
+          </div>
+          <div class="note-card">
+            <h3>On the day</h3>
+            <p>
+              The final competition and pitch ran on 2 May 2026 at 11:00 in
+              Building 105, Prince Sultan University. Light snacks, tea and
+              water were provided on site.
+            </p>
+          </div>
+        </div>
+      </section>
 
-        <section class="reveal" aria-labelledby="judging-heading">
-            <div class="section-header">
-                <h2 id="judging-heading">Judging Rubric</h2><span class="mono-meta">07 CRITERIA // TOTAL 100%</span>
-            </div>
-            <div class="table-scroll">
-                <table class="results-table">
-                    <caption>Scoring weights, adapted from ACM PSU AI Hackathon 2025</caption>
-                    <thead>
-                        <tr>
-                            <th scope="col">Criterion</th>
-                            <th scope="col" class="col-score">Weight</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="is-podium">
-                            <td>Technical execution &mdash; AI model effectiveness and implementation</td>
-                            <td class="col-score">30%</td>
-                        </tr>
-                        <tr>
-                            <td>Innovation and creativity &mdash; uniqueness of the solution</td>
-                            <td class="col-score">20%</td>
-                        </tr>
-                        <tr>
-                            <td>Feasibility and scalability &mdash; real-world applicability</td>
-                            <td class="col-score">15%</td>
-                        </tr>
-                        <tr>
-                            <td>Business viability &mdash; market potential</td>
-                            <td class="col-score">10%</td>
-                        </tr>
-                        <tr>
-                            <td>Presentation and storytelling &mdash; clarity and engagement</td>
-                            <td class="col-score">10%</td>
-                        </tr>
-                        <tr>
-                            <td>Ethical integrity &mdash; adherence to AI ethics</td>
-                            <td class="col-score">10%</td>
-                        </tr>
-                        <tr>
-                            <td>Interdisciplinary collaboration &mdash; team diversity</td>
-                            <td class="col-score">5%</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
+      <section class="reveal" aria-labelledby="judging-heading">
+        <div class="section-header">
+          <h2 id="judging-heading">Judging Rubric</h2>
+          <span class="mono-meta">07 CRITERIA // TOTAL 100%</span>
+        </div>
+        <div class="table-scroll">
+          <table class="results-table">
+            <caption>
+              Scoring weights, adapted from ACM PSU AI Hackathon 2025
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Criterion</th>
+                <th scope="col" class="col-score">Weight</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="is-podium">
+                <td>
+                  Technical execution &mdash; AI model effectiveness and
+                  implementation
+                </td>
+                <td class="col-score">30%</td>
+              </tr>
+              <tr>
+                <td>
+                  Innovation and creativity &mdash; uniqueness of the solution
+                </td>
+                <td class="col-score">20%</td>
+              </tr>
+              <tr>
+                <td>
+                  Feasibility and scalability &mdash; real-world applicability
+                </td>
+                <td class="col-score">15%</td>
+              </tr>
+              <tr>
+                <td>Business viability &mdash; market potential</td>
+                <td class="col-score">10%</td>
+              </tr>
+              <tr>
+                <td>
+                  Presentation and storytelling &mdash; clarity and engagement
+                </td>
+                <td class="col-score">10%</td>
+              </tr>
+              <tr>
+                <td>Ethical integrity &mdash; adherence to AI ethics</td>
+                <td class="col-score">10%</td>
+              </tr>
+              <tr>
+                <td>Interdisciplinary collaboration &mdash; team diversity</td>
+                <td class="col-score">5%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-        <section class="reveal" aria-labelledby="prizes-heading">
-            <div class="section-header">
-                <h2 id="prizes-heading">Prizes &amp; Recognition</h2><span class="mono-meta">SAR 9,000+ TOTAL</span>
-            </div>
-            <div class="stat-strip">
-                <div class="stat-cell stat-cell--accent"><span class="stat-value">5,000</span><span
-                        class="stat-label">1st place, SAR</span></div>
-                <div class="stat-cell"><span class="stat-value">3,000</span><span class="stat-label">2nd place,
-                        SAR</span></div>
-                <div class="stat-cell"><span class="stat-value">2,000</span><span class="stat-label">3rd place,
-                        SAR</span></div>
-                <div class="stat-cell"><span class="stat-value">TOP 3</span><span class="stat-label">Poster
-                        category</span></div>
-                <div class="stat-cell"><span class="stat-value">DEAN</span><span class="stat-label">Choice &amp; support
-                        awards</span></div>
-            </div>
-            <div class="note-grid" style="margin-top: 2rem;">
-                <div class="note-card">
-                    <h3>Award categories</h3>
-                    <p>Cash prizes go to the top three presentations; the poster category is ranked separately. The
-                        Dean's Choice Award recognises the best overall presentation, and Dean's Special Support Awards
-                        back selected innovative projects.</p>
-                </div>
-                <div class="note-card">
-                    <h3>Beyond the prize money</h3>
-                    <p>Selected ideas may receive mentorship and incubation opportunities, and winning teams may be
-                        considered for research collaborations, internships and startup incubation.</p>
-                </div>
-            </div>
-        </section>
+      <section class="reveal" aria-labelledby="prizes-heading">
+        <div class="section-header">
+          <h2 id="prizes-heading">Prizes &amp; Recognition</h2>
+          <span class="mono-meta">SAR 9,000+ TOTAL</span>
+        </div>
+        <div class="stat-strip">
+          <div class="stat-cell stat-cell--accent">
+            <span class="stat-value">5,000</span
+            ><span class="stat-label">1st place, SAR</span>
+          </div>
+          <div class="stat-cell">
+            <span class="stat-value">3,000</span
+            ><span class="stat-label">2nd place, SAR</span>
+          </div>
+          <div class="stat-cell">
+            <span class="stat-value">2,000</span
+            ><span class="stat-label">3rd place, SAR</span>
+          </div>
+          <div class="stat-cell">
+            <span class="stat-value">TOP 3</span
+            ><span class="stat-label">Poster category</span>
+          </div>
+          <div class="stat-cell">
+            <span class="stat-value">DEAN</span
+            ><span class="stat-label">Choice &amp; support awards</span>
+          </div>
+        </div>
+        <div class="note-grid" style="margin-top: 2rem">
+          <div class="note-card">
+            <h3>Award categories</h3>
+            <p>
+              Cash prizes go to the top three presentations; the poster category
+              is ranked separately. The Dean's Choice Award recognises the best
+              overall presentation, and Dean's Special Support Awards back
+              selected innovative projects.
+            </p>
+          </div>
+          <div class="note-card">
+            <h3>Beyond the prize money</h3>
+            <p>
+              Selected ideas may receive mentorship and incubation
+              opportunities, and winning teams may be considered for research
+              collaborations, internships and startup incubation.
+            </p>
+          </div>
+        </div>
+      </section>
 
-        <section class="reveal" aria-labelledby="organizers-heading">
-            <div class="section-header">
-                <h2 id="organizers-heading">Organisers</h2><span class="mono-meta">PATRONAGE: DEAN OF CCIS</span>
-            </div>
-            <div class="note-grid">
-                <div class="note-card">
-                    <h3>Under the Dean's patronage</h3>
-                    <p>The hackathon ran under the patronage of the Dean of CCIS, Dr. Mohammed Ali Alshara, with the
-                        Dean taking part in the closing award ceremony.</p>
-                </div>
-                <div class="note-card">
-                    <h3>Hosting bodies</h3>
-                    <p>Delivered by the ACM Student Chapter at Prince Sultan University with the ACM Professional
-                        Chapter in Saudi Arabia, under the College of Computer and Information Sciences.</p>
-                    <ul>
-                        <li><span>Host</span><span>ACM Student Chapter, PSU</span></li>
-                        <li><span>Screening</span><span>ACM Professional Chapter core members</span></li>
-                        <li><span>College</span><span>CCIS, Prince Sultan University</span></li>
-                    </ul>
-                </div>
-            </div>
-        </section>
+      <section class="reveal" aria-labelledby="organizers-heading">
+        <div class="section-header">
+          <h2 id="organizers-heading">Organisers</h2>
+          <span class="mono-meta">PATRONAGE: DEAN OF CCIS</span>
+        </div>
+        <div class="note-grid">
+          <div class="note-card">
+            <h3>Under the Dean's patronage</h3>
+            <p>
+              The hackathon ran under the patronage of the Dean of CCIS, Dr.
+              Mohammed Ali Alshara, with the Dean taking part in the closing
+              award ceremony.
+            </p>
+          </div>
+          <div class="note-card">
+            <h3>Hosting bodies</h3>
+            <p>
+              Delivered by the ACM Student Chapter at Prince Sultan University
+              with the ACM Professional Chapter in Saudi Arabia, under the
+              College of Computer and Information Sciences.
+            </p>
+            <ul>
+              <li><span>Host</span><span>ACM Student Chapter, PSU</span></li>
+              <li>
+                <span>Screening</span
+                ><span>ACM Professional Chapter core members</span>
+              </li>
+              <li>
+                <span>College</span><span>CCIS, Prince Sultan University</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
 
-        <section class="ending reveal">
-            <p class="ending-desc">SUBMISSIONS CLOSED 25 APRIL 2026 &middot; 11:59 PM</p>
-            <h2 class="ending-title">The Full Event Site.</h2>
-            <p class="hero-desc" style="margin-bottom: 3rem; text-align: center;">The original hackathon site is kept as
-                part of the event record, including the announcement, the organiser logos and the registration form.</p>
-            <a href="projects/hackathons/psu-ai-hackathon-2.0/event-site.html" class="btn btn-primary btn-lg">Open PSU AI
-                Hackathon 2.0 Event Site</a>
-        </section>
+      <section class="ending reveal">
+        <p class="ending-desc">
+          SUBMISSIONS CLOSED 25 APRIL 2026 &middot; 11:59 PM
+        </p>
+        <h2 class="ending-title">The Full Event Site.</h2>
+        <p class="hero-desc" style="margin-bottom: 3rem; text-align: center">
+          The original hackathon site is kept as part of the event record,
+          including the announcement, the organiser logos and the registration
+          form.
+        </p>
+        <a
+          href="projects/hackathons/psu-ai-hackathon-2.0/event-site.html"
+          class="btn btn-primary btn-lg"
+          >Open PSU AI Hackathon 2.0 Event Site</a
+        >
+      </section>
     </main>
 
     <footer class="container site-footer mono-meta">
-        <div>© <span data-current-year>2026</span> ACM PRINCE SULTAN UNIVERSITY</div>
-        <div class="footer-logos"><img src="assets/img/acm.png" alt="Association for Computing Machinery"><img
-                src="assets/img/prince-sultan-univeristy.png" alt="Prince Sultan University"><img
-                src="assets/img/ccis-logo.png" alt="College of Computer and Information Sciences"></div>
-        <div>EVENT: <span class="accent-text">CONCLUDED</span></div>
-        <div>MADE BY <a href="https://blueprint.shoug-tech.com/" rel="noopener">BLUEPRINT ↗</a></div>
+      <div>
+        © <span data-current-year>2026</span> ACM PRINCE SULTAN UNIVERSITY
+      </div>
+      <div class="footer-logos">
+        <img
+          src="assets/img/acm.png"
+          alt="Association for Computing Machinery"
+        /><img
+          src="assets/img/prince-sultan-univeristy.png"
+          alt="Prince Sultan University"
+        /><img
+          src="assets/img/ccis-logo.png"
+          alt="College of Computer and Information Sciences"
+        />
+      </div>
+      <div>EVENT: <span class="accent-text">CONCLUDED</span></div>
+      <div>
+        MADE BY
+        <a href="https://blueprint.shoug-tech.com/" rel="noopener"
+          >BLUEPRINT ↗</a
+        >
+      </div>
     </footer>
-    <script src="assets/js/i18n.js?v=20260908-2" defer></script>
-    <script src="assets/js/main.js?v=20260905-1" defer></script>
-</body>
-
+    <script src="assets/js/i18n.js?v=20260922-5" defer></script>
+    <script src="assets/js/project-names.js?v=20260922-2" defer></script>
+    <script src="assets/js/main.js?v=20260922-4" defer></script>
+  </body>
 </html>

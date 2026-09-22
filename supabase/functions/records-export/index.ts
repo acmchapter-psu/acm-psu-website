@@ -28,39 +28,113 @@
  * POST { dataset: 'members'|'participation'|'contributions'|'inquiries',
  *        format:  'csv'|'xlsx' }
  */
-import { clientForRequest, fail, json, corsHeaders, requireRole } from '../_shared/http.ts';
-import { buildXlsx } from '../_shared/xlsx.ts';
+import {
+  clientForRequest,
+  fail,
+  json,
+  corsHeaders,
+  requireRole,
+} from "../_shared/http.ts";
+import { buildXlsx } from "../_shared/xlsx.ts";
 
 const DATASETS = {
   members: {
-    rpc: 'export_members',
-    sheet: 'Members',
-    columns: ['full_name', 'university_role', 'student_id', 'psu_email', 'major', 'academic_year',
-              'position_title', 'membership_status', 'join_date'],
-    headers: ['Name', 'University Role', 'Student ID', 'PSU Email', 'Major', 'Academic Year',
-              'Position', 'Membership Status', 'Join Date'],
+    rpc: "export_members",
+    sheet: "Members",
+    columns: [
+      "full_name",
+      "university_role",
+      "student_id",
+      "psu_email",
+      "major",
+      "academic_year",
+      "position_title",
+      "membership_status",
+      "join_date",
+    ],
+    headers: [
+      "Name",
+      "University Role",
+      "Student ID",
+      "PSU Email",
+      "Major",
+      "Academic Year",
+      "Position",
+      "Membership Status",
+      "Join Date",
+    ],
   },
   participation: {
-    rpc: 'export_event_participation',
-    sheet: 'Event Participation',
-    columns: ['student_id', 'member_name', 'event_title', 'role_text', 'status', 'participated_on'],
-    headers: ['Student ID', 'Member Name', 'Event', 'Position/Role', 'Participation Status', 'Date'],
+    rpc: "export_event_participation",
+    sheet: "Event Participation",
+    columns: [
+      "student_id",
+      "member_name",
+      "event_title",
+      "role_text",
+      "status",
+      "participated_on",
+    ],
+    headers: [
+      "Student ID",
+      "Member Name",
+      "Event",
+      "Position/Role",
+      "Participation Status",
+      "Date",
+    ],
   },
   contributions: {
-    rpc: 'export_contributions',
-    sheet: 'Contributions',
-    columns: ['student_id', 'member_name', 'project_title', 'contribution',
-              'contribution_type', 'occurred_on', 'verification'],
-    headers: ['Student ID', 'Member', 'Event/Project', 'Contribution', 'Type',
-              'Date', 'Verification Status'],
+    rpc: "export_contributions",
+    sheet: "Contributions",
+    columns: [
+      "student_id",
+      "member_name",
+      "project_title",
+      "contribution",
+      "contribution_type",
+      "occurred_on",
+      "verification",
+    ],
+    headers: [
+      "Student ID",
+      "Member",
+      "Event/Project",
+      "Contribution",
+      "Type",
+      "Date",
+      "Verification Status",
+    ],
   },
   inquiries: {
-    rpc: 'export_inquiries',
-    sheet: 'Inquiries',
-    columns: ['reference', 'submitted_on', 'sender_name', 'sender_email', 'category',
-              'subject', 'message', 'status', 'assigned_to', 'responded_on', 'response_sent'],
-    headers: ['Reference', 'Received', 'From', 'Email', 'Category', 'Subject',
-              'Message', 'Status', 'Assigned To', 'Responded', 'Response Sent'],
+    rpc: "export_inquiries",
+    sheet: "Inquiries",
+    columns: [
+      "reference",
+      "submitted_on",
+      "sender_name",
+      "sender_email",
+      "category",
+      "subject",
+      "message",
+      "status",
+      "assigned_to",
+      "responded_on",
+      "response_sent",
+    ],
+    headers: [
+      "Reference",
+      "Received",
+      "From",
+      "Email",
+      "Category",
+      "Subject",
+      "Message",
+      "Status",
+      "Assigned To",
+      "Responded",
+      "Response Sent",
+    ],
   },
 } as const;
 
@@ -68,7 +142,7 @@ type DatasetKey = keyof typeof DATASETS;
 
 /** RFC 4180 quoting, plus the leading-character guard against formula injection. */
 function csvCell(value: unknown): string {
-  if (value === null || value === undefined) return '';
+  if (value === null || value === undefined) return "";
   let text = String(value);
   // A cell starting with = + - @ is executed as a formula by Sheets and Excel.
   if (/^[=+\-@\t\r]/.test(text)) text = `'${text}`;
@@ -76,35 +150,42 @@ function csvCell(value: unknown): string {
 }
 
 Deno.serve(async (req: Request): Promise<Response> => {
-  const origin = req.headers.get('Origin');
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(origin) });
-  if (req.method !== 'POST') return fail('POST only', 405, origin);
+  const origin = req.headers.get("Origin");
+  if (req.method === "OPTIONS")
+    return new Response("ok", { headers: corsHeaders(origin) });
+  if (req.method !== "POST") return fail("POST only", 405, origin);
 
   const supabase = clientForRequest(req);
-  if (!supabase) return fail('Sign in required.', 401, origin);
+  if (!supabase) return fail("Sign in required.", 401, origin);
 
   // Reviewers cannot export. Student data leaves the platform only for admins.
-  const caller = await requireRole(supabase, ['club_admin']);
-  if (!caller) return fail('Club admin access required.', 403, origin);
+  const caller = await requireRole(supabase, ["club_admin"]);
+  if (!caller) return fail("Club admin access required.", 403, origin);
 
   let dataset: DatasetKey;
-  let format: 'csv' | 'xlsx';
+  let format: "csv" | "xlsx";
   try {
     const body = await req.json();
     dataset = body.dataset;
     // Anything other than 'xlsx' falls through to the CSV branch at the
     // bottom, so an unrecognised format would silently produce a CSV named
     // after whatever the caller asked for, and log that name as fact.
-    format = body.format ?? 'csv';
-    if (format !== 'csv' && format !== 'xlsx') {
-      return fail(`Unknown format "${body.format}". Expected 'csv' or 'xlsx'.`, 400, origin);
+    format = body.format ?? "csv";
+    if (format !== "csv" && format !== "xlsx") {
+      return fail(
+        `Unknown format "${body.format}". Expected 'csv' or 'xlsx'.`,
+        400,
+        origin,
+      );
     }
   } catch {
-    return fail('Expected JSON body { dataset, format }.', 400, origin);
+    return fail("Expected JSON body { dataset, format }.", 400, origin);
   }
 
   /** Runs one dataset's database function and shapes it into a sheet matrix. */
-  async function collect(key: DatasetKey): Promise<{ matrix: unknown[][]; rows: number }> {
+  async function collect(
+    key: DatasetKey,
+  ): Promise<{ matrix: unknown[][]; rows: number }> {
     const spec = DATASETS[key];
     const { data, error } = await supabase!.rpc(spec.rpc);
     if (error) throw new Error(`${spec.sheet}: ${error.message}`);
@@ -112,7 +193,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return {
       matrix: [
         [...spec.headers],
-        ...records.map((row) => spec.columns.map((c) => row[c] ?? '')),
+        ...records.map((row) => spec.columns.map((c) => row[c] ?? "")),
       ],
       rows: records.length,
     };
@@ -121,21 +202,26 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // record_university_export() writes the ledger row and the audit entry in one
   // transaction, so an export cannot happen without being accounted for.
   const logExport = (key: string, destination: string | null, rows: number) =>
-    supabase.rpc('record_university_export', {
-      dataset: key, format, row_count: rows, destination, reason: null,
+    supabase.rpc("record_university_export", {
+      dataset: key,
+      format,
+      row_count: rows,
+      destination,
+      reason: null,
     });
 
   // Object.hasOwn, not truthiness: `dataset` comes from the request body, and
   // "constructor" or "toString" resolve off Object.prototype to something
   // truthy, sail past a `!spec` check and fail later as a 500 on `spec.rpc`.
-  if (!Object.hasOwn(DATASETS, dataset)) return fail(`Unknown dataset "${dataset}".`, 400, origin);
+  if (!Object.hasOwn(DATASETS, dataset))
+    return fail(`Unknown dataset "${dataset}".`, 400, origin);
   const spec = DATASETS[dataset];
 
   let collected;
   try {
     collected = await collect(dataset);
   } catch (e) {
-    return fail(e instanceof Error ? e.message : 'Export failed.', 500, origin);
+    return fail(e instanceof Error ? e.message : "Export failed.", 500, origin);
   }
   const { matrix, rows } = collected;
 
@@ -144,7 +230,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   await logExport(dataset, null, rows);
 
-  if (format === 'xlsx') {
+  if (format === "xlsx") {
     const bytes = buildXlsx(spec.sheet, matrix);
     // Response expects an ArrayBuffer/BodyInit. Copying gives the typed array
     // its own ArrayBuffer instead of the broader ArrayBufferLike generic that
@@ -153,18 +239,20 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return new Response(body, {
       headers: {
         ...corsHeaders(origin),
-        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'Content-Disposition': `attachment; filename="${filename}.xlsx"`,
+        "Content-Type":
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Disposition": `attachment; filename="${filename}.xlsx"`,
       },
     });
   }
 
-  const csv = matrix.map((row) => row.map(csvCell).join(',')).join('\r\n');
-  return new Response('﻿' + csv, {  // BOM so Excel reads Arabic correctly
+  const csv = matrix.map((row) => row.map(csvCell).join(",")).join("\r\n");
+  return new Response("﻿" + csv, {
+    // BOM so Excel reads Arabic correctly
     headers: {
       ...corsHeaders(origin),
-      'Content-Type': 'text/csv; charset=utf-8',
-      'Content-Disposition': `attachment; filename="${filename}.csv"`,
+      "Content-Type": "text/csv; charset=utf-8",
+      "Content-Disposition": `attachment; filename="${filename}.csv"`,
     },
   });
 });

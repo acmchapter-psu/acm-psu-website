@@ -11,38 +11,44 @@
  */
 
 export type MembershipStatus =
-  | 'applicant' | 'active' | 'alumni' | 'withdrawn' | 'inactive' | 'rejected';
+  "applicant" | "active" | "alumni" | "withdrawn" | "inactive" | "rejected";
 
-export type AccountState = 'active' | 'disabled';
+export type AccountState = "active" | "disabled";
 
-export type UniversityRole = 'student' | 'instructor' | 'staff' | 'alumni' | 'other';
+export type UniversityRole =
+  "student" | "instructor" | "staff" | "alumni" | "other";
 
 export type ApplicationStatus =
-  | 'submitted' | 'interview' | 'approved' | 'rejected' | 'withdrawn';
+  "submitted" | "interview" | "approved" | "rejected" | "withdrawn";
 
 export type ReviewStatus =
-  | 'draft' | 'submitted' | 'changes_requested' | 'approved' | 'rejected';
+  "draft" | "submitted" | "changes_requested" | "approved" | "rejected";
 
-export type RequestStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
+export type RequestStatus = "pending" | "approved" | "rejected" | "cancelled";
 
 export type AdminRole =
-  | 'super_admin' | 'club_admin' | 'reviewer' | 'advisory_instructor';
+  "super_admin" | "club_admin" | "reviewer" | "advisory_instructor";
 
-export type ProfileVisibility = 'public' | 'private';
+export type ProfileVisibility = "public" | "private";
 
-export type ContentVisibility = 'public' | 'internal';
+export type ContentVisibility = "public" | "internal";
 
-export type ProjectKind = 'event' | 'project' | 'workshop_series' | 'initiative';
+export type ProjectKind =
+  "event" | "project" | "workshop_series" | "initiative";
 
-export type ProjectStatus = 'planning' | 'active' | 'completed' | 'archived';
+export type ProjectStatus = "planning" | "active" | "completed" | "archived";
 
 export type ParticipationStatus =
-  | 'registered' | 'confirmed' | 'completed' | 'withdrawn' | 'no_show';
+  "registered" | "confirmed" | "completed" | "withdrawn" | "no_show";
 
 export type MemberRequestKind =
-  | 'withdrawal' | 'profile_removal' | 'account_deletion' | 'data_export' | 'other';
+  | "withdrawal"
+  | "profile_removal"
+  | "account_deletion"
+  | "data_export"
+  | "other";
 
-export type ArchiveItemKind = 'file' | 'link' | 'embed';
+export type ArchiveItemKind = "file" | "link" | "embed";
 
 export interface AppUser {
   id: string;
@@ -95,7 +101,18 @@ export interface Position {
   max_holders: number | null;
   is_active: boolean;
   archived_at: string | null;
+  /** Operational team for leads and team members; null otherwise. */
+  team: TeamKey | null;
+  /** The role this one reports to, e.g. Tech Team Member → Tech Lead. */
+  reports_to: string | null;
+  responsibilities: string[];
 }
+
+/** The four operational teams. */
+export type TeamKey = "tech" | "media" | "workshops" | "events";
+
+/** An opportunity's primary team. Eligibility is recorded separately. */
+export type OpportunityCategory = TeamKey | "general";
 
 export interface PositionHistoryRow {
   id: string;
@@ -154,6 +171,8 @@ export interface Project {
   id: string;
   slug: string;
   title: string;
+  /** Arabic display name; the public site falls back to title when null. */
+  title_ar: string | null;
   kind: ProjectKind;
   status: ProjectStatus;
   summary: string | null;
@@ -182,6 +201,17 @@ export interface EventPositionAvailability {
   filled: number;
   remaining: number;
   pending: number;
+  category: OpportunityCategory;
+  lead_position_id: string | null;
+  lead_title: string | null;
+  opens_on: string | null;
+  requirements: string | null;
+  responsibilities: string | null;
+  /** Membership roles that may register. Empty means every active member. */
+  eligible_role_ids: string[];
+  eligible_role_titles: string[];
+  /** Whether the signed-in person may register, as the database decides it. */
+  viewer_eligible: boolean;
 }
 
 export interface EventPositionApplication {
@@ -221,7 +251,7 @@ export interface MyEventApplication {
   project_starts_on: string | null;
   has_active_assignment: boolean;
   can_unregister: boolean;
-  unregister_block: 'window_closed' | null;
+  unregister_block: "window_closed" | null;
 }
 
 export interface Participation {
@@ -342,7 +372,7 @@ export interface AiSuggestions {
 
 export interface AiFlag {
   kind: string;
-  severity: 'info' | 'warning' | 'high';
+  severity: "info" | "warning" | "high";
   detail: string;
 }
 
@@ -420,16 +450,37 @@ export interface PublicMember {
 
 /* -------------------------------------------------------------- audit log */
 
-export type AuditActorKind = 'admin' | 'member' | 'system' | 'migration' | 'ai_assistant';
+export type AuditActorKind =
+  "admin" | "member" | "system" | "migration" | "ai_assistant";
 
 export type AuditCategory =
-  | 'membership' | 'positions' | 'events' | 'projects' | 'contributions'
-  | 'archive' | 'requests' | 'administration' | 'exports' | 'inquiries';
+  | "membership"
+  | "positions"
+  | "events"
+  | "projects"
+  | "contributions"
+  | "archive"
+  | "requests"
+  | "administration"
+  | "exports"
+  | "inquiries";
 
 export type AuditDecision =
-  | 'approved' | 'rejected' | 'changes_requested' | 'interview' | 'published'
-  | 'unpublished' | 'granted' | 'revoked' | 'created' | 'updated' | 'archived'
-  | 'restored' | 'deleted' | 'exported' | 'noted';
+  | "approved"
+  | "rejected"
+  | "changes_requested"
+  | "interview"
+  | "published"
+  | "unpublished"
+  | "granted"
+  | "revoked"
+  | "created"
+  | "updated"
+  | "archived"
+  | "restored"
+  | "deleted"
+  | "exported"
+  | "noted";
 
 /**
  * One audit entry.
@@ -498,8 +549,8 @@ export interface AuditSummary {
 
 export interface AuditFilters {
   search?: string;
-  category?: AuditCategory | '';
-  decision?: AuditDecision | '';
+  category?: AuditCategory | "";
+  decision?: AuditDecision | "";
   actorId?: string;
   projectId?: string;
   from?: string;
@@ -509,7 +560,7 @@ export interface AuditFilters {
 
 /* -------------------------------------------------------------- inquiries */
 
-export type InquiryStatus = 'new' | 'in_progress' | 'answered' | 'closed';
+export type InquiryStatus = "new" | "in_progress" | "answered" | "closed";
 
 export interface InquiryCategory {
   slug: string;

@@ -11,9 +11,16 @@
 
 /** Mirror worksheets, which the snapshot sync clears on every refresh. */
 const CANONICAL_WORKSHEETS = [
-  'People', 'Membership Applications', 'Members', 'Club Positions',
-  'Opportunity Positions', 'Position Applications', 'Event Participation',
-  'Contributions', 'Inquiries', 'University Export Log',
+  "People",
+  "Membership Applications",
+  "Members",
+  "Club Positions",
+  "Opportunity Positions",
+  "Position Applications",
+  "Event Participation",
+  "Contributions",
+  "Inquiries",
+  "University Export Log",
 ];
 
 /**
@@ -29,16 +36,25 @@ export const SHEET_NAME_PATTERN = /^[a-z][a-z0-9_-]{2,40}$/;
  * rejection here is something they typed and can fix.
  */
 export function sheetNameProblem(name: string): string | null {
-  const value = String(name ?? '');
-  if (!value) return 'Enter a worksheet name.';
-  if (value !== value.trim()) return 'A worksheet name cannot start or end with a space.';
+  const value = String(name ?? "");
+  if (!value) return "Enter a worksheet name.";
+  if (value !== value.trim())
+    return "A worksheet name cannot start or end with a space.";
   if (!SHEET_NAME_PATTERN.test(value)) {
-    return 'Use 3–41 characters: lowercase letters, digits, underscore or hyphen, ' +
-      'starting with a letter. For example: hackathon261.';
+    return (
+      "Use 3–41 characters: lowercase letters, digits, underscore or hyphen, " +
+      "starting with a letter. For example: hackathon261."
+    );
   }
-  if (CANONICAL_WORKSHEETS.some((tab) => tab.toLowerCase() === value.toLowerCase())) {
-    return `"${value}" is one of the Supabase mirror worksheets, which are rebuilt on every ` +
-      'records sync. Choose another name.';
+  if (
+    CANONICAL_WORKSHEETS.some(
+      (tab) => tab.toLowerCase() === value.toLowerCase(),
+    )
+  ) {
+    return (
+      `"${value}" is one of the Supabase mirror worksheets, which are rebuilt on every ` +
+      "records sync. Choose another name."
+    );
   }
   return null;
 }
@@ -53,15 +69,26 @@ export function sheetNameProblem(name: string): string | null {
  * be called in conversation.
  */
 export function suggestSheetName(title: string, term?: string | null): string {
-  const words = String(title ?? '').toLowerCase()
-    .replace(/[^a-z0-9]+/g, ' ')
-    .split(' ')
-    .filter((word) => word && !['acm', 'psu', 'club', 'the', 'and', 'of', 'term'].includes(word));
+  const words = String(title ?? "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .split(" ")
+    .filter(
+      (word) =>
+        word &&
+        !["acm", "psu", "club", "the", "and", "of", "term"].includes(word),
+    );
 
   // Digits already in the title are usually the year or edition, and the term
   // code carries that better, so they are dropped from the word part.
-  const stem = words.filter((word) => !/^\d+$/.test(word)).join('').slice(0, 28) || 'event';
-  const suffix = String(term ?? '').replace(/[^0-9]/g, '').slice(0, 4);
+  const stem =
+    words
+      .filter((word) => !/^\d+$/.test(word))
+      .join("")
+      .slice(0, 28) || "event";
+  const suffix = String(term ?? "")
+    .replace(/[^0-9]/g, "")
+    .slice(0, 4);
   const name = `${stem}${suffix}`;
   return SHEET_NAME_PATTERN.test(name) ? name : `${stem}form`.slice(0, 41);
 }

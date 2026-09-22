@@ -91,10 +91,10 @@ transaction cannot.
 
 ### Two layers, no duplicates
 
-| Layer | Covers | Carries |
-|---|---|---|
-| **RPCs** | the consequential decisions | reason, decision, before/after, member visibility |
-| **Row triggers** | everything else, including direct writes | before/after and changed fields |
+| Layer            | Covers                                   | Carries                                           |
+| ---------------- | ---------------------------------------- | ------------------------------------------------- |
+| **RPCs**         | the consequential decisions              | reason, decision, before/after, member visibility |
+| **Row triggers** | everything else, including direct writes | before/after and changed fields                   |
 
 `audit_context()` sets a transaction-local flag. A transaction that has
 established a context is one where an RPC is in charge and will write its own
@@ -112,22 +112,22 @@ that touched four tables reads as one event with its detail attached.
 The database refuses these without one — `require_reason()` demands at least a
 short sentence, so `REJECTED` can never stand alone:
 
-| Action | Function |
-|---|---|
-| Decline an application | `reject_application` |
-| Decline a contribution, or ask for changes | `decide_contribution` |
-| Revoke a verified contribution | `revoke_contribution_verification` |
-| Decline an archive submission, or ask for changes | `decide_archive_submission` |
-| Publish publicly what a member marked internal | `publish_archive_submission` |
-| Change what the public can see | `set_archive_item_visibility` |
-| Remove an archive item | `delete_archive_item` |
-| End a membership (alumni / inactive / withdrawn / rejected) | `set_membership_status`, `resolve_withdrawal` |
-| Disable or restore sign-in | `set_account_state` |
-| Grant or revoke an admin role | `grant_admin_role`, `revoke_admin_role` |
-| Decline a position request or profile removal | `resolve_position_request`, `resolve_profile_removal` |
-| Resolve an account deletion request, or decline any request | `resolve_member_request` |
-| Change a feature switch or the accepted PSU email domains | `save_setting` |
-| Close an inquiry that was never answered, or reopen a closed one | `set_inquiry_status` |
+| Action                                                           | Function                                              |
+| ---------------------------------------------------------------- | ----------------------------------------------------- |
+| Decline an application                                           | `reject_application`                                  |
+| Decline a contribution, or ask for changes                       | `decide_contribution`                                 |
+| Revoke a verified contribution                                   | `revoke_contribution_verification`                    |
+| Decline an archive submission, or ask for changes                | `decide_archive_submission`                           |
+| Publish publicly what a member marked internal                   | `publish_archive_submission`                          |
+| Change what the public can see                                   | `set_archive_item_visibility`                         |
+| Remove an archive item                                           | `delete_archive_item`                                 |
+| End a membership (alumni / inactive / withdrawn / rejected)      | `set_membership_status`, `resolve_withdrawal`         |
+| Disable or restore sign-in                                       | `set_account_state`                                   |
+| Grant or revoke an admin role                                    | `grant_admin_role`, `revoke_admin_role`               |
+| Decline a position request or profile removal                    | `resolve_position_request`, `resolve_profile_removal` |
+| Resolve an account deletion request, or decline any request      | `resolve_member_request`                              |
+| Change a feature switch or the accepted PSU email domains        | `save_setting`                                        |
+| Close an inquiry that was never answered, or reopen a closed one | `set_inquiry_status`                                  |
 
 Approving is generally **not** gated — approvals are the expected outcome and
 forcing a sentence on every one of them trains people to type "ok". Reasons are
@@ -161,13 +161,13 @@ status page.
 
 ## Who can read the global log
 
-| Role | Sees |
-|---|---|
-| **Super admin** | everything |
-| **Club admin** | everything |
-| **Reviewer** | only entries they themselves produced |
-| **Member** | nothing — `my_decision_history` only |
-| **Anonymous** | nothing |
+| Role            | Sees                                  |
+| --------------- | ------------------------------------- |
+| **Super admin** | everything                            |
+| **Club admin**  | everything                            |
+| **Reviewer**    | only entries they themselves produced |
+| **Member**      | nothing — `my_decision_history` only  |
+| **Anonymous**   | nothing                               |
 
 A reviewer works the submission queues; they can account for their own
 decisions but have no business reading membership or administration history.

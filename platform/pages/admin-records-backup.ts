@@ -1,14 +1,29 @@
-import { h, render, type Child } from '../lib/dom.js';
+import { h, render, type Child } from "../lib/dom.js";
 import {
-  shell, pageHeader, panel, dataTable, loading, notice, action, attentionRow, attentionLegend,
-} from '../lib/ui.js';
-import { requireAdvisor, isClubAdmin } from '../lib/session.js';
+  shell,
+  pageHeader,
+  panel,
+  dataTable,
+  loading,
+  notice,
+  action,
+  attentionRow,
+  attentionLegend,
+} from "../lib/ui.js";
+import { requireAdvisor, isClubAdmin } from "../lib/session.js";
 import {
-  websiteClubRecords, importEventRegistrations, type WebsiteRecordsResult,
-} from '../lib/admin.js';
-import { archiveDateTime } from '../lib/format.js';
-import { newestFirst, type Term } from '../lib/terms.js';
-import { csvCell, termsResolver, rowTintResolver, type RowTint } from '../lib/record-terms.js';
+  websiteClubRecords,
+  importEventRegistrations,
+  type WebsiteRecordsResult,
+} from "../lib/admin.js";
+import { archiveDateTime } from "../lib/format.js";
+import { newestFirst, type Term } from "../lib/terms.js";
+import {
+  csvCell,
+  termsResolver,
+  rowTintResolver,
+  type RowTint,
+} from "../lib/record-terms.js";
 
 const PAGE_SIZE = 50;
 
@@ -17,16 +32,19 @@ const PAGE_SIZE = 50;
  * introducing a private palette: an applicant nobody has contacted yet needs
  * action ('now'), one already marked for interview is in progress ('review').
  */
-const TINT_LEVEL: Record<RowTint, 'now' | 'review'> = { new: 'now', interview: 'review' };
+const TINT_LEVEL: Record<RowTint, "now" | "review"> = {
+  new: "now",
+  interview: "review",
+};
 
 function message(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
 function display(value: unknown): string {
-  if (value === null || value === undefined || value === '') return '—';
-  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
-  if (typeof value === 'object') return JSON.stringify(value);
+  if (value === null || value === undefined || value === "") return "—";
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (typeof value === "object") return JSON.stringify(value);
   return String(value);
 }
 
@@ -38,7 +56,7 @@ function display(value: unknown): string {
  * added upstream before this page learns about it. Filing it under Admin keeps
  * it reachable instead of dropping it from the tree.
  */
-const FALLBACK_FOLDER = ['Admin'];
+const FALLBACK_FOLDER = ["Admin"];
 
 interface TreeFolder {
   name: string;
@@ -54,24 +72,31 @@ interface TreeFolder {
  * and per audit period, so whatever someone closes to make this page usable
  * should stay closed the next time they open it.
  */
-const CLOSED_FOLDERS_KEY = 'acm-records-closed-folders';
+const CLOSED_FOLDERS_KEY = "acm-records-closed-folders";
 
 function loadClosedFolders(): Set<string> {
   try {
-    const stored = JSON.parse(localStorage.getItem(CLOSED_FOLDERS_KEY) ?? '[]');
+    const stored = JSON.parse(localStorage.getItem(CLOSED_FOLDERS_KEY) ?? "[]");
     return new Set(Array.isArray(stored) ? stored.map(String) : []);
   } catch {
-    return new Set();  // private windows and blocked storage both land here
+    return new Set(); // private windows and blocked storage both land here
   }
 }
 
 function saveClosedFolders(closed: Set<string>): void {
-  try { localStorage.setItem(CLOSED_FOLDERS_KEY, JSON.stringify([...closed])); } catch { /* storage unavailable */ }
+  try {
+    localStorage.setItem(CLOSED_FOLDERS_KEY, JSON.stringify([...closed]));
+  } catch {
+    /* storage unavailable */
+  }
 }
 
 /** Every folder path in the tree, for collapse-all. */
 function allFolderPaths(folder: TreeFolder): string[] {
-  return folder.folders.flatMap((child) => [child.path, ...allFolderPaths(child)]);
+  return folder.folders.flatMap((child) => [
+    child.path,
+    ...allFolderPaths(child),
+  ]);
 }
 
 /**
@@ -80,14 +105,19 @@ function allFolderPaths(folder: TreeFolder): string[] {
  * workbook itself.
  */
 function buildTree(result: WebsiteRecordsResult): TreeFolder {
-  const root: TreeFolder = { name: '', path: '', folders: [], sheets: [] };
+  const root: TreeFolder = { name: "", path: "", folders: [], sheets: [] };
 
   for (const [name, sheet] of Object.entries(result.sheets)) {
     let node = root;
-    for (const segment of (sheet.folder?.length ? sheet.folder : FALLBACK_FOLDER)) {
+    for (const segment of sheet.folder?.length
+      ? sheet.folder
+      : FALLBACK_FOLDER) {
       const path = node.path ? `${node.path}/${segment}` : segment;
       let child = node.folders.find((f) => f.name === segment);
-      if (!child) { child = { name: segment, path, folders: [], sheets: [] }; node.folders.push(child); }
+      if (!child) {
+        child = { name: segment, path, folders: [], sheets: [] };
+        node.folders.push(child);
+      }
       node = child;
     }
     node.sheets.push({ name, rows: sheet.rows.length });
@@ -97,7 +127,10 @@ function buildTree(result: WebsiteRecordsResult): TreeFolder {
 
 /** Every worksheet in a folder and everything below it. */
 function folderSheets(folder: TreeFolder): string[] {
-  return [...folder.sheets.map((s) => s.name), ...folder.folders.flatMap(folderSheets)];
+  return [
+    ...folder.sheets.map((s) => s.name),
+    ...folder.folders.flatMap(folderSheets),
+  ];
 }
 
 /** The folder path leading to a worksheet, for the breadcrumb above the table. */
@@ -111,15 +144,18 @@ function pathTo(folder: TreeFolder, sheet: string): string[] | null {
 }
 
 function slug(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
 function downloadCsv(filename: string, matrix: unknown[][]): void {
-  const csv = matrix.map((row) => row.map(csvCell).join(',')).join('\r\n');
+  const csv = matrix.map((row) => row.map(csvCell).join(",")).join("\r\n");
   // BOM so Excel reads Arabic names correctly.
-  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+  const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
+  const link = document.createElement("a");
   link.href = url;
   link.download = filename;
   document.body.appendChild(link);
@@ -130,10 +166,10 @@ function downloadCsv(filename: string, matrix: unknown[][]): void {
 
 async function start(): Promise<void> {
   const viewer = await requireAdvisor();
-  const content = shell(viewer, 'admin', 'Records backup');
-  let active = '';
-  let term = '';
-  let query = '';
+  const content = shell(viewer, "admin", "Records backup");
+  let active = "";
+  let term = "";
+  let query = "";
   let page = 0;
   // Folders are open unless the viewer closed them. Their state lives here
   // rather than in the DOM because every keystroke re-renders the page, and
@@ -155,12 +191,12 @@ async function start(): Promise<void> {
   async function draw(): Promise<void> {
     try {
       if (!cache) {
-        render(content, loading('LOADING LIVE RECORDS'));
+        render(content, loading("LOADING LIVE RECORDS"));
         cache = await websiteClubRecords();
       }
       const result = cache;
       const names = Object.keys(result.sheets);
-      if (!active || !result.sheets[active]) active = names[0] ?? '';
+      if (!active || !result.sheets[active]) active = names[0] ?? "";
       const sheet = result.sheets[active];
       const rows = sheet?.rows ?? [];
       const columns = sheet?.columns ?? [];
@@ -182,54 +218,94 @@ async function start(): Promise<void> {
       }
       const terms = newestFirst([...present.values()].map((e) => e.term));
       // A term selected on another worksheet may not exist here.
-      if (term && !present.has(term)) term = '';
+      if (term && !present.has(term)) term = "";
 
-      const inTerm = !term || !resolve
-        ? rows
-        : rows.filter((row) => resolve(row).some((t) => t.code === term));
+      const inTerm =
+        !term || !resolve
+          ? rows
+          : rows.filter((row) => resolve(row).some((t) => t.code === term));
 
       const needle = query.trim().toLocaleLowerCase();
-      const filtered = inTerm.filter((row) =>
-        !needle || row.some((cell) => display(cell).toLocaleLowerCase().includes(needle)));
+      const filtered = inTerm.filter(
+        (row) =>
+          !needle ||
+          row.some((cell) =>
+            display(cell).toLocaleLowerCase().includes(needle),
+          ),
+      );
       const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
       page = Math.max(0, Math.min(page, pages - 1));
       const visible = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
-      const search = h('input', {
-        type: 'search', value: query, placeholder: `Search ${active || 'records'}…`,
-        'aria-label': 'Search current records page',
+      const search = h("input", {
+        type: "search",
+        value: query,
+        placeholder: `Search ${active || "records"}…`,
+        "aria-label": "Search current records page",
       }) as HTMLInputElement;
-      search.addEventListener('change', () => { query = search.value; page = 0; void draw(); });
+      search.addEventListener("change", () => {
+        query = search.value;
+        page = 0;
+        void draw();
+      });
 
-      const semester = h('select', {
-        'aria-label': 'Filter by semester', disabled: !resolve,
-      }, [
-        h('option', { value: '', selected: term === '' },
-          resolve ? 'All semesters' : 'Not dated by semester'),
-        ...terms.map((t) => h('option', { value: t.code, selected: t.code === term },
-          `${t.code} — ${t.label} (${present.get(t.code)!.count})`)),
-      ]) as HTMLSelectElement;
-      semester.addEventListener('change', () => { term = semester.value; page = 0; void draw(); });
+      const semester = h(
+        "select",
+        {
+          "aria-label": "Filter by semester",
+          disabled: !resolve,
+        },
+        [
+          h(
+            "option",
+            { value: "", selected: term === "" },
+            resolve ? "All semesters" : "Not dated by semester",
+          ),
+          ...terms.map((t) =>
+            h(
+              "option",
+              { value: t.code, selected: t.code === term },
+              `${t.code} — ${t.label} (${present.get(t.code)!.count})`,
+            ),
+          ),
+        ],
+      ) as HTMLSelectElement;
+      semester.addEventListener("change", () => {
+        term = semester.value;
+        page = 0;
+        void draw();
+      });
 
       const selected = term ? present.get(term)!.term : null;
-      const exportName = `acm-psu-${slug(active)}-${term ? `${term}-${slug(selected!.label)}` : 'all'}.csv`;
-      const exportButton = action(`EXPORT CSV (${filtered.length})`, async () => {
-        downloadCsv(exportName, [columns, ...filtered]);
-      }, filtered.length ? 'primary' : undefined);
+      const exportName = `acm-psu-${slug(active)}-${term ? `${term}-${slug(selected!.label)}` : "all"}.csv`;
+      const exportButton = action(
+        `EXPORT CSV (${filtered.length})`,
+        async () => {
+          downloadCsv(exportName, [columns, ...filtered]);
+        },
+        filtered.length ? "primary" : undefined,
+      );
 
       const openSheet = (name: string) => async () => {
-        active = name; query = ''; page = 0; await draw();
+        active = name;
+        query = "";
+        page = 0;
+        await draw();
       };
 
       function leaf(sheet: { name: string; rows: number }): HTMLElement {
-        return h('button', {
-          type: 'button',
-          class: `tree-sheet${sheet.name === active ? ' tree-sheet--active' : ''}`,
-          'aria-current': sheet.name === active ? 'true' : undefined,
-          onclick: openSheet(sheet.name),
-        }, h('span', { class: 'tree-chevron', 'aria-hidden': 'true' }),
-          h('span', { class: 'tree-name' }, sheet.name),
-          h('span', { class: 'tree-count' }, String(sheet.rows)));
+        return h(
+          "button",
+          {
+            type: "button",
+            class: `tree-sheet${sheet.name === active ? " tree-sheet--active" : ""}`,
+            "aria-current": sheet.name === active ? "true" : undefined,
+            onclick: openSheet(sheet.name),
+          },
+          h("span", { class: "tree-chevron", "aria-hidden": "true" }),
+          h("span", { class: "tree-name" }, sheet.name),
+          h("span", { class: "tree-count" }, String(sheet.rows)),
+        );
       }
 
       function branch(folder: TreeFolder): HTMLElement {
@@ -237,21 +313,35 @@ async function start(): Promise<void> {
         // The folder holding the open worksheet is never drawn closed, so the
         // tree cannot hide what the table below it is showing.
         const holdsActive = contained.includes(active);
-        const details = h('details', {
-          class: 'tree-branch',
-          open: holdsActive || !collapsed.has(folder.path),
-        },
-          h('summary', { class: 'tree-folder' },
+        const details = h(
+          "details",
+          {
+            class: "tree-branch",
+            open: holdsActive || !collapsed.has(folder.path),
+          },
+          h(
+            "summary",
+            { class: "tree-folder" },
             // A real element, not ::marker: the summary is a flex row, which
             // removes the browser's own disclosure triangle and with it any
             // sign that the folder opens at all.
-            h('span', { class: 'tree-chevron', 'aria-hidden': 'true' }, '\u25B8'),
-            h('span', { class: 'tree-name' }, folder.name),
-            h('span', { class: 'tree-count' }, String(contained.length))),
-          h('div', { class: 'tree-children' },
-            folder.folders.map(branch), folder.sheets.map(leaf)));
+            h(
+              "span",
+              { class: "tree-chevron", "aria-hidden": "true" },
+              "\u25B8",
+            ),
+            h("span", { class: "tree-name" }, folder.name),
+            h("span", { class: "tree-count" }, String(contained.length)),
+          ),
+          h(
+            "div",
+            { class: "tree-children" },
+            folder.folders.map(branch),
+            folder.sheets.map(leaf),
+          ),
+        );
 
-        details.addEventListener('toggle', () => {
+        details.addEventListener("toggle", () => {
           if (details.open) collapsed.delete(folder.path);
           else collapsed.add(folder.path);
           saveClosedFolders(collapsed);
@@ -260,50 +350,94 @@ async function start(): Promise<void> {
       }
 
       const tree = buildTree(result);
-      const browser = h('div', { class: 'record-tree', role: 'navigation', 'aria-label': 'Records' },
-        tree.folders.map(branch), tree.sheets.map(leaf));
+      const browser = h(
+        "div",
+        { class: "record-tree", role: "navigation", "aria-label": "Records" },
+        tree.folders.map(branch),
+        tree.sheets.map(leaf),
+      );
 
       // One control for the whole tree. As events and audit periods accumulate
       // this is the difference between a page you scan and a page you scroll.
       const paths = allFolderPaths(tree);
       const anyOpen = paths.some((path) => !collapsed.has(path));
-      const collapseAll = paths.length ? action(
-        anyOpen ? 'COLLAPSE ALL' : 'EXPAND ALL',
-        async () => {
-          if (anyOpen) for (const path of paths) collapsed.add(path);
-          else collapsed.clear();
-          saveClosedFolders(collapsed);
-          await draw();
-        }) : null;
+      const collapseAll = paths.length
+        ? action(anyOpen ? "COLLAPSE ALL" : "EXPAND ALL", async () => {
+            if (anyOpen) for (const path of paths) collapsed.add(path);
+            else collapsed.clear();
+            saveClosedFolders(collapsed);
+            await draw();
+          })
+        : null;
 
-      const crumbs = h('p', { class: 'mono-meta dim-text' },
-        [...(pathTo(tree, active) ?? []), active].join(' / ').toUpperCase());
+      const crumbs = h(
+        "p",
+        { class: "mono-meta dim-text" },
+        [...(pathTo(tree, active) ?? []), active].join(" / ").toUpperCase(),
+      );
 
       // Every registration worksheet, so the toolbar can offer them the same
       // way it offers semesters. An event is a thing you pick, not a folder
       // you have to find first.
-      const registrations = tree.folders.find((f) => f.name === 'Events')
-        ?.folders.find((f) => f.name === 'Registrations');
+      const registrations = tree.folders
+        .find((f) => f.name === "Events")
+        ?.folders.find((f) => f.name === "Registrations");
       const events = registrations?.sheets ?? [];
 
-      const eventPicker = events.length ? h('select', {
-        'aria-label': 'Choose an event',
-      }, [
-        h('option', { value: '', selected: !events.some((e) => e.name === active) },
-          `Event registrations (${events.length})`),
-        ...events.map((e) => h('option', { value: e.name, selected: e.name === active },
-          `${e.name} (${e.rows})`)),
-      ]) as HTMLSelectElement : null;
-      eventPicker?.addEventListener('change', () => {
+      const eventPicker = events.length
+        ? (h(
+            "select",
+            {
+              "aria-label": "Choose an event",
+            },
+            [
+              h(
+                "option",
+                { value: "", selected: !events.some((e) => e.name === active) },
+                `Event registrations (${events.length})`,
+              ),
+              ...events.map((e) =>
+                h(
+                  "option",
+                  { value: e.name, selected: e.name === active },
+                  `${e.name} (${e.rows})`,
+                ),
+              ),
+            ],
+          ) as HTMLSelectElement)
+        : null;
+      eventPicker?.addEventListener("change", () => {
         if (eventPicker.value) void openSheet(eventPicker.value)();
       });
 
-      const pager: Child = pages > 1 ? h('div', { class: 'button-row pager' },
-        page > 0 ? action('PREVIOUS', async () => { page -= 1; await draw(); }) : null,
-        h('span', { class: 'mono-meta dim-text' }, `PAGE ${page + 1} OF ${pages}`),
-        page < pages - 1 ? action('NEXT', async () => { page += 1; await draw(); }) : null) : null;
+      const pager: Child =
+        pages > 1
+          ? h(
+              "div",
+              { class: "button-row pager" },
+              page > 0
+                ? action("PREVIOUS", async () => {
+                    page -= 1;
+                    await draw();
+                  })
+                : null,
+              h(
+                "span",
+                { class: "mono-meta dim-text" },
+                `PAGE ${page + 1} OF ${pages}`,
+              ),
+              page < pages - 1
+                ? action("NEXT", async () => {
+                    page += 1;
+                    await draw();
+                  })
+                : null,
+            )
+          : null;
 
-      const scope = selected ? `${selected.code} · ${selected.label}` : 'ALL SEMESTERS';
+      const scope = selected
+        ? `${selected.code} · ${selected.label}`
+        : "ALL SEMESTERS";
 
       // Public event signups are collected in the club records workbook's own
       // jam26/ctf30 tabs by Apps Script, and copied here as they arrive.
@@ -311,76 +445,158 @@ async function start(): Promise<void> {
       // rather than automatically: it reads Google, so it is a deliberate act
       // and not something a page load should do.
       const canImport = isClubAdmin(viewer) && !!registrations;
-      const importControls: Child = canImport ? h('div', { class: 'button-row' },
-        action('IMPORT FROM REGISTRATION TABS', async () => {
-          importNote = loading('IMPORTING REGISTRATIONS');
-          await draw();
-          try {
-            const outcome = await importEventRegistrations();
-            const entries = Object.entries(outcome.imported);
-            const added = entries.reduce((total, [, r]) => total + r.added, 0);
-            const failed = entries.filter(([, r]) => r.error);
-            importNote = notice(failed.length ? 'warn' : 'ok',
-              `${added} registration${added === 1 ? '' : 's'} recovered from the sheet.` +
-              (failed.length ? ` Could not read: ${failed.map(([label, r]) => `${label} (${r.error})`).join('; ')}` : ''));
-            cache = null;
-          } catch (error) {
-            importNote = notice('err', `Import failed: ${message(error)}`);
-          }
-          await draw();
-        }),
-        h('span', { class: 'mono-meta dim-text' },
-          'READS THE JAM26/CTF30 TABS AND ADDS ANYTHING MISSING HERE.')) : null;
+      const importControls: Child = canImport
+        ? h(
+            "div",
+            { class: "button-row" },
+            action("IMPORT FROM REGISTRATION TABS", async () => {
+              importNote = loading("IMPORTING REGISTRATIONS");
+              await draw();
+              try {
+                const outcome = await importEventRegistrations();
+                const entries = Object.entries(outcome.imported);
+                const added = entries.reduce(
+                  (total, [, r]) => total + r.added,
+                  0,
+                );
+                const failed = entries.filter(([, r]) => r.error);
+                importNote = notice(
+                  failed.length ? "warn" : "ok",
+                  `${added} registration${added === 1 ? "" : "s"} recovered from the sheet.` +
+                    (failed.length
+                      ? ` Could not read: ${failed.map(([label, r]) => `${label} (${r.error})`).join("; ")}`
+                      : ""),
+                );
+                cache = null;
+              } catch (error) {
+                importNote = notice("err", `Import failed: ${message(error)}`);
+              }
+              await draw();
+            }),
+            h(
+              "span",
+              { class: "mono-meta dim-text" },
+              "READS THE JAM26/CTF30 TABS AND ADDS ANYTHING MISSING HERE.",
+            ),
+          )
+        : null;
 
-      render(content,
-        pageHeader('ADMIN / RECORDS BACKUP', 'Live club records', action('REFRESH', refresh, 'primary')),
-        notice('warn', 'Private records: this page can contain student identifiers and internal notes. Access is limited to club admins and advisory instructors.'),
-        notice('info', `Last loaded: ${archiveDateTime(result.generated_at)}.`),
-        h('p', { class: 'mono-meta dim-text' },
-          h('a', { href: 'https://psu.edu.sa/en/academiccalendar', target: '_blank', rel: 'noopener' })),
+      render(
+        content,
+        pageHeader(
+          "ADMIN / RECORDS BACKUP",
+          "Live club records",
+          action("REFRESH", refresh, "primary"),
+        ),
+        notice(
+          "warn",
+          "Private records: this page can contain student identifiers and internal notes. Access is limited to club admins and advisory instructors.",
+        ),
+        notice("info", `Last loaded: ${archiveDateTime(result.generated_at)}.`),
+        h(
+          "p",
+          { class: "mono-meta dim-text" },
+          h("a", {
+            href: "https://psu.edu.sa/en/academiccalendar",
+            target: "_blank",
+            rel: "noopener",
+          }),
+        ),
         result.registration_error
-          ? notice('warn', `Event registrations could not be read: ${result.registration_error}. Everything else below is current.`)
+          ? notice(
+              "warn",
+              `Event registrations could not be read: ${result.registration_error}. Everything else below is current.`,
+            )
           : null,
         // Every worksheet arriving without a folder means the records function
         // answering this page predates the tree — so it also predates event
         // registrations. Say that plainly instead of quietly filing everything
         // under Admin and leaving the missing events to be guessed at.
-        !result.registration_error && names.every((name) => !result.sheets[name]!.folder)
-          ? notice('info', 'This page is being answered by an older records function: worksheets arrive ' +
-            'without folders and public event registrations are not included. Deploy ' +
-            'club-records-sheet-sync (npm run functions:deploy) to enable both — see docs/SETUP.md step 5b.')
+        !result.registration_error &&
+          names.every((name) => !result.sheets[name]!.folder)
+          ? notice(
+              "info",
+              "This page is being answered by an older records function: worksheets arrive " +
+                "without folders and public event registrations are not included. Deploy " +
+                "club-records-sheet-sync (npm run functions:deploy) to enable both — see docs/SETUP.md step 5b.",
+            )
           : null,
         importNote,
-        panel('Records',
-          collapseAll ? h('div', { class: 'button-row record-tree-controls' }, collapseAll,
-            h('span', { class: 'mono-meta dim-text' },
-              `${names.length} WORKSHEETS`)) : null,
-          browser, importControls),
-        panel(active || 'Records',
+        panel(
+          "Records",
+          collapseAll
+            ? h(
+                "div",
+                { class: "button-row record-tree-controls" },
+                collapseAll,
+                h(
+                  "span",
+                  { class: "mono-meta dim-text" },
+                  `${names.length} WORKSHEETS`,
+                ),
+              )
+            : null,
+          browser,
+          importControls,
+        ),
+        panel(
+          active || "Records",
           crumbs,
-          h('div', { class: 'browser-toolbar' }, search, eventPicker, semester, exportButton),
-          resolve ? null : h('p', { class: 'mono-meta dim-text' },
-            'THIS WORKSHEET HAS NO DATE COLUMN, SO IT IS NOT FILTERED BY SEMESTER.'),
-          tintOf ? attentionLegend(
-            ['now', 'New — nobody has contacted this applicant yet'],
-            ['review', 'Marked for interview']) : null,
-          dataTable(columns.map(display), visible.map((row) => row.map(display)), {
-            empty: needle || term ? 'No rows match these filters.' : 'This records page is empty.',
-            rowClass: (index) => {
-              const tint = tintOf?.(visible[index]!);
-              return tint ? attentionRow(TINT_LEVEL[tint]) : null;
+          h(
+            "div",
+            { class: "browser-toolbar" },
+            search,
+            eventPicker,
+            semester,
+            exportButton,
+          ),
+          resolve
+            ? null
+            : h(
+                "p",
+                { class: "mono-meta dim-text" },
+                "THIS WORKSHEET HAS NO DATE COLUMN, SO IT IS NOT FILTERED BY SEMESTER.",
+              ),
+          tintOf
+            ? attentionLegend(
+                ["now", "New — nobody has contacted this applicant yet"],
+                ["review", "Marked for interview"],
+              )
+            : null,
+          dataTable(
+            columns.map(display),
+            visible.map((row) => row.map(display)),
+            {
+              empty:
+                needle || term
+                  ? "No rows match these filters."
+                  : "This records page is empty.",
+              rowClass: (index) => {
+                const tint = tintOf?.(visible[index]!);
+                return tint ? attentionRow(TINT_LEVEL[tint]) : null;
+              },
             },
-          }),
+          ),
           pager,
-          h('p', { class: 'mono-meta dim-text' },
-            `${scope} · ${filtered.length} MATCHING ROWS · ${rows.length} TOTAL`)),
+          h(
+            "p",
+            { class: "mono-meta dim-text" },
+            `${scope} · ${filtered.length} MATCHING ROWS · ${rows.length} TOTAL`,
+          ),
+        ),
       );
     } catch (error) {
-      console.error('Website records backup failed:', error);
+      console.error("Website records backup failed:", error);
       cache = null;
-      render(content, pageHeader('ADMIN / RECORDS BACKUP', 'Records unavailable'),
-        notice('err', `The live records could not be loaded: ${message(error)}`),
-        action('TRY AGAIN', refresh, 'primary'));
+      render(
+        content,
+        pageHeader("ADMIN / RECORDS BACKUP", "Records unavailable"),
+        notice(
+          "err",
+          `The live records could not be loaded: ${message(error)}`,
+        ),
+        action("TRY AGAIN", refresh, "primary"),
+      );
     }
   }
 

@@ -1,16 +1,30 @@
 /** Club organization position catalogue and assignment controls. */
-import { h, render, formValues, textOf } from '../lib/dom.js';
+import { h, render, formValues, textOf } from "../lib/dom.js";
 import {
-  shell, pageHeader, panel, dataTable, loading, dialog, field, notice, toast,
-  action, emptyState, stateTag, attentionPill, attentionRow, attentionLegend,
+  shell,
+  pageHeader,
+  panel,
+  dataTable,
+  loading,
+  dialog,
+  field,
+  notice,
+  toast,
+  action,
+  emptyState,
+  stateTag,
+  attentionPill,
+  attentionRow,
+  attentionLegend,
   type Attention,
-} from '../lib/ui.js';
-import { requireAdmin } from '../lib/session.js';
-import { bestEffortFunctionSync, positions } from '../lib/api.js';
-import { members, grantPosition, type MemberRow } from '../lib/admin.js';
-import { requireClient } from '../lib/supabase.js';
-import { enumLabel, term } from '../lib/format.js';
-import type { Position } from '../lib/types.js';
+} from "../lib/ui.js";
+import { requireAdmin } from "../lib/session.js";
+import { bestEffortFunctionSync, positions } from "../lib/api.js";
+import { members, grantPosition, type MemberRow } from "../lib/admin.js";
+import { requireClient } from "../lib/supabase.js";
+import { enumLabel, term } from "../lib/format.js";
+import type { Position, TeamKey } from "../lib/types.js";
+import { TEAM_LABELS } from "../lib/teams.js";
 
 interface Holder {
   user_id: string;
@@ -21,11 +35,24 @@ interface Holder {
   member: { full_name: string } | null;
 }
 
+/*
+ * Organization levels. Leadership leads a team (or, for the Treasurer, the
+ * club's finances); specialised team membership reports to a lead; Member is
+ * deliberately teamless so it can move between every kind of opportunity.
+ */
 const CATEGORIES = [
-  { value: 'executive', label: 'Executive committee' },
-  { value: 'lead', label: 'Club leadership' },
-  { value: 'committee', label: 'Committee role' },
-  { value: 'general', label: 'General club role' },
+  { value: "executive", label: "Executive committee" },
+  { value: "lead", label: "Leadership" },
+  { value: "team", label: "Specialized team membership" },
+  { value: "general", label: "Flexible membership & volunteers" },
+];
+
+const TEAM_OPTIONS = [
+  { value: "", label: "No team" },
+  ...Object.entries(TEAM_LABELS).map(([value, label]) => ({
+    value,
+    label: `${label} team`,
+  })),
 ];
 
 /*
@@ -38,7 +65,7 @@ const CATEGORIES = [
 const RANK_BANDS: Record<string, number> = {
   executive: 0,
   lead: 100,
-  committee: 200,
+  team: 200,
   general: 300,
 };
 
@@ -67,13 +94,24 @@ function bandRange(category: string): string {
  * level — lands at the end of its band, spaced a step past the last role
  * there. This is what stops the column filling up with repeated defaults.
  */
-function rankFor(category: string, all: Position[], existing: Position | null): number {
-  if (existing && existing.category === category && inBand(existing.rank, category)) {
+function rankFor(
+  category: string,
+  all: Position[],
+  existing: Position | null,
+): number {
+  if (
+    existing &&
+    existing.category === category &&
+    inBand(existing.rank, category)
+  ) {
     return existing.rank;
   }
   const base = bandOf(category);
   const taken = all
-    .filter((position) => position.id !== existing?.id && position.category === category)
+    .filter(
+      (position) =>
+        position.id !== existing?.id && position.category === category,
+    )
     .map((position) => position.rank)
     .filter((rank) => inBand(rank, category));
   const last = taken.length ? Math.max(...taken) : base;
@@ -82,68 +120,98 @@ function rankFor(category: string, all: Position[], existing: Position | null): 
 
 function errorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
-  if (typeof error === 'object' && error !== null && 'message' in error &&
-      typeof (error as { message?: unknown }).message === 'string') {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof (error as { message?: unknown }).message === "string"
+  ) {
     return (error as { message: string }).message;
   }
-  return 'An unknown error occurred.';
+  return "An unknown error occurred.";
 }
 
 async function holders(): Promise<Holder[]> {
   const { data, error } = await requireClient()
-    .from('position_history')
-    .select(`
+    .from("position_history")
+    .select(
+      `
       user_id,
       title_snapshot,
       started_on,
       ended_on,
       position_id,
       member:app_users!position_history_user_id_fkey(full_name)
-    `)
-    .is('ended_on', null);
+    `,
+    )
+    .is("ended_on", null);
   if (error) throw new Error(error.message);
   return (data ?? []) as unknown as Holder[];
 }
 
 function slugify(title: string): string {
-  return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 60);
+}
+
+function reportsTo(position: Position, all: Position[]): string | null {
+  if (!position.reports_to) return null;
+  return (
+    all.find((candidate) => candidate.id === position.reports_to)?.title ?? null
+  );
 }
 
 function vacancy(position: Position): Attention {
-  if (!position.is_active) return 'idle';
-  return position.category === 'executive' || position.category === 'lead' ? 'now' : 'review';
+  if (!position.is_active) return "idle";
+  return position.category === "executive" || position.category === "lead"
+    ? "now"
+    : "review";
 }
 
 function membershipLabel(member: MemberRow): string {
-  return enumLabel(member.membership?.status ?? 'applicant');
+  return enumLabel(member.membership?.status ?? "applicant");
 }
 
 function mayHoldClubPosition(member: MemberRow): boolean {
-  return member.account_state === 'active' && member.membership?.status === 'active';
+  return (
+    member.account_state === "active" && member.membership?.status === "active"
+  );
 }
 
 function hasOpenSeat(position: Position, holderCount: number): boolean {
-  return position.is_active && (position.max_holders === null || holderCount < position.max_holders);
+  return (
+    position.is_active &&
+    (position.max_holders === null || holderCount < position.max_holders)
+  );
 }
 
 function capacityLabel(position: Position, holderCount: number): string {
-  if (position.max_holders === null) return `${holderCount} assigned · unlimited`;
-  return `${holderCount}/${position.max_holders} ${holderCount >= position.max_holders ? 'full' : 'assigned'}`;
+  if (position.max_holders === null)
+    return `${holderCount} assigned · unlimited`;
+  return `${holderCount}/${position.max_holders} ${holderCount >= position.max_holders ? "full" : "assigned"}`;
 }
 
 async function start(): Promise<void> {
-  const viewer = await requireAdmin('club_admin');
-  const content = shell(viewer, 'admin', 'Club Organization');
+  const viewer = await requireAdmin("club_admin");
+  const content = shell(viewer, "admin", "Club Organization");
 
   function editor(existing: Position | null, all: Position[]): void {
-    const startCategory = existing?.category ?? 'general';
+    const startCategory = existing?.category ?? "general";
 
     const categoryField = field({
-      label: 'Organization level', name: 'category', type: 'select',
-      value: startCategory, options: CATEGORIES,
+      label: "Organization level",
+      name: "category",
+      type: "select",
+      value: startCategory,
+      options: CATEGORIES,
     });
     const rankField = field({
-      label: 'Display rank', name: 'rank', type: 'number',
+      label: "Display rank",
+      name: "rank",
+      type: "number",
       value: String(rankFor(startCategory, all, existing)),
       hint: `Lower sorts first, within the level's band. ${bandRange(startCategory)} for this level.`,
     });
@@ -153,287 +221,491 @@ async function start(): Promise<void> {
      * that level's band, so the two controls can never be saved contradicting
      * each other; the number stays editable for ordering inside the band.
      */
-    const categoryInput = categoryField.querySelector('select') as HTMLSelectElement | null;
-    const rankInput = rankField.querySelector('input') as HTMLInputElement | null;
-    const rankHint = rankField.querySelector('.field-hint');
-    categoryInput?.addEventListener('change', () => {
+    const categoryInput = categoryField.querySelector(
+      "select",
+    ) as HTMLSelectElement | null;
+    const rankInput = rankField.querySelector(
+      "input",
+    ) as HTMLInputElement | null;
+    const rankHint = rankField.querySelector(".field-hint");
+    categoryInput?.addEventListener("change", () => {
       const category = categoryInput.value;
       if (rankInput) rankInput.value = String(rankFor(category, all, existing));
       if (rankHint) {
-        rankHint.textContent =
-          `Lower sorts first, within the level's band. ${bandRange(category)} for this level.`;
+        rankHint.textContent = `Lower sorts first, within the level's band. ${bandRange(category)} for this level.`;
       }
     });
 
-    const form = h('form', { class: 'portal-form', novalidate: true },
-      h('div', { class: 'field-pair' },
-        field({ label: 'Title', name: 'title', required: true, maxlength: 80, value: existing?.title }),
-        field({ label: 'Title (Arabic)', name: 'title_ar', maxlength: 80, value: existing?.title_ar }),
+    const form = h(
+      "form",
+      { class: "portal-form", novalidate: true },
+      h(
+        "div",
+        { class: "field-pair" },
+        field({
+          label: "Title",
+          name: "title",
+          required: true,
+          maxlength: 80,
+          value: existing?.title,
+        }),
+        field({
+          label: "Title (Arabic)",
+          name: "title_ar",
+          maxlength: 80,
+          value: existing?.title_ar,
+        }),
       ),
-      h('div', { class: 'field-pair' }, categoryField, rankField),
+      h("div", { class: "field-pair" }, categoryField, rankField),
       field({
-        label: 'Seat capacity', name: 'max_holders', type: 'number', min: '1',
-        value: existing?.max_holders === null || existing?.max_holders === undefined
-          ? '' : String(existing.max_holders),
-        placeholder: 'Unlimited',
-        hint: 'Leave blank for unlimited holders. Named officers and leads usually have one seat.',
+        label: "Seat capacity",
+        name: "max_holders",
+        type: "number",
+        min: "1",
+        value:
+          existing?.max_holders === null || existing?.max_holders === undefined
+            ? ""
+            : String(existing.max_holders),
+        placeholder: "Unlimited",
+        hint: "Leave blank for unlimited holders. Named officers and leads usually have one seat.",
+      }),
+      h(
+        "div",
+        { class: "field-pair" },
+        field({
+          label: "Team",
+          name: "team",
+          type: "select",
+          value: existing?.team ?? "",
+          options: TEAM_OPTIONS,
+          hint: "The operational team a lead runs or a team member belongs to.",
+        }),
+        field({
+          label: "Reports to",
+          name: "reports_to",
+          type: "select",
+          value: existing?.reports_to ?? "",
+          options: [
+            { value: "", label: "Nobody (top of its line)" },
+            ...all
+              .filter(
+                (position) =>
+                  position.id !== existing?.id && position.is_active,
+              )
+              .map((position) => ({
+                value: position.id,
+                label: position.title,
+              })),
+          ],
+        }),
+      ),
+      field({
+        label: "Description",
+        name: "description",
+        type: "textarea",
+        rows: 3,
+        value: existing?.description,
       }),
       field({
-        label: 'Description', name: 'description', type: 'textarea', rows: 3,
-        value: existing?.description,
+        label: "Responsibilities",
+        name: "responsibilities",
+        type: "textarea",
+        rows: 5,
+        value: (existing?.responsibilities ?? []).join("\n"),
+        hint: "One per line.",
       }),
     ) as HTMLFormElement;
 
     const modal = dialog(
-      existing ? `Edit — ${existing.title}` : 'New club role',
+      existing ? `Edit — ${existing.title}` : "New club role",
       form,
-      h('div', { class: 'button-row' },
-        action(existing ? 'Save' : 'Create', async () => {
-          if (!form.reportValidity()) return;
-          const values = formValues(form);
-          const title = textOf(values, 'title').trim();
-          if (!title) { toast('Enter a position title.', 'err'); return; }
-          const category = textOf(values, 'category');
-          const rawRank = Number(textOf(values, 'rank'));
-          if (!Number.isInteger(rawRank) || !inBand(rawRank, category)) {
-            toast(
-              `Display rank must be a whole number in ${bandRange(category)} for this organization level.`,
-              'err',
-            );
-            return;
-          }
-          const capacityText = textOf(values, 'max_holders').trim();
-          const rawCapacity = capacityText ? Number(capacityText) : null;
-          if (rawCapacity !== null && (!Number.isInteger(rawCapacity) || rawCapacity < 1)) {
-            toast('Seat capacity must be a whole number of at least 1, or left blank for unlimited.', 'err');
-            return;
-          }
-          const patch = {
-            title,
-            title_ar: textOf(values, 'title_ar') || null,
-            category,
-            rank: rawRank,
-            max_holders: rawCapacity,
-            description: textOf(values, 'description') || null,
-          };
-          try {
-            const client = requireClient();
-            if (existing) {
-              const { error } = await client.from('positions').update(patch).eq('id', existing.id);
-              if (error) throw new Error(error.message);
-            } else {
-              const slug = slugify(title);
-              if (!slug) { toast('The title must contain at least one letter or number.', 'err'); return; }
-              const { error } = await client.from('positions').insert({ ...patch, slug }).select('id').single();
-              if (error) throw new Error(error.message);
+      h(
+        "div",
+        { class: "button-row" },
+        action(
+          existing ? "Save" : "Create",
+          async () => {
+            if (!form.reportValidity()) return;
+            const values = formValues(form);
+            const title = textOf(values, "title").trim();
+            if (!title) {
+              toast("Enter a position title.", "err");
+              return;
             }
-            modal.close();
-            toast(existing ? 'Club role updated.' : 'Club role created.');
-            void bestEffortFunctionSync('club-records-sheet-sync', {
-              sheets: ['people', 'club_positions'],
-            });
-            await draw();
-          } catch (error) {
-            console.error('Could not save club role:', error);
-            toast(`Could not save club role: ${errorMessage(error)}`, 'err');
-          }
-        }, 'primary'),
+            const category = textOf(values, "category");
+            const rawRank = Number(textOf(values, "rank"));
+            if (!Number.isInteger(rawRank) || !inBand(rawRank, category)) {
+              toast(
+                `Display rank must be a whole number in ${bandRange(category)} for this organization level.`,
+                "err",
+              );
+              return;
+            }
+            const capacityText = textOf(values, "max_holders").trim();
+            const rawCapacity = capacityText ? Number(capacityText) : null;
+            if (
+              rawCapacity !== null &&
+              (!Number.isInteger(rawCapacity) || rawCapacity < 1)
+            ) {
+              toast(
+                "Seat capacity must be a whole number of at least 1, or left blank for unlimited.",
+                "err",
+              );
+              return;
+            }
+            const patch = {
+              title,
+              title_ar: textOf(values, "title_ar") || null,
+              category,
+              rank: rawRank,
+              max_holders: rawCapacity,
+              description: textOf(values, "description") || null,
+              team: (textOf(values, "team") || null) as TeamKey | null,
+              reports_to: textOf(values, "reports_to") || null,
+              responsibilities: textOf(values, "responsibilities")
+                .split("\n")
+                .map((line) => line.trim())
+                .filter(Boolean),
+            };
+            try {
+              const client = requireClient();
+              if (existing) {
+                const { error } = await client
+                  .from("positions")
+                  .update(patch)
+                  .eq("id", existing.id);
+                if (error) throw new Error(error.message);
+              } else {
+                const slug = slugify(title);
+                if (!slug) {
+                  toast(
+                    "The title must contain at least one letter or number.",
+                    "err",
+                  );
+                  return;
+                }
+                const { error } = await client
+                  .from("positions")
+                  .insert({ ...patch, slug })
+                  .select("id")
+                  .single();
+                if (error) throw new Error(error.message);
+              }
+              modal.close();
+              toast(existing ? "Club role updated." : "Club role created.");
+              void bestEffortFunctionSync("club-records-sheet-sync", {
+                sheets: ["people", "club_positions"],
+              });
+              await draw();
+            } catch (error) {
+              console.error("Could not save club role:", error);
+              toast(`Could not save club role: ${errorMessage(error)}`, "err");
+            }
+          },
+          "primary",
+        ),
       ),
     );
   }
 
-  function assignmentDialog(position: Position, allUsers: MemberRow[], currentHolders: Holder[]): void {
+  function assignmentDialog(
+    position: Position,
+    allUsers: MemberRow[],
+    currentHolders: Holder[],
+  ): void {
     if (!allUsers.length) {
-      toast('There are no accounts to display.', 'err');
+      toast("There are no accounts to display.", "err");
       return;
     }
 
     const eligible = allUsers.filter(mayHoldClubPosition);
     const holderIds = new Set(currentHolders.map((holder) => holder.user_id));
     const assignable = eligible.filter((member) => !holderIds.has(member.id));
-    let selectedId = assignable[0]?.id ?? '';
+    let selectedId = assignable[0]?.id ?? "";
     const today = new Date().toISOString().slice(0, 10);
 
-    const searchInput = h('input', {
-      type: 'search',
-      placeholder: 'Search by name, email, student ID or current role…',
-      'aria-label': 'Search accounts',
+    const searchInput = h("input", {
+      type: "search",
+      placeholder: "Search by name, email, student ID or current role…",
+      "aria-label": "Search accounts",
       style: {
-        width: '100%',
-        padding: '0.85rem 1rem',
-        background: '#0d0d12',
-        border: '1px solid var(--border-color)',
-        color: 'var(--text-main)',
-        font: 'inherit',
+        width: "100%",
+        padding: "0.85rem 1rem",
+        background: "#0d0d12",
+        border: "1px solid var(--border-color)",
+        color: "var(--text-main)",
+        font: "inherit",
       },
     }) as HTMLInputElement;
-    const peopleFilter = h('select', {
-      'aria-label': 'Filter member directory',
-      class: 'member-directory__filter',
-    },
-      h('option', { value: 'eligible' }, 'Eligible to assign'),
-      h('option', { value: 'no-role' }, 'Eligible · no current role'),
-      h('option', { value: 'has-role' }, 'Eligible · has current role'),
-      h('option', { value: 'all' }, 'All accounts'),
+    const peopleFilter = h(
+      "select",
+      {
+        "aria-label": "Filter member directory",
+        class: "member-directory__filter",
+      },
+      h("option", { value: "eligible" }, "Eligible to assign"),
+      h("option", { value: "no-role" }, "Eligible · no current role"),
+      h("option", { value: "has-role" }, "Eligible · has current role"),
+      h("option", { value: "all" }, "All accounts"),
     ) as HTMLSelectElement;
 
-    const selectedSummary = h('div', {
-      class: 'mono-meta',
+    const selectedSummary = h("div", {
+      class: "mono-meta",
       style: {
-        minHeight: '2.5rem',
-        padding: '0.75rem 1rem',
-        border: '1px solid var(--border-color)',
-        background: 'var(--bg-surface-hover)',
+        minHeight: "2.5rem",
+        padding: "0.75rem 1rem",
+        border: "1px solid var(--border-color)",
+        background: "var(--bg-surface-hover)",
       },
     });
 
-    const list = h('div', {
-      role: 'listbox',
-      'aria-label': 'Club accounts',
+    const list = h("div", {
+      role: "listbox",
+      "aria-label": "Club accounts",
       style: {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(18rem, 1fr))',
-        gap: '0.65rem',
-        maxHeight: '24rem',
-        overflowY: 'auto',
-        padding: '0.25rem',
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(18rem, 1fr))",
+        gap: "0.65rem",
+        maxHeight: "24rem",
+        overflowY: "auto",
+        padding: "0.25rem",
       },
     });
 
-    function renderPeople(query = ''): void {
+    function renderPeople(query = ""): void {
       const normalized = query.trim().toLowerCase();
       const visible = allUsers.filter((member) => {
-        const allowed = mayHoldClubPosition(member) && !holderIds.has(member.id);
-        if (peopleFilter.value === 'eligible' && !allowed) return false;
-        if (peopleFilter.value === 'no-role' && (!allowed || member.current_position)) return false;
-        if (peopleFilter.value === 'has-role' && (!allowed || !member.current_position)) return false;
+        const allowed =
+          mayHoldClubPosition(member) && !holderIds.has(member.id);
+        if (peopleFilter.value === "eligible" && !allowed) return false;
+        if (
+          peopleFilter.value === "no-role" &&
+          (!allowed || member.current_position)
+        )
+          return false;
+        if (
+          peopleFilter.value === "has-role" &&
+          (!allowed || !member.current_position)
+        )
+          return false;
         const haystack = [
           member.full_name,
           member.email,
-          member.student_id ?? '',
-          member.current_position ?? '',
+          member.student_id ?? "",
+          member.current_position ?? "",
           membershipLabel(member),
-        ].join(' ').toLowerCase();
+        ]
+          .join(" ")
+          .toLowerCase();
         return !normalized || haystack.includes(normalized);
       });
 
-      list.replaceChildren(...visible.map((member) => {
-        const alreadyAssigned = holderIds.has(member.id);
-        const allowed = mayHoldClubPosition(member) && !alreadyAssigned;
-        const selected = member.id === selectedId;
-        const status = membershipLabel(member);
-        const detail = [
-          member.email,
-          member.student_id ? `ID ${member.student_id}` : null,
-          member.current_position ? `Current: ${member.current_position} (will be replaced)` : 'No current role',
-        ].filter(Boolean).join(' · ');
+      list.replaceChildren(
+        ...visible.map((member) => {
+          const alreadyAssigned = holderIds.has(member.id);
+          const allowed = mayHoldClubPosition(member) && !alreadyAssigned;
+          const selected = member.id === selectedId;
+          const status = membershipLabel(member);
+          const detail = [
+            member.email,
+            member.student_id ? `ID ${member.student_id}` : null,
+            member.current_position
+              ? `Current: ${member.current_position} (will be replaced)`
+              : "No current role",
+          ]
+            .filter(Boolean)
+            .join(" · ");
 
-        return h('button', {
-          type: 'button',
-          role: 'option',
-          'aria-selected': String(selected),
-          disabled: !allowed,
-          onclick: () => {
-            if (!allowed) return;
-            selectedId = member.id;
-            renderPeople(searchInput.value);
-            selectedSummary.replaceChildren(
-              h('strong', member.full_name),
-              h('span', { style: { marginLeft: '0.65rem', color: 'var(--text-muted)' } },
-                `selected for ${position.title}`),
-            );
-          },
-          style: {
-            textAlign: 'left',
-            padding: '0.9rem 1rem',
-            minHeight: '6.25rem',
-            border: selected ? '1px solid var(--accent-blue)' : '1px solid var(--border-color)',
-            background: selected ? 'var(--accent-blue-dim)' : 'var(--bg-surface)',
-            color: allowed ? 'var(--text-main)' : 'var(--text-dark)',
-            cursor: allowed ? 'pointer' : 'not-allowed',
-            opacity: allowed ? '1' : '0.55',
-          },
-        },
-          h('strong', { style: { display: 'block', marginBottom: '0.35rem' } }, member.full_name),
-          h('span', { class: 'mono-meta', style: { display: 'block', marginBottom: '0.45rem' } }, detail || 'No account details'),
-          h('span', { class: 'mono-meta' },
-            alreadyAssigned
-              ? `ALREADY ASSIGNED TO ${position.title.toUpperCase()}`
-              : allowed
-              ? `MEMBERSHIP: ${status.toUpperCase()}`
-              : `MEMBERSHIP: ${status.toUpperCase()} — activate in Members before assigning a club role`),
-        );
-      }));
+          return h(
+            "button",
+            {
+              type: "button",
+              role: "option",
+              "aria-selected": String(selected),
+              disabled: !allowed,
+              onclick: () => {
+                if (!allowed) return;
+                selectedId = member.id;
+                renderPeople(searchInput.value);
+                selectedSummary.replaceChildren(
+                  h("strong", member.full_name),
+                  h(
+                    "span",
+                    {
+                      style: {
+                        marginLeft: "0.65rem",
+                        color: "var(--text-muted)",
+                      },
+                    },
+                    `selected for ${position.title}`,
+                  ),
+                );
+              },
+              style: {
+                textAlign: "left",
+                padding: "0.9rem 1rem",
+                minHeight: "6.25rem",
+                border: selected
+                  ? "1px solid var(--accent-blue)"
+                  : "1px solid var(--border-color)",
+                background: selected
+                  ? "var(--accent-blue-dim)"
+                  : "var(--bg-surface)",
+                color: allowed ? "var(--text-main)" : "var(--text-dark)",
+                cursor: allowed ? "pointer" : "not-allowed",
+                opacity: allowed ? "1" : "0.55",
+              },
+            },
+            h(
+              "strong",
+              { style: { display: "block", marginBottom: "0.35rem" } },
+              member.full_name,
+            ),
+            h(
+              "span",
+              {
+                class: "mono-meta",
+                style: { display: "block", marginBottom: "0.45rem" },
+              },
+              detail || "No account details",
+            ),
+            h(
+              "span",
+              { class: "mono-meta" },
+              alreadyAssigned
+                ? `ALREADY ASSIGNED TO ${position.title.toUpperCase()}`
+                : allowed
+                  ? `MEMBERSHIP: ${status.toUpperCase()}`
+                  : `MEMBERSHIP: ${status.toUpperCase()} — activate in Members before assigning a club role`,
+            ),
+          );
+        }),
+      );
 
       if (!visible.length) {
-        list.replaceChildren(h('p', { class: 'mono-meta dim-text' }, 'No accounts match this search.'));
+        list.replaceChildren(
+          h(
+            "p",
+            { class: "mono-meta dim-text" },
+            "No accounts match this search.",
+          ),
+        );
       }
     }
 
-    searchInput.addEventListener('input', () => renderPeople(searchInput.value));
-    peopleFilter.addEventListener('change', () => renderPeople(searchInput.value));
+    searchInput.addEventListener("input", () =>
+      renderPeople(searchInput.value),
+    );
+    peopleFilter.addEventListener("change", () =>
+      renderPeople(searchInput.value),
+    );
     renderPeople();
 
     if (selectedId) {
       const selected = allUsers.find((member) => member.id === selectedId);
-      if (selected) selectedSummary.replaceChildren(
-        h('strong', selected.full_name),
-        h('span', { style: { marginLeft: '0.65rem', color: 'var(--text-muted)' } },
-          `selected for ${position.title}`),
-      );
+      if (selected)
+        selectedSummary.replaceChildren(
+          h("strong", selected.full_name),
+          h(
+            "span",
+            { style: { marginLeft: "0.65rem", color: "var(--text-muted)" } },
+            `selected for ${position.title}`,
+          ),
+        );
     } else {
-      selectedSummary.replaceChildren('No active member is currently eligible. Activate an applicant from Members first.');
+      selectedSummary.replaceChildren(
+        "No active member is currently eligible. Activate an applicant from Members first.",
+      );
     }
 
     const dateField = field({
-      label: 'Effective date', name: 'effective_on', type: 'date', required: true, value: today,
+      label: "Effective date",
+      name: "effective_on",
+      type: "date",
+      required: true,
+      value: today,
     });
     const reason = field({
-      label: 'Reason / note', name: 'reason', type: 'textarea', rows: 3,
-      hint: 'Optional. Stored with the official club position change.',
+      label: "Reason / note",
+      name: "reason",
+      type: "textarea",
+      rows: 3,
+      hint: "Optional. Stored with the official club position change.",
     });
 
-    const body = h('div', { class: 'portal-form' },
-      notice('info',
-        `This assigns an official ACM club organization role: ${position.title}. Event and competition work is separate and belongs under Projects & Events → event positions.`),
-      h('div', {},
-        h('div', { class: 'mono-meta', style: { marginBottom: '0.5rem' } },
-          `CURRENT HOLDERS (${currentHolders.length}) · AVAILABLE MEMBERS (${assignable.length}) · ALL ACCOUNTS (${allUsers.length})`),
-        h('div', { class: 'member-directory__toolbar' }, searchInput, peopleFilter),
+    const body = h(
+      "div",
+      { class: "portal-form" },
+      notice(
+        "info",
+        `This assigns an official ACM club organization role: ${position.title}. Event and competition work is separate and belongs under Projects & Events → event positions.`,
+      ),
+      h(
+        "div",
+        {},
+        h(
+          "div",
+          { class: "mono-meta", style: { marginBottom: "0.5rem" } },
+          `CURRENT HOLDERS (${currentHolders.length}) · AVAILABLE MEMBERS (${assignable.length}) · ALL ACCOUNTS (${allUsers.length})`,
+        ),
+        h(
+          "div",
+          { class: "member-directory__toolbar" },
+          searchInput,
+          peopleFilter,
+        ),
       ),
       list,
       selectedSummary,
-      h('div', { class: 'field-pair' }, dateField, reason),
+      h("div", { class: "field-pair" }, dateField, reason),
     );
 
     const modal = dialog(
       `Assign club role — ${position.title}`,
       body,
-      h('div', { class: 'button-row' },
-        action('Assign member', async () => {
-          if (!selectedId) {
-            toast('Choose an active member first.', 'err');
-            return;
-          }
-          const dateInput = dateField.querySelector('input') as HTMLInputElement | null;
-          const reasonInput = reason.querySelector('textarea') as HTMLTextAreaElement | null;
-          const effectiveOn = dateInput?.value || today;
-          try {
-            await grantPosition(selectedId, position.id, effectiveOn, reasonInput?.value.trim() || null);
-            modal.close();
-            toast(`${position.title} assigned.`);
-            await draw();
-          } catch (error) {
-            console.error('Could not assign club role:', error);
-            toast(`Could not assign club role: ${errorMessage(error)}`, 'err');
-          }
-        }, 'primary'),
+      h(
+        "div",
+        { class: "button-row" },
+        action(
+          "Assign member",
+          async () => {
+            if (!selectedId) {
+              toast("Choose an active member first.", "err");
+              return;
+            }
+            const dateInput = dateField.querySelector(
+              "input",
+            ) as HTMLInputElement | null;
+            const reasonInput = reason.querySelector(
+              "textarea",
+            ) as HTMLTextAreaElement | null;
+            const effectiveOn = dateInput?.value || today;
+            try {
+              await grantPosition(
+                selectedId,
+                position.id,
+                effectiveOn,
+                reasonInput?.value.trim() || null,
+              );
+              modal.close();
+              toast(`${position.title} assigned.`);
+              await draw();
+            } catch (error) {
+              console.error("Could not assign club role:", error);
+              toast(
+                `Could not assign club role: ${errorMessage(error)}`,
+                "err",
+              );
+            }
+          },
+          "primary",
+        ),
       ),
     );
 
-    modal.style.width = 'min(72rem, calc(100vw - 3rem))';
-    modal.style.maxWidth = '72rem';
-    modal.style.margin = 'auto';
+    modal.style.width = "min(72rem, calc(100vw - 3rem))";
+    modal.style.maxWidth = "72rem";
+    modal.style.margin = "auto";
   }
 
   async function draw(): Promise<void> {
@@ -442,7 +714,7 @@ async function start(): Promise<void> {
       const [all, current, allUsers] = await Promise.all([
         positions(true),
         holders(),
-        members('', ''),
+        members("", ""),
       ]);
 
       const byPosition = new Map<string, Holder[]>();
@@ -453,36 +725,48 @@ async function start(): Promise<void> {
         byPosition.set(holder.position_id, list);
       }
 
-      const vacantLeadership = all.filter((position) =>
-        position.is_active && vacancy(position) === 'now' && !(byPosition.get(position.id) ?? []).length,
+      const vacantLeadership = all.filter(
+        (position) =>
+          position.is_active &&
+          vacancy(position) === "now" &&
+          !(byPosition.get(position.id) ?? []).length,
       );
 
-      const catalogue = h('div', { class: 'position-catalogue' });
-      const results = h('div', { class: 'position-catalogue__results' });
-      const resultCount = h('p', { class: 'mono-meta position-catalogue__count', 'aria-live': 'polite' });
-      const search = h('input', {
-        type: 'search',
-        class: 'position-catalogue__search',
-        placeholder: 'Search roles, descriptions, holders or rank…',
-        'aria-label': 'Search club roles',
+      const catalogue = h("div", { class: "position-catalogue" });
+      const results = h("div", { class: "position-catalogue__results" });
+      const resultCount = h("p", {
+        class: "mono-meta position-catalogue__count",
+        "aria-live": "polite",
+      });
+      const search = h("input", {
+        type: "search",
+        class: "position-catalogue__search",
+        placeholder: "Search roles, descriptions, holders or rank…",
+        "aria-label": "Search club roles",
       }) as HTMLInputElement;
-      const categoryFilter = h('select', {
-        class: 'position-catalogue__select',
-        'aria-label': 'Filter by organization level',
-      },
-        h('option', { value: '' }, 'All organization levels'),
-        CATEGORIES.map((category) => h('option', { value: category.value }, category.label)),
+      const categoryFilter = h(
+        "select",
+        {
+          class: "position-catalogue__select",
+          "aria-label": "Filter by organization level",
+        },
+        h("option", { value: "" }, "All organization levels"),
+        CATEGORIES.map((category) =>
+          h("option", { value: category.value }, category.label),
+        ),
       ) as HTMLSelectElement;
-      const statusFilter = h('select', {
-        class: 'position-catalogue__select',
-        'aria-label': 'Filter by seat status',
-      },
-        h('option', { value: '' }, 'All seat statuses'),
-        h('option', { value: 'open' }, 'Open seats'),
-        h('option', { value: 'full' }, 'Full'),
-        h('option', { value: 'unoccupied' }, 'Unoccupied'),
-        h('option', { value: 'unlimited' }, 'Unlimited capacity'),
-        h('option', { value: 'archived' }, 'Archived'),
+      const statusFilter = h(
+        "select",
+        {
+          class: "position-catalogue__select",
+          "aria-label": "Filter by seat status",
+        },
+        h("option", { value: "" }, "All seat statuses"),
+        h("option", { value: "open" }, "Open seats"),
+        h("option", { value: "full" }, "Full"),
+        h("option", { value: "unoccupied" }, "Unoccupied"),
+        h("option", { value: "unlimited" }, "Unlimited capacity"),
+        h("option", { value: "archived" }, "Archived"),
       ) as HTMLSelectElement;
 
       function renderCatalogue(): void {
@@ -491,139 +775,306 @@ async function start(): Promise<void> {
         const status = statusFilter.value;
         const visible = all.filter((position) => {
           const held = byPosition.get(position.id) ?? [];
-          const categoryLabel = CATEGORIES.find((item) => item.value === position.category)?.label
-            ?? enumLabel(position.category);
-          const seatStatus = !position.is_active ? 'archived'
-            : position.max_holders !== null && held.length >= position.max_holders ? 'full'
-            : held.length === 0 ? 'unoccupied' : 'open';
+          const categoryLabel =
+            CATEGORIES.find((item) => item.value === position.category)
+              ?.label ?? enumLabel(position.category);
+          const seatStatus = !position.is_active
+            ? "archived"
+            : position.max_holders !== null &&
+                held.length >= position.max_holders
+              ? "full"
+              : held.length === 0
+                ? "unoccupied"
+                : "open";
           const searchable = [
             position.title,
-            position.description ?? '',
+            position.description ?? "",
             categoryLabel,
+            position.team ? `${TEAM_LABELS[position.team]} team` : "",
+            ...(position.responsibilities ?? []),
             String(position.rank),
             seatStatus,
-            position.max_holders === null ? 'unlimited' : `${held.length} of ${position.max_holders}`,
-            ...held.map((holder) => holder.member?.full_name ?? ''),
-          ].join(' ').toLowerCase();
-          return (!query || searchable.includes(query))
-            && (!category || position.category === category)
-            && (!status
-              || seatStatus === status
-              || (status === 'open' && hasOpenSeat(position, held.length))
-              || (status === 'unlimited' && position.is_active && position.max_holders === null));
+            position.max_holders === null
+              ? "unlimited"
+              : `${held.length} of ${position.max_holders}`,
+            ...held.map((holder) => holder.member?.full_name ?? ""),
+          ]
+            .join(" ")
+            .toLowerCase();
+          return (
+            (!query || searchable.includes(query)) &&
+            (!category || position.category === category) &&
+            (!status ||
+              seatStatus === status ||
+              (status === "open" && hasOpenSeat(position, held.length)) ||
+              (status === "unlimited" &&
+                position.is_active &&
+                position.max_holders === null))
+          );
         });
 
         resultCount.textContent = `SHOWING ${visible.length} OF ${all.length} CLUB ROLES`;
-        results.replaceChildren(dataTable(
-          ['Club role', 'Organization level', 'Rank', 'Currently held by', 'Seats', 'State', 'Actions'],
-          visible.map((position) => {
-            const held = byPosition.get(position.id) ?? [];
-            const categoryLabel = CATEGORIES.find((item) => item.value === position.category)?.label
-              ?? enumLabel(position.category);
-            return [
-              h('div', { class: 'position-role' },
-                h('strong', position.title),
-                position.description ? h('p', { class: 'mono-meta dim-text' }, position.description) : null,
-              ),
-              h('span', { class: 'mono-meta' }, categoryLabel.toUpperCase()),
-              h('span', { class: 'mono-meta' }, String(position.rank)),
-              held.length
-                ? h('div', { class: 'holder-list' }, held.map((holder) =>
-                    h('p', {},
-                      h('strong', holder.member?.full_name ?? '—'), ' ',
-                      h('span', { class: 'mono-meta dim-text' }, term(holder.started_on, holder.ended_on)),
+        results.replaceChildren(
+          dataTable(
+            [
+              "Club role",
+              "Organization level",
+              "Rank",
+              "Currently held by",
+              "Seats",
+              "State",
+              "Actions",
+            ],
+            visible.map((position) => {
+              const held = byPosition.get(position.id) ?? [];
+              const categoryLabel =
+                CATEGORIES.find((item) => item.value === position.category)
+                  ?.label ?? enumLabel(position.category);
+              return [
+                h(
+                  "div",
+                  { class: "position-role" },
+                  h("strong", position.title),
+                  position.description
+                    ? h(
+                        "p",
+                        { class: "mono-meta dim-text" },
+                        position.description,
+                      )
+                    : null,
+                  reportsTo(position, all)
+                    ? h(
+                        "p",
+                        { class: "mono-meta position-role__line" },
+                        `REPORTS TO ${reportsTo(position, all)!.toUpperCase()}`,
+                      )
+                    : null,
+                ),
+                h(
+                  "div",
+                  { class: "position-level" },
+                  h(
+                    "span",
+                    { class: "mono-meta" },
+                    categoryLabel.toUpperCase(),
+                  ),
+                  position.team
+                    ? h(
+                        "span",
+                        { class: "mono-meta dim-text" },
+                        `${TEAM_LABELS[position.team].toUpperCase()} TEAM`,
+                      )
+                    : null,
+                ),
+                h("span", { class: "mono-meta" }, String(position.rank)),
+                held.length
+                  ? h(
+                      "div",
+                      { class: "holder-list" },
+                      held.map((holder) =>
+                        h(
+                          "p",
+                          {},
+                          h("strong", holder.member?.full_name ?? "—"),
+                          " ",
+                          h(
+                            "span",
+                            { class: "mono-meta dim-text" },
+                            term(holder.started_on, holder.ended_on),
+                          ),
+                        ),
+                      ),
+                    )
+                  : attentionPill(
+                      vacancy(position),
+                      position.is_active ? "Unoccupied" : "None",
                     ),
-                  ))
-                : attentionPill(vacancy(position), position.is_active ? 'Unoccupied' : 'None'),
-              h('span', {
-                class: `capacity-badge capacity-badge--${position.max_holders === null
-                  ? 'unlimited' : held.length >= position.max_holders ? 'full' : 'open'}`,
-              }, capacityLabel(position, held.length).toUpperCase()),
-              stateTag(position.is_active ? 'Active' : 'Archived', !position.is_active),
-              h('div', { class: 'position-actions' },
-                hasOpenSeat(position, held.length)
-                  ? action('ASSIGN', async () => assignmentDialog(position, allUsers, held), 'primary')
-                  : h('span', { class: 'position-actions__placeholder', 'aria-hidden': 'true' }),
-                h('button', { type: 'button', class: 'btn-ghost', onclick: () => editor(position, all) }, 'EDIT'),
-                action(position.is_active ? 'ARCHIVE' : 'RESTORE', async () => {
-                  try {
-                    const { error } = await requireClient().from('positions').update({
-                      is_active: !position.is_active,
-                      archived_at: position.is_active ? new Date().toISOString() : null,
-                    }).eq('id', position.id);
-                    if (error) throw new Error(error.message);
-                    toast(position.is_active ? 'Club role archived.' : 'Club role restored.');
-                    void bestEffortFunctionSync('club-records-sheet-sync', {
-                      sheets: ['people', 'club_positions'],
-                    });
-                    await draw();
-                  } catch (error) {
-                    console.error('Could not change club role state:', error);
-                    toast(`Could not update club role: ${errorMessage(error)}`, 'err');
-                  }
-                }),
-              ),
-            ];
-          }),
-          {
-            empty: 'No club roles match these filters.',
-            tableClass: 'position-table',
-            rowClass: (index) => {
-              const position = visible[index];
-              if (!position) return '';
-              return attentionRow((byPosition.get(position.id) ?? []).length ? 'ok' : vacancy(position));
+                h(
+                  "span",
+                  {
+                    class: `capacity-badge capacity-badge--${
+                      position.max_holders === null
+                        ? "unlimited"
+                        : held.length >= position.max_holders
+                          ? "full"
+                          : "open"
+                    }`,
+                  },
+                  capacityLabel(position, held.length).toUpperCase(),
+                ),
+                stateTag(
+                  position.is_active ? "Active" : "Archived",
+                  !position.is_active,
+                ),
+                h(
+                  "div",
+                  { class: "position-actions" },
+                  hasOpenSeat(position, held.length)
+                    ? action(
+                        "ASSIGN",
+                        async () => assignmentDialog(position, allUsers, held),
+                        "primary",
+                      )
+                    : h("span", {
+                        class: "position-actions__placeholder",
+                        "aria-hidden": "true",
+                      }),
+                  h(
+                    "button",
+                    {
+                      type: "button",
+                      class: "btn-ghost",
+                      onclick: () => editor(position, all),
+                    },
+                    "EDIT",
+                  ),
+                  action(
+                    position.is_active ? "ARCHIVE" : "RESTORE",
+                    async () => {
+                      try {
+                        const { error } = await requireClient()
+                          .from("positions")
+                          .update({
+                            is_active: !position.is_active,
+                            archived_at: position.is_active
+                              ? new Date().toISOString()
+                              : null,
+                          })
+                          .eq("id", position.id);
+                        if (error) throw new Error(error.message);
+                        toast(
+                          position.is_active
+                            ? "Club role archived."
+                            : "Club role restored.",
+                        );
+                        void bestEffortFunctionSync("club-records-sheet-sync", {
+                          sheets: ["people", "club_positions"],
+                        });
+                        await draw();
+                      } catch (error) {
+                        console.error(
+                          "Could not change club role state:",
+                          error,
+                        );
+                        toast(
+                          `Could not update club role: ${errorMessage(error)}`,
+                          "err",
+                        );
+                      }
+                    },
+                  ),
+                ),
+              ];
+            }),
+            {
+              empty: "No club roles match these filters.",
+              tableClass: "position-table",
+              rowClass: (index) => {
+                const position = visible[index];
+                if (!position) return "";
+                return attentionRow(
+                  (byPosition.get(position.id) ?? []).length
+                    ? "ok"
+                    : vacancy(position),
+                );
+              },
             },
-          },
-        ));
+          ),
+        );
       }
 
-      const clearFilters = h('button', {
-        type: 'button', class: 'btn-ghost position-catalogue__clear',
-        onclick: () => {
-          search.value = '';
-          categoryFilter.value = '';
-          statusFilter.value = '';
-          renderCatalogue();
-          search.focus();
+      const clearFilters = h(
+        "button",
+        {
+          type: "button",
+          class: "btn-ghost position-catalogue__clear",
+          onclick: () => {
+            search.value = "";
+            categoryFilter.value = "";
+            statusFilter.value = "";
+            renderCatalogue();
+            search.focus();
+          },
         },
-      }, 'CLEAR');
-      search.addEventListener('input', renderCatalogue);
-      categoryFilter.addEventListener('change', renderCatalogue);
-      statusFilter.addEventListener('change', renderCatalogue);
+        "CLEAR",
+      );
+      search.addEventListener("input", renderCatalogue);
+      categoryFilter.addEventListener("change", renderCatalogue);
+      statusFilter.addEventListener("change", renderCatalogue);
       catalogue.append(
-        h('div', { class: 'position-catalogue__toolbar' }, search, categoryFilter, statusFilter, clearFilters),
+        h(
+          "div",
+          { class: "position-catalogue__toolbar" },
+          search,
+          categoryFilter,
+          statusFilter,
+          clearFilters,
+        ),
         resultCount,
         results,
       );
       renderCatalogue();
 
-      render(content,
-        pageHeader('ADMIN / CLUB ORGANIZATION', 'Club organization roles',
-          h('button', {
-            type: 'button', class: 'btn-submit', style: { marginTop: '0' },
-            onclick: () => editor(null, all),
-          }, 'New club role'),
+      render(
+        content,
+        pageHeader(
+          "ADMIN / CLUB ORGANIZATION",
+          "Club organization roles",
+          h(
+            "button",
+            {
+              type: "button",
+              class: "btn-submit",
+              style: { marginTop: "0" },
+              onclick: () => editor(null, all),
+            },
+            "New club role",
+          ),
         ),
-        h('div', { class: 'position-summary' },
-          h('p', { class: 'queue-summary' },
+        h(
+          "div",
+          { class: "position-summary" },
+          h(
+            "p",
+            { class: "queue-summary" },
             vacantLeadership.length
               ? `${vacantLeadership.length} vacant leadership roles`
-              : 'All leadership roles filled',
+              : "All leadership roles filled",
           ),
           attentionLegend(
-            ['now', 'Empty leadership seat'], ['review', 'Empty committee seat'],
-            ['ok', 'Filled'], ['idle', 'Archived'],
+            ["now", "Empty leadership seat"],
+            ["review", "No team members yet"],
+            ["ok", "Filled"],
+            ["idle", "Archived"],
           ),
         ),
-        panel('Club organization catalogue', all.length ? catalogue : emptyState('No club organization roles defined.')),
+        panel(
+          "Club organization catalogue",
+          all.length
+            ? catalogue
+            : emptyState("No club organization roles defined."),
+        ),
       );
     } catch (error) {
-      console.error('Club organization page failed to load:', error);
-      render(content,
-        pageHeader('ADMIN / CLUB ORGANIZATION', 'Club organization unavailable'),
-        notice('err', `The club role catalogue could not load: ${errorMessage(error)}`),
-        h('div', { class: 'button-row' },
-          h('button', { type: 'button', class: 'btn-ghost', onclick: () => void draw() }, 'TRY AGAIN'),
+      console.error("Club organization page failed to load:", error);
+      render(
+        content,
+        pageHeader(
+          "ADMIN / CLUB ORGANIZATION",
+          "Club organization unavailable",
+        ),
+        notice(
+          "err",
+          `The club role catalogue could not load: ${errorMessage(error)}`,
+        ),
+        h(
+          "div",
+          { class: "button-row" },
+          h(
+            "button",
+            { type: "button", class: "btn-ghost", onclick: () => void draw() },
+            "TRY AGAIN",
+          ),
         ),
       );
     }

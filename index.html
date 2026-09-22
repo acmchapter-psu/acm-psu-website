@@ -1,9 +1,8 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- Content-Security-Policy.
          GitHub Pages cannot set response headers, so the policy is stated here.
@@ -21,7 +20,9 @@
          *.supabase.co rather than the project ref, so moving projects does not
          mean editing every page; the ref is public in assets/js/app/env.js
          either way. -->
-    <meta http-equiv="Content-Security-Policy" content="
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
         default-src 'self';
         base-uri 'self';
         object-src 'none';
@@ -32,567 +33,833 @@
         img-src 'self' data: blob: https://*.supabase.co;
         connect-src 'self' https://*.supabase.co wss://*.supabase.co;
         frame-src 'none';
-    ">
+    "
+    />
     <title>ACM PSU — Digital Archive</title>
-    <meta name="description"
-        content="The PSU ACM Student Chapter at the College of Computer &amp; Information Sciences, Prince Sultan University. A platform for professional development, innovation and collaboration among computing students. We run WebForge 2026 and the ACM/CyberTech CTF, and we archive every generation of the chapter.">
+    <meta
+      name="description"
+      content="The PSU ACM Student Chapter at the College of Computer &amp; Information Sciences, Prince Sultan University. A platform for professional development, innovation and collaboration among computing students. We run WebForge 2026 and the ACM/CyberTech CTF, and we archive every generation of the chapter."
+    />
 
-    <link rel="canonical" href="https://acmchapter-psu.github.io/acm-psu-website/">
-    <link rel="icon" href="/assets/img/favicon.ico" sizes="any">
-    <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
-    <link rel="mask-icon" href="/assets/img/safari-pinned-tab.svg?v=20260916-1" color="#5bbad5">
-    <link rel="icon" href="/assets/img/favicon-32.png" type="image/png" sizes="32x32">
-    <link rel="icon" href="/assets/img/favicon-16.png" type="image/png" sizes="16x16">
-    <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png?v=20260916">
-    <link rel="manifest" href="/site.webmanifest">
-    <meta name="theme-color" content="#050507">
+    <link
+      rel="canonical"
+      href="https://acmchapter-psu.github.io/acm-psu-website/"
+    />
+    <link rel="icon" href="/assets/img/favicon.ico" sizes="any" />
+    <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml" />
+    <link
+      rel="mask-icon"
+      href="/assets/img/safari-pinned-tab.svg?v=20260916-1"
+      color="#5bbad5"
+    />
+    <link
+      rel="icon"
+      href="/assets/img/favicon-32.png"
+      type="image/png"
+      sizes="32x32"
+    />
+    <link
+      rel="icon"
+      href="/assets/img/favicon-16.png"
+      type="image/png"
+      sizes="16x16"
+    />
+    <link
+      rel="apple-touch-icon"
+      href="/assets/img/apple-touch-icon.png?v=20260916"
+    />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#050507" />
 
-    <meta property="og:type" content="website">
-    <meta property="og:site_name" content="ACM PSU">
-    <meta property="og:title" content="ACM PSU — Digital Archive">
-    <meta property="og:description"
-        content="Student-led computing chapter at Prince Sultan University. Home of WebForge 2026 and the ACM/CyberTech CTF.">
-    <meta property="og:url" content="https://acmchapter-psu.github.io/acm-psu-website/">
-    <meta property="og:image" content="https://acmchapter-psu.github.io/acm-psu-website/assets/img/acm-banner.png">
-    <meta name="twitter:card" content="summary_large_image">
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ACM PSU" />
+    <meta property="og:title" content="ACM PSU — Digital Archive" />
+    <meta
+      property="og:description"
+      content="Student-led computing chapter at Prince Sultan University. Home of WebForge 2026 and the ACM/CyberTech CTF."
+    />
+    <meta
+      property="og:url"
+      content="https://acmchapter-psu.github.io/acm-psu-website/"
+    />
+    <meta
+      property="og:image"
+      content="https://acmchapter-psu.github.io/acm-psu-website/assets/img/acm-banner.png"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
 
-    <link rel="stylesheet" href="assets/css/main.css?v=20260908-3">
+    <script src="assets/js/theme.js?v=20260922-1"></script>
+    <link rel="stylesheet" href="assets/css/main.css?v=20260922-4" />
 
     <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@graph": [
-        {
-          "@type": "Organization",
-          "@id": "https://acmchapter-psu.github.io/acm-psu-website/#chapter",
-          "name": "ACM Student Chapter — Prince Sultan University",
-          "alternateName": "ACM PSU",
-          "url": "https://acmchapter-psu.github.io/acm-psu-website/",
-          "logo": "https://acmchapter-psu.github.io/acm-psu-website/assets/img/acm.png",
-          "description": "The PSU ACM Student Chapter at the College of Computer & Information Sciences, Prince Sultan University. It provides a dynamic platform that fosters professional development, innovation and collaboration among computing students, bridging the gap between academia and industry. Organises WebForge 2026 and the ACM/CyberTech Capture The Flag competition.",
-          "email": "acmchapter@psu.edu.sa",
-          "parentOrganization": {
-            "@type": "CollegeOrUniversity",
-            "name": "Prince Sultan University",
-            "address": {
-              "@type": "PostalAddress",
-              "addressLocality": "Riyadh",
-              "addressCountry": "SA"
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://acmchapter-psu.github.io/acm-psu-website/#chapter",
+            "name": "ACM Student Chapter — Prince Sultan University",
+            "alternateName": "ACM PSU",
+            "url": "https://acmchapter-psu.github.io/acm-psu-website/",
+            "logo": "https://acmchapter-psu.github.io/acm-psu-website/assets/img/acm.png",
+            "description": "The PSU ACM Student Chapter at the College of Computer & Information Sciences, Prince Sultan University. It provides a dynamic platform that fosters professional development, innovation and collaboration among computing students, bridging the gap between academia and industry. Organises WebForge 2026 and the ACM/CyberTech Capture The Flag competition.",
+            "email": "acmchapter@psu.edu.sa",
+            "parentOrganization": {
+              "@type": "CollegeOrUniversity",
+              "name": "Prince Sultan University",
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Riyadh",
+                "addressCountry": "SA"
+              }
+            }
+          },
+          {
+            "@type": "Event",
+            "name": "WebForge 2026",
+            "description": "An AI-assisted web engineering competition. Every team receives the same application brief, then plans, designs, builds, deploys and presents a working web application.",
+            "startDate": "2026-09-15",
+            "endDate": "2026-09-19",
+            "eventStatus": "https://schema.org/EventScheduled",
+            "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+            "url": "https://acmchapter-psu.github.io/acm-webforge-2026/",
+            "location": {
+              "@type": "Place",
+              "name": "Prince Sultan University",
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Riyadh",
+                "addressCountry": "SA"
+              }
+            },
+            "organizer": [
+              {
+                "@id": "https://acmchapter-psu.github.io/acm-psu-website/#chapter"
+              },
+              {
+                "@type": "Organization",
+                "name": "CyberTech Club, Prince Sultan University"
+              }
+            ]
+          },
+          {
+            "@type": "Event",
+            "name": "ACM/CyberTech CTF 3.0",
+            "description": "A Capture The Flag cybersecurity competition across cryptography, web, forensics and OSINT. Teams of two to three compete for three hours on a live scoreboard.",
+            "startDate": "2026-10-24T10:00:00+03:00",
+            "endDate": "2026-10-24T13:00:00+03:00",
+            "eventStatus": "https://schema.org/EventScheduled",
+            "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+            "url": "https://acmchapter-psu.github.io/ACM-CTF-3.0./",
+            "location": {
+              "@type": "Place",
+              "name": "Auditorium B105, 2nd Floor, Prince Sultan University",
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Riyadh",
+                "addressCountry": "SA"
+              }
+            },
+            "organizer": {
+              "@id": "https://acmchapter-psu.github.io/acm-psu-website/#chapter"
             }
           }
-        },
-        {
-          "@type": "Event",
-          "name": "ACM Programming Jam 2026 (JAM.26)",
-          "description": "An AI-assisted web engineering competition. Every team receives the same application brief, then plans, designs, builds, deploys and presents a working web application.",
-          "startDate": "2026-09-15",
-          "endDate": "2026-09-19",
-          "eventStatus": "https://schema.org/EventScheduled",
-          "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
-          "url": "https://acmchapter-psu.github.io/acm-webforge-2026/",
-          "location": {
-            "@type": "Place",
-            "name": "Prince Sultan University",
-            "address": {
-              "@type": "PostalAddress",
-              "addressLocality": "Riyadh",
-              "addressCountry": "SA"
-            }
-          },
-          "organizer": [
-            { "@id": "https://acmchapter-psu.github.io/acm-psu-website/#chapter" },
-            { "@type": "Organization", "name": "CyberTech Club, Prince Sultan University" }
-          ]
-        },
-        {
-          "@type": "Event",
-          "name": "ACM/CyberTech CTF 3.0",
-          "description": "A Capture The Flag cybersecurity competition across cryptography, web, forensics and OSINT. Teams of two to three compete for three hours on a live scoreboard.",
-          "startDate": "2026-10-24T10:00:00+03:00",
-          "endDate": "2026-10-24T13:00:00+03:00",
-          "eventStatus": "https://schema.org/EventScheduled",
-          "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
-          "url": "https://acmchapter-psu.github.io/ACM-CTF-3.0./",
-          "location": {
-            "@type": "Place",
-            "name": "Auditorium B105, 2nd Floor, Prince Sultan University",
-            "address": {
-              "@type": "PostalAddress",
-              "addressLocality": "Riyadh",
-              "addressCountry": "SA"
-            }
-          },
-          "organizer": { "@id": "https://acmchapter-psu.github.io/acm-psu-website/#chapter" }
-        }
-      ]
-    }
+        ]
+      }
     </script>
-</head>
+  </head>
 
-<body>
-
+  <body>
     <a class="skip-link" href="#main">Skip to content</a>
 
     <div class="ambient-glow"></div>
 
     <nav>
-        <div class="container nav-inner">
-            <a class="nav-logo" href="index.html" aria-label="ACM PSU — home">
-                <img src="assets/img/acm.png" alt="">
-                <span>ACM</span>
-                <span class="divider">/</span>
-                <span>PSU</span>
-            </a>
-            <button class="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false"
-                aria-controls="nav-links">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    aria-hidden="true">
-                    <path d="M4 7h16M4 12h16M4 17h16" />
-                </svg>
-            </button>
-            <div class="nav-links" id="nav-links">
-                <a href="#about">About</a>
-                <a href="positions.html">Positions</a>
-                <a href="projects.html">Projects</a>
-                <a href="archive.html">Archive</a>
-                <a href="team.html">Team</a>
-                <a href="join.html">Join</a>
-                <a href="contact.html">Contact</a>
-                <a href="/portal/index.html" class="accent-text">Portal</a>
-            </div>
-            <div class="nav-meta mono-meta">
-                SYS.ARCHIVE_<span data-current-year>2026</span> // ONLINE
-            </div>
+      <div class="container nav-inner">
+        <a class="nav-logo" href="index.html" aria-label="ACM PSU — home">
+          <img src="assets/img/acm.png" alt="" />
+          <span>ACM</span>
+          <span class="divider">/</span>
+          <span>PSU</span>
+        </a>
+        <button
+          class="nav-toggle"
+          type="button"
+          aria-label="Toggle navigation"
+          aria-expanded="false"
+          aria-controls="nav-links"
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+          >
+            <path d="M4 7h16M4 12h16M4 17h16" />
+          </svg>
+        </button>
+        <div class="nav-links" id="nav-links">
+          <a href="#about">About</a>
+          <a href="positions.html">Positions</a>
+          <a href="projects.html">Projects</a>
+          <a href="archive.html">Archive</a>
+          <a href="team.html">Team</a>
+          <a href="join.html">Join</a>
+          <a href="contact.html">Contact</a>
+          <a href="/portal/index.html" class="accent-text">Portal</a>
         </div>
+        <div class="nav-meta mono-meta">
+          SYS.ARCHIVE_<span data-current-year>2026</span> // ONLINE
+        </div>
+      </div>
     </nav>
 
     <main id="main">
-        <section class="hero container reveal">
-            <div class="hero-system-label mono-meta">
-                <span class="status-dot"></span>
-                ACM.PSU / CURRENT CHAPTER / <span data-current-year>2026</span>
-            </div>
+      <section class="hero container reveal">
+        <div class="hero-system-label mono-meta">
+          <span class="status-dot"></span>
+          ACM.PSU / CURRENT CHAPTER / <span data-current-year>2026</span>
+        </div>
 
-            <h1 class="hero-title">
-                Prince Sultan University
-                <span>Association for Computing Machinery.</span>
-            </h1>
+        <h1 class="hero-title">
+          Prince Sultan University
+          <span>Association for Computing Machinery.</span>
+        </h1>
 
-            <div class="hero-content">
-                <p class="hero-desc">
-                    The ACM student chapter at the College of Computer &amp; Information Sciences. We run programming
-                    and cybersecurity competitions, teach the workshops that lead into them, and keep the record of
-                    every chapter that came before. This is our digital archive.
-                </p>
-                <div class="hero-ctas">
-                    <a href="projects.html" class="btn btn-primary">Explore Projects</a>
-                    <a href="join.html" class="btn btn-secondary">Join ACM</a>
-                </div>
-            </div>
-        </section>
+        <div class="hero-content">
+          <p class="hero-desc">
+            The ACM student chapter at the College of Computer &amp; Information
+            Sciences. We run programming and cybersecurity competitions, teach
+            the workshops that lead into them, and keep the record of every
+            chapter that came before. This is our digital archive.
+          </p>
+          <div class="hero-ctas">
+            <a href="projects.html" class="btn btn-primary">Explore Projects</a>
+            <a href="join.html" class="btn btn-secondary">Join ACM</a>
+          </div>
+        </div>
+      </section>
 
-        <section id="about" class="container reveal">
-            <div class="section-header">
-                <h2>Charter</h2>
-                <span class="mono-meta">CCIS // OFFICIAL CHAPTER MANDATE</span>
-            </div>
+      <section id="about" class="container reveal">
+        <div class="section-header">
+          <h2>Charter</h2>
+          <span class="mono-meta">CCIS // OFFICIAL CHAPTER MANDATE</span>
+        </div>
 
-            <div class="note-card charter-intro">
-                <p class="mono-meta accent-text">MISSION</p>
-                <h3>Bridging academia and industry for computing students.</h3>
-                <p>
-                    The PSU ACM Student Chapter is a platform for professional development,
-                    new ideas and working together. It exists to close the gap between
-                    university and industry, and to build a community where students can grow,
-                    learn and contribute to computing more widely.
-                </p>
-                <ul>
-                    <li><span>CHARTERED UNDER</span><span>College of Computer &amp; Information Sciences</span></li>
-                    <li><span>CHAPTER CHAIRS</span><span>Dr. Yasir Javed &middot; Dr. Souad Larabi-Marie-Sainte</span></li>
-                    <li><span>CHAPTER EMAIL</span><span>acmchapter@psu.edu.sa</span></li>
-                </ul>
-            </div>
+        <div class="note-card charter-intro">
+          <p class="mono-meta accent-text">MISSION</p>
+          <h3>Bridging academia and industry for computing students.</h3>
+          <p>
+            The PSU ACM Student Chapter is a platform for professional
+            development, new ideas and working together. It exists to close the
+            gap between university and industry, and to build a community where
+            students can grow, learn and contribute to computing more widely.
+          </p>
+          <ul>
+            <li>
+              <span>CHARTERED UNDER</span
+              ><span>College of Computer &amp; Information Sciences</span>
+            </li>
+            <li>
+              <span>CHAPTER CHAIRS</span
+              ><span
+                >Dr. Yasir Javed &middot; Dr. Souad Larabi-Marie-Sainte</span
+              >
+            </li>
+            <li>
+              <span>CHAPTER EMAIL</span><span>acmchapter@psu.edu.sa</span>
+            </li>
+          </ul>
+        </div>
 
-            <div class="charter-grid">
-                <div class="charter-item">
-                    <span class="focus-num">01</span>
-                    <h3 class="focus-title">Talks and discussions</h3>
-                    <p class="charter-text">Open the door to talks, panel discussions and conferences that
-                        build the professional skills students need after graduation.</p>
-                </div>
-                <div class="charter-item">
-                    <span class="focus-num">02</span>
-                    <h3 class="focus-title">Writing and research</h3>
-                    <p class="charter-text">Give students the chance to write and present technical reports,
-                        and to work together on research projects.</p>
-                </div>
-                <div class="charter-item">
-                    <span class="focus-num">03</span>
-                    <h3 class="focus-title">New ideas</h3>
-                    <p class="charter-text">Back new computing programmes and give students room to build
-                        things together.</p>
-                </div>
-                <div class="charter-item">
-                    <span class="focus-num">04</span>
-                    <h3 class="focus-title">University and industry</h3>
-                    <p class="charter-text">Close the gap between university and industry, and put students
-                        in front of employers and the people leading the field.</p>
-                </div>
-                <div class="charter-item">
-                    <span class="focus-num">05</span>
-                    <h3 class="focus-title">People and mentorship</h3>
-                    <p class="charter-text">Create chances to meet people, find mentors and keep learning
-                        outside the classroom by trading ideas and experience.</p>
-                </div>
-            </div>
-        </section>
-
-        <section id="focus" class="container reveal">
-            <div class="section-header">
-                <h2>System Focus</h2>
-                <span class="mono-meta">CORE COMPETENCIES // V.26</span>
-            </div>
-
-            <div class="focus-grid">
-                <div class="focus-item">
-                    <span class="focus-num">01</span>
-                    <h3 class="focus-title">AI-Assisted Engineering</h3>
-                    <p class="mono-meta focus-meta">PLAN, BUILD, DEBUG, DEPLOY</p>
-                </div>
-                <div class="focus-item">
-                    <span class="focus-num">02</span>
-                    <h3 class="focus-title">Full-Stack Web</h3>
-                    <p class="mono-meta focus-meta">FIREBASE, GITHUB, VERCEL, CLOUDFLARE</p>
-                </div>
-                <div class="focus-item">
-                    <span class="focus-num">03</span>
-                    <h3 class="focus-title">Cybersecurity (CTF)</h3>
-                    <p class="mono-meta focus-meta">CRYPTOGRAPHY, WEB, FORENSICS, OSINT</p>
-                </div>
-                <div class="focus-item">
-                    <span class="focus-num">04</span>
-                    <h3 class="focus-title">Workshops &amp; Competitions</h3>
-                    <p class="mono-meta focus-meta">TEACH FIRST, THEN COMPETE</p>
-                </div>
-            </div>
-        </section>
-
-        <section id="team" class="container reveal">
-            <div class="section-header">
-                <h2>Current Generation</h2>
-                <span class="mono-meta tag active">STATUS: ACTIVE CHAPTER</span>
-            </div>
-
-            <div class="team-grid">
-                <div class="team-member">
-                    <div class="team-img-wrapper">
-                        <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:var(--bg-base);font-family:var(--font-display);font-size:2.5rem;color:var(--text-dark);"
-                            aria-hidden="true">MY</div>
-                    </div>
-                    <div class="team-info">
-                        <h3 class="team-name">Muhammad Yawar Hayat</h3>
-                        <div class="team-role mono-meta">
-                            <span>President</span>
-                            <span class="dim-text">ID: 0x01</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="team-member">
-                    <div class="team-img-wrapper">
-                        <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:var(--bg-base);font-family:var(--font-display);font-size:2.5rem;color:var(--text-dark);"
-                            aria-hidden="true">SA</div>
-                    </div>
-                    <div class="team-info">
-                        <h3 class="team-name">Shoug Alomran</h3>
-                        <div class="team-role mono-meta">
-                            <span>Vice President</span>
-                            <span class="dim-text">ID: 0x02</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div style="margin-top: 3rem; text-align: right;">
-                <a href="team.html" class="link-arrow">View Complete Roster
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="square" aria-hidden="true">
-                        <path d="M5 12h14M12 5l7 7-7 7" />
-                    </svg>
-                </a>
-            </div>
-        </section>
-
-        <section id="projects" class="container reveal">
-            <div class="section-header">
-                <h2>Selected Work</h2>
-                <span class="mono-meta">BUILT BY ACM // PRODUCTION ENV</span>
-            </div>
-
-            <div class="work-grid">
-                <article class="project-card">
-                    <div class="project-visual">
-                        <div class="window-chrome">
-                            <span class="window-dot"></span><span class="window-dot"></span><span
-                                class="window-dot"></span>
-                        </div>
-                        <img src="projects/programming-jams/ai-programming-jam-26/workshop-content/assests/banner.png"
-                            alt="WebForge 2026 event banner" class="project-img" loading="lazy">
-                    </div>
-                    <div class="project-content">
-                        <div class="project-meta-block">
-                            <div class="meta-item">
-                                <span class="meta-label">PROJECT_ID</span>
-                                <span class="mono-meta meta-value">JAM.26</span>
-                            </div>
-                            <div class="meta-item">
-                                <span class="meta-label">COMPETITION_DAY</span>
-                                <span class="mono-meta meta-value">19 SEP 2026</span>
-                            </div>
-                        </div>
-                        <h3 class="project-title">WebForge 2026</h3>
-                        <p class="project-desc">An AI-assisted web engineering competition. Every team receives the same
-                            application brief, then plans it in Excalidraw, designs it, builds it with AI assistants and
-                            Firebase, ships it to Vercel behind a real domain, absorbs a mid-competition change request,
-                            and presents the result. Three preparation workshop days run 15&ndash;17 September; the
-                            brief stays locked until competition day.</p>
-                        <div class="project-links">
-                            <a href="projects/programming-jams/ai-programming-jam-26/" class="btn btn-secondary">Event Guide</a>
-                            <a href="https://acmchapter-psu.github.io/acm-webforge-2026/" class="link-arrow" rel="noopener">Event
-                                Site
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2" stroke-linecap="square" aria-hidden="true">
-                                    <path d="M7 17L17 7M17 7H7M17 7V17" />
-                                </svg>
-                            </a>
-                        </div>
-                    </div>
-                </article>
-
-                <article class="project-card">
-                    <div class="project-visual">
-                        <div class="window-chrome">
-                            <span class="window-dot"></span><span class="window-dot"></span><span
-                                class="window-dot"></span>
-                        </div>
-                        <img src="projects/ctfs/ctf-3.0/workshop-material/assets/banner.png"
-                            alt="ACM/CyberTech CTF 3.0 event banner" class="project-img" loading="lazy">
-                    </div>
-                    <div class="project-content">
-                        <div class="project-meta-block">
-                            <div class="meta-item">
-                                <span class="meta-label">PROJECT_ID</span>
-                                <span class="mono-meta meta-value">CTF-3.0</span>
-                            </div>
-                            <div class="meta-item">
-                                <span class="meta-label">COMPETITION_DAY</span>
-                                <span class="mono-meta meta-value">24 OCT 2026</span>
-                            </div>
-                        </div>
-                        <h3 class="project-title">ACM/CyberTech CTF 3.0</h3>
-                        <p class="project-desc">A three-hour jeopardy-style Capture The Flag run jointly with the
-                            CyberTech Club. Four attack vectors &mdash; cryptography, web, forensics and OSINT &mdash;
-                            scaled from Very Easy to Insane. Teams of two to three submit flags in
-                            <code>ACM{&hellip;}</code> format for points on a live scoreboard. Saturday 24 October 2026,
-                            10:00&ndash;13:00, Auditorium B105.</p>
-                        <div class="project-links">
-                            <a href="projects/ctfs/ctf-3.0/" class="btn btn-secondary">Event Guide</a>
-                            <a href="https://acmchapter-psu.github.io/ACM-CTF-3.0./" class="link-arrow" rel="noopener">Event Site
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2" stroke-linecap="square" aria-hidden="true">
-                                    <path d="M7 17L17 7M17 7H7M17 7V17" />
-                                </svg>
-                            </a>
-                        </div>
-                    </div>
-                </article>
-            </div>
-        </section>
-
-        <section id="collaborations" class="container reveal">
-            <div class="section-header">
-                <h2>Club Collaborations</h2>
-                <span class="mono-meta">SHARED PROJECTS // DOCUMENTED HISTORY</span>
-            </div>
-
-            <div class="note-card collaboration-intro">
-                <p class="mono-meta accent-text">ACM × CYBERTECH</p>
-                <h3>Building PSU's Capture The Flag series together.</h3>
-                <p>
-                    The ACM Club and CyberTech Club collaborate on the ACM/CyberTech Capture The
-                    Flag series at Prince Sultan University. The partnership brings students
-                    together around practical cybersecurity training, challenge-based competition
-                    and a shared record of each edition. Published materials currently document
-                    three editions, from the inaugural CTF 1.0 through the upcoming CTF 3.0.
-                </p>
-                <div class="project-links" style="margin-top: 1.5rem;">
-                    <a href="projects/ctfs/ctf-3.0/" class="btn btn-secondary">Explore CTF 3.0</a>
-                    <a href="projects/ctfs/ctf-2.0/" class="link-arrow">View CTF 2.0 Results
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="square" aria-hidden="true">
-                            <path d="M5 12h14M12 5l7 7-7 7" />
-                        </svg>
-                    </a>
-                </div>
-            </div>
-
-            <div class="timeline collaboration-timeline">
-                <div class="timeline-row timeline-row--distant">
-                    <div class="year">CTF 1.0</div>
-                    <div class="timeline-details">
-                        <div class="timeline-stat"><span class="meta-label">COLLABORATORS</span><span
-                                class="mono-meta meta-value">ACM CLUB × CYBERTECH CLUB</span></div>
-                        <div class="timeline-stat"><span class="meta-label">MILESTONE</span><span
-                                class="mono-meta meta-value">INAUGURAL JOINT CTF</span></div>
-                        <div class="timeline-stat"><span class="meta-label">RECORDS</span><span
-                                class="mono-meta meta-value">ARCHIVE MATERIAL PENDING</span></div>
-                    </div>
-                    <div class="timeline-status"><span class="tag">PAST EDITION</span></div>
-                </div>
-                <div class="timeline-row timeline-row--past">
-                    <div class="year">CTF 2.0</div>
-                    <div class="timeline-details">
-                        <div class="timeline-stat"><span class="meta-label">COLLABORATORS</span><span
-                                class="mono-meta meta-value">ACM CLUB × CYBERTECH CLUB</span></div>
-                        <div class="timeline-stat"><span class="meta-label">VERIFIED OUTCOME</span><span
-                                class="mono-meta meta-value">11 TEAMS // 852 SUBMISSIONS // HZ WON</span></div>
-                        <div class="timeline-stat"><span class="meta-label">PUBLIC RECORD</span><span
-                                class="mono-meta meta-value">RESULTS + PRIVACY-SAFE REPORT</span></div>
-                    </div>
-                    <div class="timeline-status"><span class="tag">ARCHIVED</span></div>
-                </div>
-                <div class="timeline-row">
-                    <div class="year">CTF 3.0</div>
-                    <div class="timeline-details">
-                        <div class="timeline-stat"><span class="meta-label">COLLABORATORS</span><span
-                                class="mono-meta meta-value">ACM CLUB × CYBERTECH CLUB</span></div>
-                        <div class="timeline-stat"><span class="meta-label">CURRENT PROGRAMME</span><span
-                                class="mono-meta meta-value">04 TRAINING TRACKS + CAPTURE THE FLAG</span></div>
-                        <div class="timeline-stat"><span class="meta-label">COMPETITION</span><span
-                                class="mono-meta meta-value">24 OCT 2026 // AUDITORIUM B105</span></div>
-                    </div>
-                    <div class="timeline-status"><span class="tag active">ACTIVE</span></div>
-                </div>
-            </div>
-        </section>
-
-        <section id="archive" class="container reveal">
-            <div class="section-header">
-                <h2>Archive Directory</h2>
-                <span class="mono-meta">HISTORICAL DATA // READ-ONLY</span>
-            </div>
-
-            <div class="timeline">
-                <div class="timeline-row">
-                    <div class="year">2026</div>
-                    <div class="timeline-details">
-                        <div class="timeline-stat">
-                            <span class="meta-label">FLAGSHIP EVENTS</span>
-                            <span class="mono-meta meta-value">JAM.26 + CTF 3.0</span>
-                        </div>
-                        <div class="timeline-stat">
-                            <span class="meta-label">WORKSHOP DAYS</span>
-                            <span class="mono-meta meta-value">07 SCHEDULED</span>
-                        </div>
-                        <div class="timeline-stat">
-                            <span class="meta-label">LEADERSHIP</span>
-                            <span class="mono-meta meta-value">M. Y. HAYAT</span>
-                        </div>
-                    </div>
-                    <div class="timeline-status">
-                        <span class="tag active">ACTIVE CHAPTER</span>
-                    </div>
-                </div>
-
-                <div class="timeline-row timeline-row--past">
-                    <div class="year">CTF 2.0</div>
-                    <div class="timeline-details">
-                        <div class="timeline-stat">
-                            <span class="meta-label">TEAMS RANKED</span>
-                            <span class="mono-meta">11</span>
-                        </div>
-                        <div class="timeline-stat">
-                            <span class="meta-label">SUBMISSIONS</span>
-                            <span class="mono-meta">852 // 89 CAPTURED</span>
-                        </div>
-                        <div class="timeline-stat">
-                            <span class="meta-label">WINNER</span>
-                            <span class="mono-meta">HZ &mdash; 3,800 PTS</span>
-                        </div>
-                    </div>
-                    <div class="timeline-status">
-                        <span class="tag">RESULTS VERIFIED</span>
-                    </div>
-                </div>
-
-                <div class="timeline-row timeline-row--distant">
-                    <div class="year">CTF 1.0</div>
-                    <div class="timeline-details">
-                        <div class="timeline-stat">
-                            <span class="meta-label">EDITION</span>
-                            <span class="mono-meta">FIRST ACM/CYBERTECH CTF</span>
-                        </div>
-                        <div class="timeline-stat">
-                            <span class="meta-label">RECORDS</span>
-                            <span class="mono-meta">NOT YET DIGITISED</span>
-                        </div>
-                        <div class="timeline-stat">
-                            <span class="meta-label">STATUS</span>
-                            <span class="mono-meta">ARCHIVE PENDING</span>
-                        </div>
-                    </div>
-                    <div class="timeline-status">
-                        <span class="tag">ARCHIVED</span>
-                    </div>
-                </div>
-            </div>
-
-            <div style="margin-top: 3rem; display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
-                <a href="projects/programming-jams/ai-programming-jam-26/archive.html" class="link-arrow">Browse the WebForge Resource Archive
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="square" aria-hidden="true">
-                        <path d="M5 12h14M12 5l7 7-7 7" />
-                    </svg>
-                </a>
-                <a href="projects/ctfs/ctf-2.0/" class="link-arrow">Open the CTF 2.0 Results Archive
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="square" aria-hidden="true">
-                        <path d="M5 12h14M12 5l7 7-7 7" />
-                    </svg>
-                </a>
-            </div>
-        </section>
-
-        <section id="join" class="ending container reveal">
-            <p class="ending-desc">SYS.MSG: EOF NOT REACHED</p>
-            <h2 class="ending-title">The Archive Isn't Finished.</h2>
-            <p class="hero-desc" style="margin-bottom: 3rem; text-align: center;">
-                Your code, your designs, your leadership could define the next block.
+        <div class="charter-grid">
+          <div class="charter-item">
+            <span class="focus-num">01</span>
+            <h3 class="focus-title">Talks and discussions</h3>
+            <p class="charter-text">
+              Open the door to talks, panel discussions and conferences that
+              build the professional skills students need after graduation.
             </p>
-            <a href="join.html" class="btn btn-primary btn-lg">Initialize Membership
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="square" style="margin-left: 10px;" aria-hidden="true">
-                    <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
+          </div>
+          <div class="charter-item">
+            <span class="focus-num">02</span>
+            <h3 class="focus-title">Writing and research</h3>
+            <p class="charter-text">
+              Give students the chance to write and present technical reports,
+              and to work together on research projects.
+            </p>
+          </div>
+          <div class="charter-item">
+            <span class="focus-num">03</span>
+            <h3 class="focus-title">New ideas</h3>
+            <p class="charter-text">
+              Back new computing programmes and give students room to build
+              things together.
+            </p>
+          </div>
+          <div class="charter-item">
+            <span class="focus-num">04</span>
+            <h3 class="focus-title">University and industry</h3>
+            <p class="charter-text">
+              Close the gap between university and industry, and put students in
+              front of employers and the people leading the field.
+            </p>
+          </div>
+          <div class="charter-item">
+            <span class="focus-num">05</span>
+            <h3 class="focus-title">People and mentorship</h3>
+            <p class="charter-text">
+              Create chances to meet people, find mentors and keep learning
+              outside the classroom by trading ideas and experience.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="focus" class="container reveal">
+        <div class="section-header">
+          <h2>System Focus</h2>
+          <span class="mono-meta">CORE COMPETENCIES // V.26</span>
+        </div>
+
+        <div class="focus-grid">
+          <div class="focus-item">
+            <span class="focus-num">01</span>
+            <h3 class="focus-title">AI-Assisted Engineering</h3>
+            <p class="mono-meta focus-meta">PLAN, BUILD, DEBUG, DEPLOY</p>
+          </div>
+          <div class="focus-item">
+            <span class="focus-num">02</span>
+            <h3 class="focus-title">Full-Stack Web</h3>
+            <p class="mono-meta focus-meta">
+              FIREBASE, GITHUB, VERCEL, CLOUDFLARE
+            </p>
+          </div>
+          <div class="focus-item">
+            <span class="focus-num">03</span>
+            <h3 class="focus-title">Cybersecurity (CTF)</h3>
+            <p class="mono-meta focus-meta">
+              CRYPTOGRAPHY, WEB, FORENSICS, OSINT
+            </p>
+          </div>
+          <div class="focus-item">
+            <span class="focus-num">04</span>
+            <h3 class="focus-title">Workshops &amp; Competitions</h3>
+            <p class="mono-meta focus-meta">TEACH FIRST, THEN COMPETE</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="team" class="container reveal">
+        <div class="section-header">
+          <h2>Current Generation</h2>
+          <span class="mono-meta tag active">STATUS: ACTIVE CHAPTER</span>
+        </div>
+
+        <div class="team-grid">
+          <div class="team-member">
+            <div class="team-img-wrapper">
+              <div
+                style="
+                  aspect-ratio: 1;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  background: var(--bg-base);
+                  font-family: var(--font-display);
+                  font-size: 2.5rem;
+                  color: var(--text-dark);
+                "
+                aria-hidden="true"
+              >
+                MY
+              </div>
+            </div>
+            <div class="team-info">
+              <h3 class="team-name">Muhammad Yawar Hayat</h3>
+              <div class="team-role mono-meta">
+                <span>President</span>
+                <span class="dim-text">ID: 0x01</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="team-member">
+            <div class="team-img-wrapper">
+              <div
+                style="
+                  aspect-ratio: 1;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  background: var(--bg-base);
+                  font-family: var(--font-display);
+                  font-size: 2.5rem;
+                  color: var(--text-dark);
+                "
+                aria-hidden="true"
+              >
+                SA
+              </div>
+            </div>
+            <div class="team-info">
+              <h3 class="team-name">Shoug Alomran</h3>
+              <div class="team-role mono-meta">
+                <span>Vice President</span>
+                <span class="dim-text">ID: 0x02</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 3rem; text-align: right">
+          <a href="team.html" class="link-arrow"
+            >View Complete Roster
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="square"
+              aria-hidden="true"
+            >
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          </a>
+        </div>
+      </section>
+
+      <section id="projects" class="container reveal">
+        <div class="section-header">
+          <h2>Selected Work</h2>
+          <span class="mono-meta">BUILT BY ACM // PRODUCTION ENV</span>
+        </div>
+
+        <div class="work-grid">
+          <article class="project-card">
+            <div class="project-visual">
+              <div class="window-chrome">
+                <span class="window-dot"></span><span class="window-dot"></span
+                ><span class="window-dot"></span>
+              </div>
+              <img
+                src="projects/programming-jams/ai-programming-jam-26/workshop-content/assests/banner.png"
+                alt="WebForge 2026 event banner"
+                data-project-alt="ai-programming-jam-2026"
+                class="project-img"
+                loading="lazy"
+              />
+            </div>
+            <div class="project-content">
+              <div class="project-meta-block">
+                <div class="meta-item">
+                  <span class="meta-label">PROJECT_ID</span>
+                  <span class="mono-meta meta-value">JAM.26</span>
+                </div>
+                <div class="meta-item">
+                  <span class="meta-label">COMPETITION_DAY</span>
+                  <span class="mono-meta meta-value">19 SEP 2026</span>
+                </div>
+              </div>
+              <h3 class="project-title" data-project-title="ai-programming-jam-2026">WebForge 2026</h3>
+              <p class="project-desc">
+                An AI-assisted web engineering competition. Every team receives
+                the same application brief, then plans it in Excalidraw, designs
+                it, builds it with AI assistants and Firebase, ships it to
+                Vercel behind a real domain, absorbs a mid-competition change
+                request, and presents the result. Three preparation workshop
+                days run 15&ndash;17 September; the brief stays locked until
+                competition day.
+              </p>
+              <div class="project-links">
+                <a
+                  href="projects/programming-jams/ai-programming-jam-26/"
+                  class="btn btn-secondary"
+                  >Event Guide</a
+                >
+                <a
+                  href="https://acmchapter-psu.github.io/acm-webforge-2026/"
+                  class="link-arrow"
+                  rel="noopener"
+                  >Event Site
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="square"
+                    aria-hidden="true"
+                  >
+                    <path d="M7 17L17 7M17 7H7M17 7V17" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </article>
+
+          <article class="project-card">
+            <div class="project-visual">
+              <div class="window-chrome">
+                <span class="window-dot"></span><span class="window-dot"></span
+                ><span class="window-dot"></span>
+              </div>
+              <img
+                src="projects/ctfs/ctf-3.0/workshop-material/assets/banner.png"
+                alt="ACM/CyberTech CTF 3.0 event banner"
+                data-project-alt="ctf-3-0"
+                class="project-img"
+                loading="lazy"
+              />
+            </div>
+            <div class="project-content">
+              <div class="project-meta-block">
+                <div class="meta-item">
+                  <span class="meta-label">PROJECT_ID</span>
+                  <span class="mono-meta meta-value">CTF-3.0</span>
+                </div>
+                <div class="meta-item">
+                  <span class="meta-label">COMPETITION_DAY</span>
+                  <span class="mono-meta meta-value">24 OCT 2026</span>
+                </div>
+              </div>
+              <h3 class="project-title" data-project-title="ctf-3-0">ACM/CyberTech CTF 3.0</h3>
+              <p class="project-desc">
+                A three-hour jeopardy-style Capture The Flag run jointly with
+                the CyberTech Club. Four attack vectors &mdash; cryptography,
+                web, forensics and OSINT &mdash; scaled from Very Easy to
+                Insane. Teams of two to three submit flags in
+                <code>ACM{&hellip;}</code> format for points on a live
+                scoreboard. Saturday 24 October 2026, 10:00&ndash;13:00,
+                Auditorium B105.
+              </p>
+              <div class="project-links">
+                <a href="projects/ctfs/ctf-3.0/" class="btn btn-secondary"
+                  >Event Guide</a
+                >
+                <a
+                  href="https://acmchapter-psu.github.io/ACM-CTF-3.0./"
+                  class="link-arrow"
+                  rel="noopener"
+                  >Event Site
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="square"
+                    aria-hidden="true"
+                  >
+                    <path d="M7 17L17 7M17 7H7M17 7V17" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="collaborations" class="container reveal">
+        <div class="section-header">
+          <h2>Club Collaborations</h2>
+          <span class="mono-meta">SHARED PROJECTS // DOCUMENTED HISTORY</span>
+        </div>
+
+        <div class="note-card collaboration-intro">
+          <p class="mono-meta accent-text">ACM × CYBERTECH</p>
+          <h3>Building PSU's Capture The Flag series together.</h3>
+          <p>
+            The ACM Club and CyberTech Club collaborate on the ACM/CyberTech
+            Capture The Flag series at Prince Sultan University. The partnership
+            brings students together around practical cybersecurity training,
+            challenge-based competition and a shared record of each edition.
+            Published materials currently document three editions, from the
+            inaugural CTF 1.0 through the upcoming CTF 3.0.
+          </p>
+          <div class="project-links" style="margin-top: 1.5rem">
+            <a href="projects/ctfs/ctf-3.0/" class="btn btn-secondary"
+              >Explore CTF 3.0</a
+            >
+            <a href="projects/ctfs/ctf-2.0/" class="link-arrow"
+              >View CTF 2.0 Results
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="square"
+                aria-hidden="true"
+              >
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
             </a>
-        </section>
+          </div>
+        </div>
+
+        <div class="timeline collaboration-timeline">
+          <div class="timeline-row timeline-row--distant">
+            <div class="year">CTF 1.0</div>
+            <div class="timeline-details">
+              <div class="timeline-stat">
+                <span class="meta-label">COLLABORATORS</span
+                ><span class="mono-meta meta-value"
+                  >ACM CLUB × CYBERTECH CLUB</span
+                >
+              </div>
+              <div class="timeline-stat">
+                <span class="meta-label">MILESTONE</span
+                ><span class="mono-meta meta-value">INAUGURAL JOINT CTF</span>
+              </div>
+              <div class="timeline-stat">
+                <span class="meta-label">RECORDS</span
+                ><span class="mono-meta meta-value"
+                  >ARCHIVE MATERIAL PENDING</span
+                >
+              </div>
+            </div>
+            <div class="timeline-status">
+              <span class="tag">PAST EDITION</span>
+            </div>
+          </div>
+          <div class="timeline-row timeline-row--past">
+            <div class="year">CTF 2.0</div>
+            <div class="timeline-details">
+              <div class="timeline-stat">
+                <span class="meta-label">COLLABORATORS</span
+                ><span class="mono-meta meta-value"
+                  >ACM CLUB × CYBERTECH CLUB</span
+                >
+              </div>
+              <div class="timeline-stat">
+                <span class="meta-label">VERIFIED OUTCOME</span
+                ><span class="mono-meta meta-value"
+                  >11 TEAMS // 852 SUBMISSIONS // HZ WON</span
+                >
+              </div>
+              <div class="timeline-stat">
+                <span class="meta-label">PUBLIC RECORD</span
+                ><span class="mono-meta meta-value"
+                  >RESULTS + PRIVACY-SAFE REPORT</span
+                >
+              </div>
+            </div>
+            <div class="timeline-status"><span class="tag">ARCHIVED</span></div>
+          </div>
+          <div class="timeline-row">
+            <div class="year">CTF 3.0</div>
+            <div class="timeline-details">
+              <div class="timeline-stat">
+                <span class="meta-label">COLLABORATORS</span
+                ><span class="mono-meta meta-value"
+                  >ACM CLUB × CYBERTECH CLUB</span
+                >
+              </div>
+              <div class="timeline-stat">
+                <span class="meta-label">CURRENT PROGRAMME</span
+                ><span class="mono-meta meta-value"
+                  >04 TRAINING TRACKS + CAPTURE THE FLAG</span
+                >
+              </div>
+              <div class="timeline-stat">
+                <span class="meta-label">COMPETITION</span
+                ><span class="mono-meta meta-value"
+                  >24 OCT 2026 // AUDITORIUM B105</span
+                >
+              </div>
+            </div>
+            <div class="timeline-status">
+              <span class="tag active">ACTIVE</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="archive" class="container reveal">
+        <div class="section-header">
+          <h2>Archive Directory</h2>
+          <span class="mono-meta">HISTORICAL DATA // READ-ONLY</span>
+        </div>
+
+        <div class="timeline">
+          <div class="timeline-row">
+            <div class="year">2026</div>
+            <div class="timeline-details">
+              <div class="timeline-stat">
+                <span class="meta-label">FLAGSHIP EVENTS</span>
+                <span class="mono-meta meta-value">JAM.26 + CTF 3.0</span>
+              </div>
+              <div class="timeline-stat">
+                <span class="meta-label">WORKSHOP DAYS</span>
+                <span class="mono-meta meta-value">07 SCHEDULED</span>
+              </div>
+              <div class="timeline-stat">
+                <span class="meta-label">LEADERSHIP</span>
+                <span class="mono-meta meta-value">M. Y. HAYAT</span>
+              </div>
+            </div>
+            <div class="timeline-status">
+              <span class="tag active">ACTIVE CHAPTER</span>
+            </div>
+          </div>
+
+          <div class="timeline-row timeline-row--past">
+            <div class="year">CTF 2.0</div>
+            <div class="timeline-details">
+              <div class="timeline-stat">
+                <span class="meta-label">TEAMS RANKED</span>
+                <span class="mono-meta">11</span>
+              </div>
+              <div class="timeline-stat">
+                <span class="meta-label">SUBMISSIONS</span>
+                <span class="mono-meta">852 // 89 CAPTURED</span>
+              </div>
+              <div class="timeline-stat">
+                <span class="meta-label">WINNER</span>
+                <span class="mono-meta">HZ &mdash; 3,800 PTS</span>
+              </div>
+            </div>
+            <div class="timeline-status">
+              <span class="tag">RESULTS VERIFIED</span>
+            </div>
+          </div>
+
+          <div class="timeline-row timeline-row--distant">
+            <div class="year">CTF 1.0</div>
+            <div class="timeline-details">
+              <div class="timeline-stat">
+                <span class="meta-label">EDITION</span>
+                <span class="mono-meta">FIRST ACM/CYBERTECH CTF</span>
+              </div>
+              <div class="timeline-stat">
+                <span class="meta-label">RECORDS</span>
+                <span class="mono-meta">NOT YET DIGITISED</span>
+              </div>
+              <div class="timeline-stat">
+                <span class="meta-label">STATUS</span>
+                <span class="mono-meta">ARCHIVE PENDING</span>
+              </div>
+            </div>
+            <div class="timeline-status">
+              <span class="tag">ARCHIVED</span>
+            </div>
+          </div>
+        </div>
+
+        <div
+          style="
+            margin-top: 3rem;
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+          "
+        >
+          <a
+            href="projects/programming-jams/ai-programming-jam-26/archive.html"
+            class="link-arrow"
+            >Browse the WebForge Resource Archive
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="square"
+              aria-hidden="true"
+            >
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          </a>
+          <a href="projects/ctfs/ctf-2.0/" class="link-arrow"
+            >Open the CTF 2.0 Results Archive
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="square"
+              aria-hidden="true"
+            >
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          </a>
+        </div>
+      </section>
+
+      <section id="join" class="ending container reveal">
+        <p class="ending-desc">SYS.MSG: EOF NOT REACHED</p>
+        <h2 class="ending-title">The Archive Isn't Finished.</h2>
+        <p class="hero-desc" style="margin-bottom: 3rem; text-align: center">
+          Your code, your designs, your leadership could define the next block.
+        </p>
+        <a href="join.html" class="btn btn-primary btn-lg"
+          >Initialize Membership
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="square"
+            style="margin-left: 10px"
+            aria-hidden="true"
+          >
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </a>
+      </section>
     </main>
 
     <footer class="container site-footer mono-meta">
-        <div>© <span data-current-year>2026</span> ACM PRINCE SULTAN UNIVERSITY</div>
-        <div class="footer-logos">
-            <img src="assets/img/acm.png" alt="Association for Computing Machinery">
-            <img src="assets/img/prince-sultan-univeristy.png" alt="Prince Sultan University">
-            <img src="assets/img/ccis-logo.png" alt="College of Computer and Information Sciences">
-        </div>
-        <div><a href="https://github.com/Shoug-Alomran/acm-psu-website" rel="noopener">SOURCE: GITHUB ↗</a> // RENDERED:
-            <span class="meta-value" data-clock>—</span></div>
-        <div>MADE BY <a href="https://blueprint.shoug-tech.com/" rel="noopener">BLUEPRINT ↗</a></div>
+      <div>
+        © <span data-current-year>2026</span> ACM PRINCE SULTAN UNIVERSITY
+      </div>
+      <div class="footer-logos">
+        <img
+          src="assets/img/acm.png"
+          alt="Association for Computing Machinery"
+        />
+        <img
+          src="assets/img/prince-sultan-univeristy.png"
+          alt="Prince Sultan University"
+        />
+        <img
+          src="assets/img/ccis-logo.png"
+          alt="College of Computer and Information Sciences"
+        />
+      </div>
+      <div>
+        <a
+          href="https://github.com/Shoug-Alomran/acm-psu-website"
+          rel="noopener"
+          >SOURCE: GITHUB ↗</a
+        >
+        // RENDERED: <span class="meta-value" data-clock>—</span>
+      </div>
+      <div>
+        MADE BY
+        <a href="https://blueprint.shoug-tech.com/" rel="noopener"
+          >BLUEPRINT ↗</a
+        >
+      </div>
     </footer>
 
-    <script src="assets/js/i18n.js?v=20260908-2" defer></script>
-    <script src="assets/js/main.js?v=20260905-1" defer></script>
-
-</body>
-
+    <script src="assets/js/i18n.js?v=20260922-5" defer></script>
+    <script src="assets/js/project-names.js?v=20260922-2" defer></script>
+    <script src="assets/js/main.js?v=20260922-4" defer></script>
+  </body>
 </html>

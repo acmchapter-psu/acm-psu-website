@@ -5,93 +5,103 @@
  * perform the actions, in the same transaction, so an action can never exist
  * without its record. See supabase/migrations/*_audit.sql.
  */
-import { requireClient } from './supabase.js';
-import { unwrap } from './api.js';
+import { requireClient } from "./supabase.js";
+import { unwrap } from "./api.js";
 import type {
-  AuditCategory, AuditDecision, AuditEntry, AuditFilters, AuditSummary,
+  AuditCategory,
+  AuditDecision,
+  AuditEntry,
+  AuditFilters,
+  AuditSummary,
   MemberDecision,
-} from './types.js';
+} from "./types.js";
 
 export const CATEGORY_LABELS: Record<AuditCategory, string> = {
-  membership: 'Membership',
-  positions: 'Positions',
-  events: 'Events',
-  projects: 'Projects',
-  contributions: 'Contributions',
-  archive: 'Archive',
-  requests: 'Requests',
-  administration: 'Administration',
-  exports: 'Exports',
-  inquiries: 'Inquiries',
+  membership: "Membership",
+  positions: "Positions",
+  events: "Events",
+  projects: "Projects",
+  contributions: "Contributions",
+  archive: "Archive",
+  requests: "Requests",
+  administration: "Administration",
+  exports: "Exports",
+  inquiries: "Inquiries",
 };
 
 export const DECISION_LABELS: Record<AuditDecision, string> = {
-  approved: 'Approved',
-  rejected: 'Rejected',
-  changes_requested: 'Changes requested',
-  interview: 'Interview',
-  published: 'Published',
-  unpublished: 'Unpublished',
-  granted: 'Granted',
-  revoked: 'Revoked',
-  created: 'Created',
-  updated: 'Updated',
-  archived: 'Archived',
-  restored: 'Restored',
-  deleted: 'Deleted',
-  exported: 'Exported',
-  noted: 'Noted',
+  approved: "Approved",
+  rejected: "Rejected",
+  changes_requested: "Changes requested",
+  interview: "Interview",
+  published: "Published",
+  unpublished: "Unpublished",
+  granted: "Granted",
+  revoked: "Revoked",
+  created: "Created",
+  updated: "Updated",
+  archived: "Archived",
+  restored: "Restored",
+  deleted: "Deleted",
+  exported: "Exported",
+  noted: "Noted",
 };
 
 /** Field names as a person would read them, for the before/after diff. */
 const FIELD_LABELS: Record<string, string> = {
-  status: 'Status',
-  membership_status: 'Membership',
-  position: 'Position',
-  visibility: 'Visibility',
-  title: 'Title',
-  category: 'Category',
-  description: 'Description',
-  account_state: 'Sign-in',
-  role: 'Admin role',
-  active: 'Active',
-  verified: 'Verified',
-  folder: 'Folder',
-  section: 'Section',
-  deleted: 'Deleted',
-  storage_bucket: 'Storage',
-  effective_from: 'Effective from',
-  start_date: 'Start date',
-  type: 'Type',
-  is_open: 'Open',
-  openings: 'Openings',
-  chapter_year: 'Chapter',
-  ended_on: 'Ended',
-  started_on: 'Started',
-  title_snapshot: 'Position',
-  is_active: 'Active',
-  is_featured: 'Featured',
-  sort_index: 'Order',
-  name: 'Name',
-  full_name: 'Name',
-  value: 'Value',
+  status: "Status",
+  membership_status: "Membership",
+  position: "Position",
+  visibility: "Visibility",
+  title: "Title",
+  category: "Category",
+  description: "Description",
+  account_state: "Sign-in",
+  role: "Admin role",
+  active: "Active",
+  verified: "Verified",
+  folder: "Folder",
+  section: "Section",
+  deleted: "Deleted",
+  storage_bucket: "Storage",
+  effective_from: "Effective from",
+  start_date: "Start date",
+  type: "Type",
+  is_open: "Open",
+  openings: "Openings",
+  chapter_year: "Chapter",
+  ended_on: "Ended",
+  started_on: "Started",
+  title_snapshot: "Position",
+  is_active: "Active",
+  is_featured: "Featured",
+  sort_index: "Order",
+  name: "Name",
+  full_name: "Name",
+  value: "Value",
 };
 
 export function fieldLabel(key: string): string {
-  return FIELD_LABELS[key] ??
-    key.replaceAll('_', ' ').replace(/^./, (c) => c.toUpperCase());
+  return (
+    FIELD_LABELS[key] ??
+    key.replaceAll("_", " ").replace(/^./, (c) => c.toUpperCase())
+  );
 }
 
 /** Renders a stored state value as a short readable string. */
 export function stateValue(value: unknown): string {
-  if (value === null || value === undefined || value === '') return '—';
-  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
-  if (Array.isArray(value)) return value.length ? value.join(', ') : '—';
-  if (typeof value === 'object') return JSON.stringify(value);
+  if (value === null || value === undefined || value === "") return "—";
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (Array.isArray(value)) return value.length ? value.join(", ") : "—";
+  if (typeof value === "object") return JSON.stringify(value);
   return String(value);
 }
 
-export interface FieldChange { field: string; before: string; after: string }
+export interface FieldChange {
+  field: string;
+  before: string;
+  after: string;
+}
 
 /**
  * Turns before/after state into the "Position: Member → Events Coordinator"
@@ -105,7 +115,7 @@ export function fieldChanges(entry: AuditEntry): FieldChange[] {
     : [...new Set([...Object.keys(before), ...Object.keys(after)])];
 
   return keys
-    .filter((key) => !['updated_at', 'created_at'].includes(key))
+    .filter((key) => !["updated_at", "created_at"].includes(key))
     .map((key) => ({
       field: fieldLabel(key),
       before: stateValue(before[key]),
@@ -116,55 +126,75 @@ export function fieldChanges(entry: AuditEntry): FieldChange[] {
 
 /** How the actor should be named — "Shoug Alomran · Vice President". */
 export function actorLine(entry: {
-  actor_kind?: string; actor_name: string | null; actor_position: string | null;
+  actor_kind?: string;
+  actor_name: string | null;
+  actor_position: string | null;
 }): string {
-  if (entry.actor_kind === 'system') return 'System';
-  if (entry.actor_kind === 'migration') return 'Migration';
-  if (entry.actor_kind === 'ai_assistant') return 'Review assistant (suggestion only)';
-  const name = entry.actor_name ?? 'Unknown';
+  if (entry.actor_kind === "system") return "System";
+  if (entry.actor_kind === "migration") return "Migration";
+  if (entry.actor_kind === "ai_assistant")
+    return "Review assistant (suggestion only)";
+  const name = entry.actor_name ?? "Unknown";
   return entry.actor_position ? `${name} · ${entry.actor_position}` : name;
 }
 
 /* -------------------------------------------------------------- querying */
 
-export async function auditEntries(filters: AuditFilters = {}): Promise<AuditEntry[]> {
-  let query = requireClient().from('audit_log').select('*')
-    .order('created_at', { ascending: false })
+export async function auditEntries(
+  filters: AuditFilters = {},
+): Promise<AuditEntry[]> {
+  let query = requireClient()
+    .from("audit_log")
+    .select("*")
+    .order("created_at", { ascending: false })
     .limit(filters.limit ?? 200);
 
-  if (filters.category) query = query.eq('category', filters.category);
-  if (filters.decision) query = query.eq('decision', filters.decision);
-  if (filters.actorId) query = query.eq('actor_id', filters.actorId);
-  if (filters.projectId) query = query.eq('related_project_id', filters.projectId);
-  if (filters.from) query = query.gte('created_at', filters.from);
+  if (filters.category) query = query.eq("category", filters.category);
+  if (filters.decision) query = query.eq("decision", filters.decision);
+  if (filters.actorId) query = query.eq("actor_id", filters.actorId);
+  if (filters.projectId)
+    query = query.eq("related_project_id", filters.projectId);
+  if (filters.from) query = query.gte("created_at", filters.from);
   // The `to` filter is a calendar day; include the whole of it.
-  if (filters.to) query = query.lte('created_at', `${filters.to}T23:59:59.999Z`);
+  if (filters.to)
+    query = query.lte("created_at", `${filters.to}T23:59:59.999Z`);
 
   if (filters.search) {
-    const term = filters.search.replaceAll('%', '').replaceAll(',', ' ');
+    const term = filters.search.replaceAll("%", "").replaceAll(",", " ");
     query = query.or(
       `summary.ilike.%${term}%,entity_label.ilike.%${term}%,` +
-      `actor_name.ilike.%${term}%,reason.ilike.%${term}%,action.ilike.%${term}%`);
+        `actor_name.ilike.%${term}%,reason.ilike.%${term}%,action.ilike.%${term}%`,
+    );
   }
 
   return unwrap(await query) ?? [];
 }
 
 export async function auditSummary(days = 30): Promise<AuditSummary> {
-  const { data, error } = await requireClient().rpc('audit_summary', { since_days: days });
+  const { data, error } = await requireClient().rpc("audit_summary", {
+    since_days: days,
+  });
   if (error) throw new Error(error.message);
   const row = (data as AuditSummary[] | null)?.[0];
-  return row ?? {
-    total_actions: 0, approvals: 0, rejections: 0,
-    changes_requested: 0, active_admins: 0, reasons_recorded: 0,
-  };
+  return (
+    row ?? {
+      total_actions: 0,
+      approvals: 0,
+      rejections: 0,
+      changes_requested: 0,
+      active_admins: 0,
+      reasons_recorded: 0,
+    }
+  );
 }
 
 /** Everything that happened to one record, for the History panel on its page. */
 export async function recordHistory(
-  entityType: string, entityId: string, memberId?: string | null,
+  entityType: string,
+  entityId: string,
+  memberId?: string | null,
 ): Promise<AuditEntry[]> {
-  const { data, error } = await requireClient().rpc('record_history', {
+  const { data, error } = await requireClient().rpc("record_history", {
     entity: entityType,
     entity_key: entityId,
     member: memberId ?? null,
@@ -175,55 +205,79 @@ export async function recordHistory(
 
 /** The signed-in member's own decision history. Column-limited by the view. */
 export async function myDecisions(limit = 40): Promise<MemberDecision[]> {
-  return unwrap(await requireClient().from('my_decision_history').select('*')
-    .order('created_at', { ascending: false }).limit(limit)) ?? [];
+  return (
+    unwrap(
+      await requireClient()
+        .from("my_decision_history")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(limit),
+    ) ?? []
+  );
 }
 
 /** Active admins plus historical actors, joined by app-user ID. */
-export async function auditActors(): Promise<Array<{ id: string; name: string }>> {
+export async function auditActors(): Promise<
+  Array<{ id: string; name: string }>
+> {
   const client = requireClient();
   const [history, assignments] = await Promise.all([
-    client.from('audit_log').select('actor_id, actor_name')
-      .not('actor_id', 'is', null).order('created_at', { ascending: false }).limit(500),
-    client.from('admin_assignments')
-      .select('user_id, member:app_users!admin_assignments_user_id_fkey(full_name)')
-      .is('revoked_at', null),
+    client
+      .from("audit_log")
+      .select("actor_id, actor_name")
+      .not("actor_id", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(500),
+    client
+      .from("admin_assignments")
+      .select(
+        "user_id, member:app_users!admin_assignments_user_id_fkey(full_name)",
+      )
+      .is("revoked_at", null),
   ]);
 
   const seen = new Map<string, string>();
   for (const row of (assignments.data ?? []) as unknown as Array<{
-    user_id: string; member: { full_name: string } | null;
+    user_id: string;
+    member: { full_name: string } | null;
   }>) {
-    if (!seen.has(row.user_id)) seen.set(row.user_id, row.member?.full_name ?? row.user_id);
+    if (!seen.has(row.user_id))
+      seen.set(row.user_id, row.member?.full_name ?? row.user_id);
   }
-  for (const row of (history.data ?? []) as Array<{ actor_id: string; actor_name: string | null }>) {
-    if (!seen.has(row.actor_id)) seen.set(row.actor_id, row.actor_name ?? row.actor_id);
+  for (const row of (history.data ?? []) as Array<{
+    actor_id: string;
+    actor_name: string | null;
+  }>) {
+    if (!seen.has(row.actor_id))
+      seen.set(row.actor_id, row.actor_name ?? row.actor_id);
   }
-  return [...seen].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
+  return [...seen]
+    .map(([id, name]) => ({ id, name }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 /* --------------------------------------------------------------- exporting */
 
 const EXPORT_COLUMNS: Array<[string, (e: AuditEntry) => string]> = [
-  ['Audit ID', (e) => String(e.id)],
-  ['Timestamp', (e) => e.created_at],
-  ['Actor kind', (e) => e.actor_kind],
-  ['Admin', (e) => e.actor_name ?? ''],
-  ['Position at the time', (e) => e.actor_position ?? ''],
-  ['Admin role at the time', (e) => e.actor_role ?? ''],
-  ['Chapter', (e) => e.actor_chapter_year ?? ''],
-  ['Category', (e) => e.category],
-  ['Action', (e) => e.action],
-  ['Decision', (e) => e.decision ?? ''],
-  ['Target type', (e) => e.entity_type ?? ''],
-  ['Target', (e) => e.entity_label ?? ''],
-  ['Target ID', (e) => e.entity_id ?? ''],
-  ['Summary', (e) => e.summary],
-  ['Reason', (e) => e.reason ?? ''],
-  ['Internal note', (e) => e.internal_note ?? ''],
-  ['Changed fields', (e) => e.changed_fields.join('; ')],
-  ['Before', (e) => (e.before_state ? JSON.stringify(e.before_state) : '')],
-  ['After', (e) => (e.after_state ? JSON.stringify(e.after_state) : '')],
+  ["Audit ID", (e) => String(e.id)],
+  ["Timestamp", (e) => e.created_at],
+  ["Actor kind", (e) => e.actor_kind],
+  ["Admin", (e) => e.actor_name ?? ""],
+  ["Position at the time", (e) => e.actor_position ?? ""],
+  ["Admin role at the time", (e) => e.actor_role ?? ""],
+  ["Chapter", (e) => e.actor_chapter_year ?? ""],
+  ["Category", (e) => e.category],
+  ["Action", (e) => e.action],
+  ["Decision", (e) => e.decision ?? ""],
+  ["Target type", (e) => e.entity_type ?? ""],
+  ["Target", (e) => e.entity_label ?? ""],
+  ["Target ID", (e) => e.entity_id ?? ""],
+  ["Summary", (e) => e.summary],
+  ["Reason", (e) => e.reason ?? ""],
+  ["Internal note", (e) => e.internal_note ?? ""],
+  ["Changed fields", (e) => e.changed_fields.join("; ")],
+  ["Before", (e) => (e.before_state ? JSON.stringify(e.before_state) : "")],
+  ["After", (e) => (e.after_state ? JSON.stringify(e.after_state) : "")],
 ];
 
 /** A cell beginning with = + - @ is executed as a formula by Excel. */
@@ -244,12 +298,12 @@ export function exportAuditCsv(entries: AuditEntry[]): void {
     EXPORT_COLUMNS.map(([header]) => header),
     ...entries.map((entry) => EXPORT_COLUMNS.map(([, read]) => read(entry))),
   ];
-  const csv = rows.map((row) => row.map(csvCell).join(',')).join('\r\n');
+  const csv = rows.map((row) => row.map(csvCell).join(",")).join("\r\n");
 
   // BOM so Excel reads Arabic names correctly.
-  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+  const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
+  const link = document.createElement("a");
   link.href = url;
   link.download = `acm-psu-audit-${new Date().toISOString().slice(0, 10)}.csv`;
   document.body.appendChild(link);

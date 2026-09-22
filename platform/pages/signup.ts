@@ -24,105 +24,182 @@
  * identifier, guarded in the database, and the membership application is where
  * it is collected and checked against the person.
  */
-import { h, formValues, textOf, asArray } from '../lib/dom.js';
-import { wideAuthShell, field, chipPicker, notice, submitButton } from '../lib/ui.js';
-import { INTERESTS, ACADEMIC_YEARS } from '../lib/membership.js';
-import { isConfigured, supabase, requireClient, siteUrl, readableError } from '../lib/supabase.js';
-import { applySignupMetadata } from '../lib/signup-profile.js';
+import { h, formValues, textOf, asArray } from "../lib/dom.js";
+import {
+  wideAuthShell,
+  field,
+  chipPicker,
+  notice,
+  submitButton,
+} from "../lib/ui.js";
+import { INTERESTS, ACADEMIC_YEARS } from "../lib/membership.js";
+import {
+  isConfigured,
+  supabase,
+  requireClient,
+  siteUrl,
+  readableError,
+} from "../lib/supabase.js";
+import { applySignupMetadata } from "../lib/signup-profile.js";
 
 const UNIVERSITY_ROLES = [
-  { value: 'student', label: 'Student' },
-  { value: 'instructor', label: 'Instructor / faculty' },
-  { value: 'staff', label: 'University staff' },
-  { value: 'alumni', label: 'Alumni' },
-  { value: 'other', label: 'Other' },
+  { value: "student", label: "Student" },
+  { value: "instructor", label: "Instructor / faculty" },
+  { value: "staff", label: "University staff" },
+  { value: "alumni", label: "Alumni" },
+  { value: "other", label: "Other" },
 ];
 
 /** A labelled break in a long form, matching the review console's captions. */
 function section(title: string, blurb: string): HTMLElement {
-  return h('div', { class: 'form-section' },
-    h('span', { class: 'form-section__label' }, title.toUpperCase()),
-    h('p', { class: 'form-section__blurb' }, blurb));
+  return h(
+    "div",
+    { class: "form-section" },
+    h("span", { class: "form-section__label" }, title.toUpperCase()),
+    h("p", { class: "form-section__blurb" }, blurb),
+  );
 }
 
 async function start(): Promise<void> {
   if (!isConfigured || !supabase) {
-    wideAuthShell('Create an account', '',
-      notice('warn', 'The portal is not connected to a database yet. See docs/SETUP.md.'));
+    wideAuthShell(
+      "Create an account",
+      "",
+      notice(
+        "warn",
+        "The portal is not connected to a database yet. See docs/SETUP.md.",
+      ),
+    );
     return;
   }
 
-  const status = h('div');
+  const status = h("div");
 
-  const form = h('form', { class: 'portal-form', novalidate: true },
-    section('Sign-in details', 'This is all you need to create the account.'),
+  const form = h(
+    "form",
+    { class: "portal-form", novalidate: true },
+    section("Sign-in details", "This is all you need to create the account."),
 
-    field({ label: 'Full name', name: 'full_name', required: true, maxlength: 120 }),
+    field({
+      label: "Full name",
+      name: "full_name",
+      required: true,
+      maxlength: 120,
+    }),
 
-    field({ label: 'Email', name: 'email', type: 'email', required: true,
-            hint: 'Use your PSU address if you intend to apply for membership.' }),
+    field({
+      label: "Email",
+      name: "email",
+      type: "email",
+      required: true,
+      hint: "Use your PSU address if you intend to apply for membership.",
+    }),
 
-    h('div', { class: 'field-pair' },
-      field({ label: 'Password', name: 'password', type: 'password', required: true,
-              hint: 'At least 8 characters.' }),
-      field({ label: 'Confirm password', name: 'confirm', type: 'password', required: true })),
+    h(
+      "div",
+      { class: "field-pair" },
+      field({
+        label: "Password",
+        name: "password",
+        type: "password",
+        required: true,
+        hint: "At least 8 characters.",
+      }),
+      field({
+        label: "Confirm password",
+        name: "confirm",
+        type: "password",
+        required: true,
+      }),
+    ),
 
-    section('About you',
-      'Tell us how you are connected to PSU. Student details are optional here and ' +
-      'can be changed later.'),
+    section(
+      "About you",
+      "Tell us how you are connected to PSU. Student details are optional here and " +
+        "can be changed later.",
+    ),
 
-    field({ label: 'I am a', name: 'university_role', type: 'select', required: true,
-            options: UNIVERSITY_ROLES }),
+    field({
+      label: "I am a",
+      name: "university_role",
+      type: "select",
+      required: true,
+      options: UNIVERSITY_ROLES,
+    }),
 
-    h('div', { class: 'field-pair', id: 'student-fields' },
-      field({ label: 'Major', name: 'major', maxlength: 120,
-              placeholder: 'e.g. Software Engineering' }),
+    h(
+      "div",
+      { class: "field-pair", id: "student-fields" },
+      field({
+        label: "Major",
+        name: "major",
+        maxlength: 120,
+        placeholder: "e.g. Software Engineering",
+      }),
 
-      field({ label: 'Academic year', name: 'academic_year', type: 'select',
-              options: [{ value: '', label: 'Prefer not to say' }, ...ACADEMIC_YEARS] })),
+      field({
+        label: "Academic year",
+        name: "academic_year",
+        type: "select",
+        options: [{ value: "", label: "Prefer not to say" }, ...ACADEMIC_YEARS],
+      }),
+    ),
 
-    h('div', { class: 'form-field' },
-      h('span', { class: 'mono-meta' }, 'AREAS OF INTEREST'),
-      h('p', { class: 'field-hint mono-meta dim-text' },
-        'Pick anything that sounds interesting. No experience is expected in any of them.'),
-      chipPicker('interests', INTERESTS)),
+    h(
+      "div",
+      { class: "form-field" },
+      h("span", { class: "mono-meta" }, "AREAS OF INTEREST"),
+      h(
+        "p",
+        { class: "field-hint mono-meta dim-text" },
+        "Pick anything that sounds interesting. No experience is expected in any of them.",
+      ),
+      chipPicker("interests", INTERESTS),
+    ),
 
     status,
-    submitButton('Create account'),
+    submitButton("Create account"),
   ) as HTMLFormElement;
 
-  const roleSelect = form.elements.namedItem('university_role') as HTMLSelectElement;
-  const studentFields = form.querySelector<HTMLElement>('#student-fields')!;
+  const roleSelect = form.elements.namedItem(
+    "university_role",
+  ) as HTMLSelectElement;
+  const studentFields = form.querySelector<HTMLElement>("#student-fields")!;
   const syncStudentFields = (): void => {
-    const isStudent = roleSelect.value === 'student';
+    const isStudent = roleSelect.value === "student";
     studentFields.hidden = !isStudent;
-    studentFields.querySelectorAll<HTMLInputElement | HTMLSelectElement>('input, select')
-      .forEach((control) => { control.disabled = !isStudent; });
+    studentFields
+      .querySelectorAll<HTMLInputElement | HTMLSelectElement>("input, select")
+      .forEach((control) => {
+        control.disabled = !isStudent;
+      });
   };
-  roleSelect.addEventListener('change', syncStudentFields);
+  roleSelect.addEventListener("change", syncStudentFields);
   syncStudentFields();
 
-  form.addEventListener('submit', async (event) => {
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
     if (!form.reportValidity()) return;
 
     const values = formValues(form);
-    const email = textOf(values, 'email');
-    const password = textOf(values, 'password');
-    const universityRole = textOf(values, 'university_role');
-    const button = form.querySelector('button')!;
+    const email = textOf(values, "email");
+    const password = textOf(values, "password");
+    const universityRole = textOf(values, "university_role");
+    const button = form.querySelector("button")!;
 
     if (password.length < 8) {
-      status.replaceChildren(notice('err', 'Choose a password of at least 8 characters.'));
+      status.replaceChildren(
+        notice("err", "Choose a password of at least 8 characters."),
+      );
       return;
     }
-    if (password !== textOf(values, 'confirm')) {
-      status.replaceChildren(notice('err', 'The two passwords do not match.'));
+    if (password !== textOf(values, "confirm")) {
+      status.replaceChildren(notice("err", "The two passwords do not match."));
       return;
     }
 
     button.disabled = true;
-    status.replaceChildren(notice('info', 'CREATING ACCOUNT…'));
+    status.replaceChildren(notice("info", "CREATING ACCOUNT…"));
 
     const { data, error } = await requireClient().auth.signUp({
       email,
@@ -134,10 +211,10 @@ async function start(): Promise<void> {
          * row level security can authorise.
          */
         data: {
-          full_name: textOf(values, 'full_name'),
+          full_name: textOf(values, "full_name"),
           university_role: universityRole,
-          major: textOf(values, 'major'),
-          academic_year: textOf(values, 'academic_year'),
+          major: textOf(values, "major"),
+          academic_year: textOf(values, "academic_year"),
           interests: asArray(values.interests),
         },
         emailRedirectTo: `${siteUrl}/portal/auth-callback.html`,
@@ -146,7 +223,7 @@ async function start(): Promise<void> {
 
     if (error) {
       button.disabled = false;
-      status.replaceChildren(notice('err', readableError(error)));
+      status.replaceChildren(notice("err", readableError(error)));
       return;
     }
 
@@ -157,22 +234,33 @@ async function start(): Promise<void> {
       // answers and wait for the Members-sheet refresh before navigating away.
       await applySignupMetadata();
       window.location.replace(
-        universityRole === 'student' ? '/portal/apply.html' : '/portal/status.html',
+        universityRole === "student"
+          ? "/portal/apply.html"
+          : "/portal/status.html",
       );
       return;
     }
 
-    form.replaceChildren(notice('ok',
-      `Account created. We sent a confirmation link to ${email} — ` +
-      'open it to activate your account, then sign in.'));
+    form.replaceChildren(
+      notice(
+        "ok",
+        `Account created. We sent a confirmation link to ${email} — ` +
+          "open it to activate your account, then sign in.",
+      ),
+    );
   });
 
-  wideAuthShell('Create an account',
-    'An account lets you apply for membership and, once accepted, use the member portal.',
+  wideAuthShell(
+    "Create an account",
+    "An account lets you apply for membership and, once accepted, use the member portal.",
     form,
-    h('div', { class: 'auth-links' },
-      h('a', { href: '/portal/login.html' }, 'ALREADY HAVE AN ACCOUNT'),
-      h('a', { href: '/join.html' }, 'ABOUT MEMBERSHIP')));
+    h(
+      "div",
+      { class: "auth-links" },
+      h("a", { href: "/portal/login.html" }, "ALREADY HAVE AN ACCOUNT"),
+      h("a", { href: "/join.html" }, "ABOUT MEMBERSHIP"),
+    ),
+  );
 }
 
 void start();

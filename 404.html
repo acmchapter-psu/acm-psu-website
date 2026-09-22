@@ -1,9 +1,8 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- Content-Security-Policy.
          GitHub Pages cannot set response headers, so the policy is stated here.
@@ -21,7 +20,9 @@
          *.supabase.co rather than the project ref, so moving projects does not
          mean editing every page; the ref is public in assets/js/app/env.js
          either way. -->
-    <meta http-equiv="Content-Security-Policy" content="
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
         default-src 'self';
         base-uri 'self';
         object-src 'none';
@@ -32,47 +33,68 @@
         img-src 'self' data: blob: https://*.supabase.co;
         connect-src 'self' https://*.supabase.co wss://*.supabase.co;
         frame-src 'none';
-    ">
+    "
+    />
     <title>404 — ACM PSU</title>
-    <meta name="robots" content="noindex">
-    <link rel="icon" href="/assets/img/favicon.ico" sizes="any">
-    <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
-    <link rel="mask-icon" href="/assets/img/safari-pinned-tab.svg?v=20260916-1" color="#5bbad5">
-    <link rel="icon" href="/assets/img/favicon-32.png" type="image/png" sizes="32x32">
-    <link rel="icon" href="/assets/img/favicon-16.png" type="image/png" sizes="16x16">
-    <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png?v=20260916">
-    <link rel="manifest" href="/site.webmanifest">
-    <meta name="theme-color" content="#050507">
-    <link rel="stylesheet" href="/assets/css/main.css?v=20260908-3">
-</head>
+    <meta name="robots" content="noindex" />
+    <link rel="icon" href="/assets/img/favicon.ico" sizes="any" />
+    <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml" />
+    <link
+      rel="mask-icon"
+      href="/assets/img/safari-pinned-tab.svg?v=20260916-1"
+      color="#5bbad5"
+    />
+    <link
+      rel="icon"
+      href="/assets/img/favicon-32.png"
+      type="image/png"
+      sizes="32x32"
+    />
+    <link
+      rel="icon"
+      href="/assets/img/favicon-16.png"
+      type="image/png"
+      sizes="16x16"
+    />
+    <link
+      rel="apple-touch-icon"
+      href="/assets/img/apple-touch-icon.png?v=20260916"
+    />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#050507" />
+    <script src="/assets/js/theme.js?v=20260922-1"></script>
+    <link rel="stylesheet" href="/assets/css/main.css?v=20260922-4" />
+  </head>
 
-<body>
-
+  <body>
     <div class="ambient-glow"></div>
 
     <nav>
-        <div class="container nav-inner">
-            <a class="nav-logo" href="/" aria-label="ACM PSU — home">
-                <img src="/assets/img/acm.png" alt="">
-                <span>ACM</span>
-                <span class="divider">/</span>
-                <span>PSU</span>
-            </a>
-            <div class="nav-meta mono-meta">SYS.ARCHIVE // 404</div>
-        </div>
+      <div class="container nav-inner">
+        <a class="nav-logo" href="/" aria-label="ACM PSU — home">
+          <img src="/assets/img/acm.png" alt="" />
+          <span>ACM</span>
+          <span class="divider">/</span>
+          <span>PSU</span>
+        </a>
+        <div class="nav-meta mono-meta">SYS.ARCHIVE // 404</div>
+      </div>
     </nav>
 
     <main class="error-page container">
-        <div class="error-code">404</div>
-        <h1 class="page-title">Record Not Found</h1>
-        <p class="mono-meta" style="max-width: 480px;">
-            The path you requested is not in the archive. It may have been moved, renamed, or never committed.
-        </p>
-        <a href="/" class="btn btn-primary" style="margin-top: 1rem;">Return to Index</a>
+      <div class="error-code">404</div>
+      <h1 class="page-title">Record Not Found</h1>
+      <p class="mono-meta" style="max-width: 480px">
+        The path you requested is not in the archive. It may have been moved,
+        renamed, or never committed.
+      </p>
+      <a href="/" class="btn btn-primary" style="margin-top: 1rem"
+        >Return to Index</a
+      >
     </main>
 
-    <script src="/assets/js/i18n.js?v=20260908-2" defer></script>
-    <script src="/assets/js/main.js?v=20260905-1" defer></script>
-</body>
-
+    <script src="/assets/js/i18n.js?v=20260922-5" defer></script>
+    <script src="/assets/js/project-names.js?v=20260922-2" defer></script>
+    <script src="/assets/js/main.js?v=20260922-4" defer></script>
+  </body>
 </html>

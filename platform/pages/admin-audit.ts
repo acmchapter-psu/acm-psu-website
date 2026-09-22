@@ -10,7 +10,7 @@
  * at the database level, for every role, so there is no such control to build.
  */
 
-import { h, render } from '../lib/dom.js';
+import { h, render } from "../lib/dom.js";
 
 import {
   shell,
@@ -26,12 +26,9 @@ import {
   emptyState,
   toast,
   action,
-} from '../lib/ui.js';
+} from "../lib/ui.js";
 
-import {
-  requireAdmin,
-  isClubAdmin,
-} from '../lib/session.js';
+import { requireAdmin, isClubAdmin } from "../lib/session.js";
 
 import {
   auditEntries,
@@ -40,28 +37,18 @@ import {
   exportAuditCsv,
   CATEGORY_LABELS,
   DECISION_LABELS,
-} from '../lib/audit.js';
+} from "../lib/audit.js";
 
-import {
-  changeList,
-  historyEntry,
-} from '../lib/history.js';
+import { changeList, historyEntry } from "../lib/history.js";
 
-import { projects } from '../lib/api.js';
+import { projects } from "../lib/api.js";
 
-import {
-  pageSlice,
-  paginationControls,
-} from '../lib/pagination.js';
+import { pageSlice, paginationControls } from "../lib/pagination.js";
 
 /** Entries shown per page of the history table. */
 const HISTORY_PAGE_SIZE = 25;
 
-import {
-  archiveDateTime,
-  relativeTime,
-  enumLabel,
-} from '../lib/format.js';
+import { archiveDateTime, relativeTime, enumLabel } from "../lib/format.js";
 
 import type {
   AuditCategory,
@@ -69,19 +56,19 @@ import type {
   AuditEntry,
   AuditFilters,
   Project,
-} from '../lib/types.js';
+} from "../lib/types.js";
 
-const CATEGORIES: Array<AuditCategory | ''> = [
-  '',
-  'membership',
-  'positions',
-  'events',
-  'projects',
-  'contributions',
-  'archive',
-  'requests',
-  'administration',
-  'exports',
+const CATEGORIES: Array<AuditCategory | ""> = [
+  "",
+  "membership",
+  "positions",
+  "events",
+  "projects",
+  "contributions",
+  "archive",
+  "requests",
+  "administration",
+  "exports",
 ];
 
 function errorMessage(error: unknown): string {
@@ -90,30 +77,23 @@ function errorMessage(error: unknown): string {
   }
 
   if (
-    typeof error === 'object' &&
+    typeof error === "object" &&
     error !== null &&
-    'message' in error &&
-    typeof (error as { message?: unknown }).message === 'string'
+    "message" in error &&
+    typeof (error as { message?: unknown }).message === "string"
   ) {
     return (error as { message: string }).message;
   }
 
-  return 'An unknown error occurred.';
+  return "An unknown error occurred.";
 }
 
 async function start(): Promise<void> {
-  const viewer = await requireAdmin('reviewer');
+  const viewer = await requireAdmin("reviewer");
 
-  const content = shell(
-    viewer,
-    'admin',
-    'Audit history',
-  );
+  const content = shell(viewer, "admin", "Audit history");
 
-  render(
-    content,
-    loading('LOADING AUDIT HISTORY'),
-  );
+  render(content, loading("LOADING AUDIT HISTORY"));
 
   const fullAccess = isClubAdmin(viewer);
 
@@ -121,42 +101,32 @@ async function start(): Promise<void> {
   let projectList: Project[] = [];
 
   try {
-    [actors, projectList] = await Promise.all([
-      auditActors(),
-      projects(),
-    ]);
+    [actors, projectList] = await Promise.all([auditActors(), projects()]);
   } catch (error) {
-    console.error(
-      'Could not load audit filter data:',
-      error,
-    );
+    console.error("Could not load audit filter data:", error);
 
     render(
       content,
 
-      pageHeader(
-        'ADMIN / AUDIT',
-        'Audit history unavailable',
-      ),
+      pageHeader("ADMIN / AUDIT", "Audit history unavailable"),
 
       notice(
-        'err',
+        "err",
         `Could not load audit history dependencies: ${errorMessage(error)}`,
       ),
 
       h(
-        'div',
-        { class: 'button-row' },
+        "div",
+        { class: "button-row" },
 
         h(
-          'button',
+          "button",
           {
-            type: 'button',
-            class: 'btn-ghost',
-            onclick: () =>
-              window.location.reload(),
+            type: "button",
+            class: "btn-ghost",
+            onclick: () => window.location.reload(),
           },
-          'TRY AGAIN',
+          "TRY AGAIN",
         ),
       ),
     );
@@ -165,10 +135,7 @@ async function start(): Promise<void> {
   }
 
   const projectTitle = new Map(
-    projectList.map((project) => [
-      project.id,
-      project.title,
-    ]),
+    projectList.map((project) => [project.id, project.title]),
   );
 
   const filters: AuditFilters = {
@@ -180,428 +147,315 @@ async function start(): Promise<void> {
   /** Reset whenever the filters change, since draw() refetches from the top. */
   let historyPage = 1;
 
-  function openEntry(
-    entry: AuditEntry,
-  ): void {
-    const related: Array<
-      [string, string]
-    > = [];
+  function openEntry(entry: AuditEntry): void {
+    const related: Array<[string, string]> = [];
 
     if (entry.related_member_id) {
-      related.push([
-        'Member',
-        entry.related_member_id,
-      ]);
+      related.push(["Member", entry.related_member_id]);
     }
 
     if (entry.related_project_id) {
       related.push([
-        'Project',
-        projectTitle.get(
-          entry.related_project_id,
-        ) ?? entry.related_project_id,
+        "Project",
+        projectTitle.get(entry.related_project_id) ?? entry.related_project_id,
       ]);
     }
 
     if (entry.related_request_id) {
-      related.push([
-        'Request',
-        entry.related_request_id,
-      ]);
+      related.push(["Request", entry.related_request_id]);
     }
 
-    const changes =
-      changeList(entry);
+    const changes = changeList(entry);
 
     dialog(
-      entry.summary ||
-      enumLabel(entry.action),
+      entry.summary || enumLabel(entry.action),
 
       h(
-        'div',
+        "div",
         {
           style: {
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '1.5rem',
+            display: "flex",
+            flexDirection: "column",
+            gap: "1.5rem",
           },
         },
 
         h(
-          'div',
+          "div",
           {
-            class:
-              'audit-detail-section',
+            class: "audit-detail-section",
             style: {
-              borderTop: 'none',
-              paddingTop: '0',
+              borderTop: "none",
+              paddingTop: "0",
             },
           },
 
           h(
-            'span',
+            "span",
             {
-              class:
-                'mono-meta',
+              class: "mono-meta",
             },
-            'WHO',
+            "WHO",
           ),
 
           metaList([
+            ["Name", entry.actor_name ?? enumLabel(entry.actor_kind)],
+            ["Position at the time", entry.actor_position ?? "—"],
             [
-              'Name',
-              entry.actor_name ??
-              enumLabel(
-                entry.actor_kind,
-              ),
+              "Admin role at the time",
+              entry.actor_role ? enumLabel(entry.actor_role) : "—",
             ],
-            [
-              'Position at the time',
-              entry.actor_position ??
-              '—',
-            ],
-            [
-              'Admin role at the time',
-              entry.actor_role
-                ? enumLabel(
-                  entry.actor_role,
-                )
-                : '—',
-            ],
-            [
-              'Chapter',
-              entry.actor_chapter_year ??
-              '—',
-            ],
-            [
-              'Acting as',
-              enumLabel(
-                entry.actor_kind,
-              ),
-            ],
+            ["Chapter", entry.actor_chapter_year ?? "—"],
+            ["Acting as", enumLabel(entry.actor_kind)],
           ]),
 
-          entry.actor_kind ===
-            'ai_assistant'
+          entry.actor_kind === "ai_assistant"
             ? notice(
-              'warn',
-              'This entry records a suggestion, not a decision. The assistant ' +
-              'cannot approve or publish anything — look for the admin entry ' +
-              'that follows it.',
-            )
+                "warn",
+                "This entry records a suggestion, not a decision. The assistant " +
+                  "cannot approve or publish anything — look for the admin entry " +
+                  "that follows it.",
+              )
             : null,
         ),
 
         h(
-          'div',
+          "div",
           {
-            class:
-              'audit-detail-section',
+            class: "audit-detail-section",
           },
 
           h(
-            'span',
+            "span",
             {
-              class:
-                'mono-meta',
+              class: "mono-meta",
             },
-            'WHAT',
+            "WHAT",
           ),
 
           metaList([
             [
-              'Action',
+              "Action",
               h(
-                'span',
+                "span",
                 {
-                  class:
-                    'mono-meta accent-text',
+                  class: "mono-meta accent-text",
                 },
                 entry.action,
               ),
             ],
-            [
-              'Category',
-              CATEGORY_LABELS[
-              entry.category
-              ] ?? entry.category,
-            ],
-            [
-              'Target',
-              entry.entity_label ??
-              '—',
-            ],
-            [
-              'Target type',
-              entry.entity_type ??
-              '—',
-            ],
-            [
-              'Decision',
-              entry.decision
-                ? statusPill(
-                  entry.decision,
-                )
-                : '—',
-            ],
+            ["Category", CATEGORY_LABELS[entry.category] ?? entry.category],
+            ["Target", entry.entity_label ?? "—"],
+            ["Target type", entry.entity_type ?? "—"],
+            ["Decision", entry.decision ? statusPill(entry.decision) : "—"],
           ]),
         ),
 
         h(
-          'div',
+          "div",
           {
-            class:
-              'audit-detail-section',
+            class: "audit-detail-section",
           },
 
           h(
-            'span',
+            "span",
             {
-              class:
-                'mono-meta',
+              class: "mono-meta",
             },
-            'WHY',
+            "WHY",
           ),
 
           entry.reason
             ? h(
-              'p',
-              {
-                class:
-                  'history-reason',
-              },
-              entry.reason,
-            )
+                "p",
+                {
+                  class: "history-reason",
+                },
+                entry.reason,
+              )
             : h(
-              'p',
-              {
-                class:
-                  'mono-meta dim-text',
-              },
-              'NO REASON RECORDED',
-            ),
+                "p",
+                {
+                  class: "mono-meta dim-text",
+                },
+                "NO REASON RECORDED",
+              ),
 
           entry.internal_note
             ? h(
-              'p',
-              {
-                class:
-                  'history-internal',
-              },
-
-              h(
-                'span',
+                "p",
                 {
-                  class:
-                    'mono-meta',
+                  class: "history-internal",
                 },
-                'INTERNAL  ',
-              ),
 
-              entry.internal_note,
-            )
+                h(
+                  "span",
+                  {
+                    class: "mono-meta",
+                  },
+                  "INTERNAL  ",
+                ),
+
+                entry.internal_note,
+              )
             : null,
         ),
 
         changes
           ? h(
-            'div',
-            {
-              class:
-                'audit-detail-section',
-            },
-
-            h(
-              'span',
+              "div",
               {
-                class:
-                  'mono-meta',
+                class: "audit-detail-section",
               },
-              'CHANGES',
-            ),
 
-            changes,
-          )
+              h(
+                "span",
+                {
+                  class: "mono-meta",
+                },
+                "CHANGES",
+              ),
+
+              changes,
+            )
           : null,
 
         related.length
           ? h(
-            'div',
-            {
-              class:
-                'audit-detail-section',
-            },
-
-            h(
-              'span',
+              "div",
               {
-                class:
-                  'mono-meta',
+                class: "audit-detail-section",
               },
-              'CONTEXT',
-            ),
 
-            metaList(
-              related.map(
-                ([label, value]) =>
-                  [
-                    label,
-                    h(
-                      'span',
-                      {
-                        class:
-                          'mono-meta',
-                      },
-                      value,
-                    ),
-                  ] as [
-                    string,
-                    HTMLElement,
-                  ],
+              h(
+                "span",
+                {
+                  class: "mono-meta",
+                },
+                "CONTEXT",
               ),
-            ),
-          )
+
+              metaList(
+                related.map(
+                  ([label, value]) =>
+                    [
+                      label,
+                      h(
+                        "span",
+                        {
+                          class: "mono-meta",
+                        },
+                        value,
+                      ),
+                    ] as [string, HTMLElement],
+                ),
+              ),
+            )
           : null,
 
         h(
-          'div',
+          "div",
           {
-            class:
-              'audit-detail-section',
+            class: "audit-detail-section",
           },
 
           h(
-            'span',
+            "span",
             {
-              class:
-                'mono-meta',
+              class: "mono-meta",
             },
-            'SYSTEM',
+            "SYSTEM",
           ),
 
           metaList([
             [
-              'Audit ID',
+              "Audit ID",
               h(
-                'span',
+                "span",
                 {
-                  class:
-                    'mono-meta',
+                  class: "mono-meta",
                 },
                 String(entry.id),
               ),
             ],
+            ["Timestamp", archiveDateTime(entry.created_at)],
+            ["Visible to the member", entry.member_visible ? "Yes" : "No"],
             [
-              'Timestamp',
-              archiveDateTime(
-                entry.created_at,
-              ),
-            ],
-            [
-              'Visible to the member',
-              entry.member_visible
-                ? 'Yes'
-                : 'No',
-            ],
-            [
-              'Correlation',
+              "Correlation",
               h(
-                'span',
+                "span",
                 {
-                  class:
-                    'mono-meta dim-text',
+                  class: "mono-meta dim-text",
                 },
-                entry.correlation_id ??
-                '—',
+                entry.correlation_id ?? "—",
               ),
             ],
           ]),
 
-          Object.keys(
-            entry.metadata ?? {},
-          ).length
+          Object.keys(entry.metadata ?? {}).length
             ? h(
-              'pre',
-              {
-                class:
-                  'mono-meta dim-text',
+                "pre",
+                {
+                  class: "mono-meta dim-text",
 
-                style: {
-                  whiteSpace:
-                    'pre-wrap',
-                  marginTop:
-                    '0.75rem',
-                  fontSize:
-                    '0.7rem',
+                  style: {
+                    whiteSpace: "pre-wrap",
+                    marginTop: "0.75rem",
+                    fontSize: "0.7rem",
+                  },
                 },
-              },
 
-              JSON.stringify(
-                entry.metadata,
-                null,
-                2,
-              ),
-            )
+                JSON.stringify(entry.metadata, null, 2),
+              )
             : null,
         ),
 
         entry.correlation_id
           ? h(
-            'div',
-            {
-              class:
-                'audit-detail-section',
-            },
-
-            h(
-              'span',
+              "div",
               {
-                class:
-                  'mono-meta',
-              },
-              'SAME TRANSACTION',
-            ),
-
-            h(
-              'div',
-              {
-                class:
-                  'history-trail',
+                class: "audit-detail-section",
               },
 
-              loaded
-                .filter(
-                  (other) =>
-                    other.correlation_id ===
-                    entry.correlation_id &&
-                    other.id !==
-                    entry.id,
-                )
-                .map((other) =>
-                  historyEntry(
-                    other,
-                    {
-                      compact: true,
-                    },
-                  ),
-                ),
-            ),
-
-            loaded.filter(
-              (other) =>
-                other.correlation_id ===
-                entry.correlation_id,
-            ).length < 2
-              ? h(
-                'p',
+              h(
+                "span",
                 {
-                  class:
-                    'mono-meta dim-text',
+                  class: "mono-meta",
                 },
-                'NO OTHER CHANGES IN THIS TRANSACTION',
-              )
-              : null,
-          )
+                "SAME TRANSACTION",
+              ),
+
+              h(
+                "div",
+                {
+                  class: "history-trail",
+                },
+
+                loaded
+                  .filter(
+                    (other) =>
+                      other.correlation_id === entry.correlation_id &&
+                      other.id !== entry.id,
+                  )
+                  .map((other) =>
+                    historyEntry(other, {
+                      compact: true,
+                    }),
+                  ),
+              ),
+
+              loaded.filter(
+                (other) => other.correlation_id === entry.correlation_id,
+              ).length < 2
+                ? h(
+                    "p",
+                    {
+                      class: "mono-meta dim-text",
+                    },
+                    "NO OTHER CHANGES IN THIS TRANSACTION",
+                  )
+                : null,
+            )
           : null,
       ),
     );
@@ -610,31 +464,19 @@ async function start(): Promise<void> {
   async function draw(): Promise<void> {
     historyPage = 1;
 
-    render(
-      content,
-      loading('LOADING AUDIT HISTORY'),
-    );
+    render(content, loading("LOADING AUDIT HISTORY"));
 
     try {
       let summary = null;
 
-      const [
-        entries,
-        summaryResult,
-        actorResult,
-      ] = await Promise.all([
+      const [entries, summaryResult, actorResult] = await Promise.all([
         auditEntries(filters),
 
-        auditSummary(30).catch(
-          (error) => {
-            console.error(
-              'Could not load audit summary:',
-              error,
-            );
+        auditSummary(30).catch((error) => {
+          console.error("Could not load audit summary:", error);
 
-            return null;
-          },
-        ),
+          return null;
+        }),
         auditActors(),
       ]);
 
@@ -644,41 +486,24 @@ async function start(): Promise<void> {
       actors = actorResult;
       loaded = entries;
 
-      const searchInput = h(
-        'input',
-        {
-          type: 'search',
-          placeholder:
-            'Search actions, people, reasons…',
-          value:
-            filters.search ?? '',
-          'aria-label':
-            'Search the audit history',
-        },
-      ) as HTMLInputElement;
+      const searchInput = h("input", {
+        type: "search",
+        placeholder: "Search actions, people, reasons…",
+        value: filters.search ?? "",
+        "aria-label": "Search the audit history",
+      }) as HTMLInputElement;
 
       let timer = 0;
 
-      searchInput.addEventListener(
-        'input',
-        () => {
-          window.clearTimeout(
-            timer,
-          );
+      searchInput.addEventListener("input", () => {
+        window.clearTimeout(timer);
 
-          timer =
-            window.setTimeout(
-              () => {
-                filters.search =
-                  searchInput.value.trim() ||
-                  undefined;
+        timer = window.setTimeout(() => {
+          filters.search = searchInput.value.trim() || undefined;
 
-                void draw();
-              },
-              300,
-            );
-        },
-      );
+          void draw();
+        }, 300);
+      });
 
       const select = (
         label: string,
@@ -687,95 +512,71 @@ async function start(): Promise<void> {
           value: string;
           label: string;
         }>,
-        onChange: (
-          value: string,
-        ) => void,
+        onChange: (value: string) => void,
       ): HTMLSelectElement => {
         const element = h(
-          'select',
+          "select",
           {
-            'aria-label': label,
+            "aria-label": label,
           },
 
-          options.map(
-            (option) =>
-              h(
-                'option',
-                {
-                  value:
-                    option.value,
+          options.map((option) =>
+            h(
+              "option",
+              {
+                value: option.value,
 
-                  selected:
-                    option.value ===
-                    (value ?? ''),
-                },
+                selected: option.value === (value ?? ""),
+              },
 
-                option.label,
-              ),
+              option.label,
+            ),
           ),
         ) as HTMLSelectElement;
 
-        element.addEventListener(
-          'change',
-          () =>
-            onChange(
-              element.value,
-            ),
-        );
+        element.addEventListener("change", () => onChange(element.value));
 
         return element;
       };
 
-      const fromInput = h(
-        'input',
-        {
-          type: 'date',
-          value:
-            filters.from ?? '',
-          'aria-label':
-            'From date',
-        },
-      ) as HTMLInputElement;
+      const fromInput = h("input", {
+        type: "date",
+        value: filters.from ?? "",
+        "aria-label": "From date",
+      }) as HTMLInputElement;
 
-      fromInput.addEventListener(
-        'change',
-        () => {
-          filters.from =
-            fromInput.value ||
-            undefined;
+      fromInput.addEventListener("change", () => {
+        filters.from = fromInput.value || undefined;
 
-          void draw();
-        },
+        void draw();
+      });
+
+      const toInput = h("input", {
+        type: "date",
+        value: filters.to ?? "",
+        "aria-label": "To date",
+      }) as HTMLInputElement;
+
+      toInput.addEventListener("change", () => {
+        filters.to = toInput.value || undefined;
+
+        void draw();
+      });
+
+      const fromField = h(
+        "label",
+        { class: "audit-date-filter" },
+        h("span", { class: "mono-meta" }, "FROM DATE"),
+        fromInput,
+      );
+      const toField = h(
+        "label",
+        { class: "audit-date-filter" },
+        h("span", { class: "mono-meta" }, "THROUGH DATE"),
+        toInput,
       );
 
-      const toInput = h(
-        'input',
-        {
-          type: 'date',
-          value:
-            filters.to ?? '',
-          'aria-label':
-            'To date',
-        },
-      ) as HTMLInputElement;
-
-      toInput.addEventListener(
-        'change',
-        () => {
-          filters.to =
-            toInput.value ||
-            undefined;
-
-          void draw();
-        },
-      );
-
-      const fromField = h('label', { class: 'audit-date-filter' },
-        h('span', { class: 'mono-meta' }, 'FROM DATE'), fromInput);
-      const toField = h('label', { class: 'audit-date-filter' },
-        h('span', { class: 'mono-meta' }, 'THROUGH DATE'), toInput);
-
-      const historyBody = h('div');
+      const historyBody = h("div");
 
       /**
        * The history is paged in place. Everything above it — the filters and the
@@ -791,212 +592,145 @@ async function start(): Promise<void> {
 
           slice.rows.length
             ? dataTable(
-              [
-                'When',
-                'Admin',
-                'Action',
-                'Target',
-                'Decision',
-                'Reason',
-              ],
+                ["When", "Admin", "Action", "Target", "Decision", "Reason"],
 
-              slice.rows.map(
-                (entry) => [
+                slice.rows.map((entry) => [
                   h(
-                    'div',
+                    "div",
                     {
-                      class:
-                        'audit-actor',
+                      class: "audit-actor",
                     },
 
                     h(
-                      'span',
+                      "span",
                       {
-                        class:
-                          'mono-meta',
+                        class: "mono-meta",
                       },
-                      archiveDateTime(
-                        entry.created_at,
-                      ),
+                      archiveDateTime(entry.created_at),
                     ),
 
                     h(
-                      'span',
+                      "span",
                       {
-                        class:
-                          'mono-meta',
+                        class: "mono-meta",
                       },
-                      relativeTime(
-                        entry.created_at,
-                      ),
+                      relativeTime(entry.created_at),
                     ),
                   ),
 
                   h(
-                    'div',
+                    "div",
                     {
-                      class:
-                        'audit-actor',
+                      class: "audit-actor",
                     },
 
                     h(
-                      'strong',
-                      entry.actor_name ??
-                      enumLabel(
-                        entry.actor_kind,
-                      ),
+                      "strong",
+                      entry.actor_name ?? enumLabel(entry.actor_kind),
                     ),
 
                     h(
-                      'span',
+                      "span",
                       {
-                        class:
-                          'mono-meta',
+                        class: "mono-meta",
                       },
 
                       [
                         entry.actor_position,
 
-                        entry.actor_role
-                          ? enumLabel(
-                            entry.actor_role,
-                          )
-                          : null,
+                        entry.actor_role ? enumLabel(entry.actor_role) : null,
                       ]
-                        .filter(
-                          Boolean,
-                        )
-                        .join(
-                          ' · ',
-                        ) ||
-                      enumLabel(
-                        entry.actor_kind,
-                      ),
+                        .filter(Boolean)
+                        .join(" · ") || enumLabel(entry.actor_kind),
                     ),
                   ),
 
                   h(
-                    'div',
+                    "div",
                     {},
 
                     h(
-                      'span',
+                      "span",
                       {
-                        class:
-                          'mono-meta accent-text',
+                        class: "mono-meta accent-text",
                       },
                       entry.action,
                     ),
 
                     h(
-                      'p',
+                      "p",
                       {
-                        class:
-                          'mono-meta dim-text',
+                        class: "mono-meta dim-text",
                       },
-                      CATEGORY_LABELS[
-                      entry.category
-                      ] ??
-                      entry.category,
+                      CATEGORY_LABELS[entry.category] ?? entry.category,
                     ),
                   ),
 
                   h(
-                    'div',
+                    "div",
                     {},
 
-                    h(
-                      'strong',
-                      entry.entity_label ??
-                      '—',
-                    ),
+                    h("strong", entry.entity_label ?? "—"),
 
                     h(
-                      'p',
+                      "p",
                       {
-                        class:
-                          'mono-meta dim-text',
+                        class: "mono-meta dim-text",
                       },
-                      (
-                        entry.summary ??
-                        ''
-                      ).slice(
-                        0,
-                        90,
-                      ),
+                      (entry.summary ?? "").slice(0, 90),
                     ),
                   ),
 
                   entry.decision
-                    ? statusPill(
-                      entry.decision,
-                    )
+                    ? statusPill(entry.decision)
                     : h(
-                      'span',
-                      {
-                        class:
-                          'mono-meta dim-text',
-                      },
-                      '—',
-                    ),
+                        "span",
+                        {
+                          class: "mono-meta dim-text",
+                        },
+                        "—",
+                      ),
 
                   h(
-                    'div',
+                    "div",
                     {},
 
                     entry.reason
                       ? h(
-                        'span',
-                        entry.reason.slice(
-                          0,
-                          80,
-                        ) +
-                        (
-                          entry.reason
-                            .length >
-                            80
-                            ? '…'
-                            : ''
-                        ),
-                      )
+                          "span",
+                          entry.reason.slice(0, 80) +
+                            (entry.reason.length > 80 ? "…" : ""),
+                        )
                       : h(
-                        'span',
-                        {
-                          class:
-                            'mono-meta dim-text',
-                        },
-                        'NONE',
-                      ),
+                          "span",
+                          {
+                            class: "mono-meta dim-text",
+                          },
+                          "NONE",
+                        ),
 
                     h(
-                      'p',
+                      "p",
                       {},
 
                       h(
-                        'button',
+                        "button",
                         {
-                          type:
-                            'button',
-                          class:
-                            'link-button',
+                          type: "button",
+                          class: "link-button",
 
-                          onclick:
-                            () =>
-                              openEntry(
-                                entry,
-                              ),
+                          onclick: () => openEntry(entry),
                         },
-                        'DETAILS',
+                        "DETAILS",
                       ),
                     ),
                   ),
-                ],
-              ),
-            )
+                ]),
+              )
             : emptyState(
-              'No entries match these filters.',
-              'Try widening the date range or clearing the category filter.',
-            ),
+                "No entries match these filters.",
+                "Try widening the date range or clearing the category filter.",
+              ),
 
           paginationControls(
             entries.length,
@@ -1010,7 +744,7 @@ async function start(): Promise<void> {
         );
       }
 
-      const historyPanel = panel('History', historyBody);
+      const historyPanel = panel("History", historyBody);
 
       drawHistory();
 
@@ -1018,145 +752,94 @@ async function start(): Promise<void> {
         content,
 
         pageHeader(
-          'ADMIN / AUDIT',
-          'Audit & decision history',
+          "ADMIN / AUDIT",
+          "Audit & decision history",
 
           fullAccess
-            ? action(
-              'Export CSV',
-              async () => {
-                if (
-                  !loaded.length
-                ) {
-                  toast(
-                    'Nothing to export with these filters.',
-                    'err',
-                  );
+            ? action("Export CSV", async () => {
+                if (!loaded.length) {
+                  toast("Nothing to export with these filters.", "err");
 
                   return;
                 }
 
                 try {
-                  exportAuditCsv(
-                    loaded,
-                  );
+                  exportAuditCsv(loaded);
 
-                  toast(
-                    `Exported ${loaded.length} entries.`,
-                  );
+                  toast(`Exported ${loaded.length} entries.`);
                 } catch (error) {
-                  console.error(
-                    'Audit export failed:',
-                    error,
-                  );
+                  console.error("Audit export failed:", error);
 
                   toast(
                     `Could not export audit history: ${errorMessage(error)}`,
-                    'err',
+                    "err",
                   );
                 }
-              },
-            )
+              })
             : null,
         ),
 
         fullAccess
           ? null
           : notice(
-            'info',
-            'You are signed in as a reviewer, so this page shows the actions you ' +
-            'performed. Club admins see the full history.',
-          ),
+              "info",
+              "You are signed in as a reviewer, so this page shows the actions you " +
+                "performed. Club admins see the full history.",
+            ),
 
         summary
           ? statRow([
-            [
-              summary.total_actions,
-              'Actions this month',
-            ],
-            [
-              summary.approvals,
-              'Approvals',
-            ],
-            [
-              summary.rejections,
-              'Rejections',
-            ],
-            [
-              summary.changes_requested,
-              'Changes requested',
-            ],
-            [
-              summary.active_admins,
-              'Admins active',
-            ],
-          ])
+              [summary.total_actions, "Actions this month"],
+              [summary.approvals, "Approvals"],
+              [summary.rejections, "Rejections"],
+              [summary.changes_requested, "Changes requested"],
+              [summary.active_admins, "Admins active"],
+            ])
           : null,
 
         h(
-          'div',
+          "div",
           {
-            class:
-              'browser-toolbar',
+            class: "browser-toolbar",
           },
 
           searchInput,
 
           select(
-            'Category',
+            "Category",
             filters.category,
 
-            CATEGORIES.map(
-              (category) => ({
-                value: category,
+            CATEGORIES.map((category) => ({
+              value: category,
 
-                label: category
-                  ? CATEGORY_LABELS[
-                  category
-                  ]
-                  : 'All categories',
-              }),
-            ),
+              label: category ? CATEGORY_LABELS[category] : "All categories",
+            })),
 
             (value) => {
-              filters.category =
-                value as
-                | AuditCategory
-                | '';
+              filters.category = value as AuditCategory | "";
 
               void draw();
             },
           ),
 
           select(
-            'Decision',
+            "Decision",
             filters.decision,
 
             [
               {
-                value: '',
-                label:
-                  'All decisions',
+                value: "",
+                label: "All decisions",
               },
 
-              ...Object.entries(
-                DECISION_LABELS,
-              ).map(
-                ([
-                  value,
-                  label,
-                ]) => ({
-                  value,
-                  label,
-                }),
-              ),
+              ...Object.entries(DECISION_LABELS).map(([value, label]) => ({
+                value,
+                label,
+              })),
             ],
 
             (value) => {
-              filters.decision =
-                value as
-                | AuditDecision
-                | '';
+              filters.decision = value as AuditDecision | "";
 
               void draw();
             },
@@ -1164,61 +847,47 @@ async function start(): Promise<void> {
 
           fullAccess
             ? select(
-              'Admin',
-              filters.actorId,
+                "Admin",
+                filters.actorId,
 
-              [
-                {
-                  value: '',
-                  label:
-                    'All admins',
+                [
+                  {
+                    value: "",
+                    label: "All admins",
+                  },
+
+                  ...actors.map((actor) => ({
+                    value: actor.id,
+                    label: actor.name,
+                  })),
+                ],
+
+                (value) => {
+                  filters.actorId = value || undefined;
+
+                  void draw();
                 },
-
-                ...actors.map(
-                  (actor) => ({
-                    value:
-                      actor.id,
-                    label:
-                      actor.name,
-                  }),
-                ),
-              ],
-
-              (value) => {
-                filters.actorId =
-                  value ||
-                  undefined;
-
-                void draw();
-              },
-            )
+              )
             : null,
 
           select(
-            'Project',
+            "Project",
             filters.projectId,
 
             [
               {
-                value: '',
-                label:
-                  'All projects',
+                value: "",
+                label: "All projects",
               },
 
-              ...projectList.map(
-                (project) => ({
-                  value:
-                    project.id,
-                  label:
-                    project.title,
-                }),
-              ),
+              ...projectList.map((project) => ({
+                value: project.id,
+                label: project.title,
+              })),
             ],
 
             (value) => {
-              filters.projectId =
-                value ||
-                undefined;
+              filters.projectId = value || undefined;
 
               void draw();
             },
@@ -1229,44 +898,36 @@ async function start(): Promise<void> {
           toField,
 
           h(
-            'button',
+            "button",
             {
-              type: 'button',
-              class: 'btn-ghost',
+              type: "button",
+              class: "btn-ghost",
 
               onclick: () => {
-                filters.search =
-                  undefined;
+                filters.search = undefined;
 
-                filters.category =
-                  '';
+                filters.category = "";
 
-                filters.decision =
-                  '';
+                filters.decision = "";
 
-                filters.actorId =
-                  undefined;
+                filters.actorId = undefined;
 
-                filters.projectId =
-                  undefined;
+                filters.projectId = undefined;
 
-                filters.from =
-                  undefined;
+                filters.from = undefined;
 
-                filters.to =
-                  undefined;
+                filters.to = undefined;
 
                 void draw();
               },
             },
-            'Reset',
+            "Reset",
           ),
 
           h(
-            'span',
+            "span",
             {
-              class:
-                'mono-meta dim-text',
+              class: "mono-meta dim-text",
             },
             `${entries.length} ENTRIES`,
           ),
@@ -1275,10 +936,10 @@ async function start(): Promise<void> {
         historyPanel,
 
         notice(
-          'info',
-          'The audit log is append-only. Entries cannot be edited or deleted by ' +
-          'anyone, including super admins — the database rejects both. To correct ' +
-          'a record, perform the corrective action so it is recorded in turn.',
+          "info",
+          "The audit log is append-only. Entries cannot be edited or deleted by " +
+            "anyone, including super admins — the database rejects both. To correct " +
+            "a record, perform the corrective action so it is recorded in turn.",
         ),
       );
 
@@ -1291,41 +952,33 @@ async function start(): Promise<void> {
         );
       }
     } catch (error) {
-      console.error(
-        'Audit history failed to load:',
-        error,
-      );
+      console.error("Audit history failed to load:", error);
 
       render(
         content,
 
-        pageHeader(
-          'ADMIN / AUDIT',
-          'Audit history unavailable',
-        ),
+        pageHeader("ADMIN / AUDIT", "Audit history unavailable"),
 
         notice(
-          'err',
+          "err",
           `The audit history could not load: ${errorMessage(error)}`,
         ),
 
         h(
-          'div',
+          "div",
           {
-            class:
-              'button-row',
+            class: "button-row",
           },
 
           h(
-            'button',
+            "button",
             {
-              type: 'button',
-              class: 'btn-ghost',
+              type: "button",
+              class: "btn-ghost",
 
-              onclick: () =>
-                void draw(),
+              onclick: () => void draw(),
             },
-            'TRY AGAIN',
+            "TRY AGAIN",
           ),
         ),
       );

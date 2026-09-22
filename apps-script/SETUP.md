@@ -25,17 +25,18 @@ Web app writes use `SpreadsheetApp.openById` with the official club workbook ID
 4. Confirm:
    - `Event jam26 — header row matches, left untouched.`
    - `Event ctf30 — header row matches, left untouched.`
-   Newly empty tabs are seeded. If either reports **HEADER MISMATCH**, stop:
-   review the existing schema and preserve all registrations before correcting
-   headers. Neither setup nor registration overwrites mismatching event data.
+     Newly empty tabs are seeded. If either reports **HEADER MISMATCH**, stop:
+     review the existing schema and preserve all registrations before correcting
+     headers. Neither setup nor registration overwrites mismatching event data.
 
    Lines beginning `WARNING` are expected on a workbook whose sheets are Google
    Sheets **Tables**: a typed column rejects the cosmetic formatting with
-   *"You can't set the number format of cells in a typed column."* Setup treats
+   _"You can't set the number format of cells in a typed column."_ Setup treats
    every appearance step as best-effort, so it records the refusal and carries
    on to the next column — the run still finishes, still prints this report, and
    still writes no data. Setup never creates, removes or modifies a filter,
    because a basic filter and a Table cannot share a range.
+
 5. **Deploy → New deployment → Web app → Execute as: Me → Who has access: Anyone
    → Deploy**. Saving editor code alone does not update an existing deployment.
 6. Copy the resulting `/exec` URL. If it differs, update only:
@@ -57,16 +58,16 @@ are not the event endpoint.
 ## Copying registrations into the platform (optional)
 
 An accepted registration can also be copied into the ACM PSU platform, where it
-appears in **Admin → Records Backup** under *Events / Registrations* and no
+appears in **Admin → Records Backup** under _Events / Registrations_ and no
 longer exists only in Google.
 
 Configure it with two **Script Properties** (Project Settings → Script
 Properties) — never in a `.gs` file, because this directory is public:
 
-| Property | Value |
-|---|---|
-| `PLATFORM_INTAKE_URL` | the `event-registration-intake` Edge Function URL |
-| `PLATFORM_INTAKE_TOKEN` | its `EVENT_REGISTRATION_TOKEN` secret |
+| Property                | Value                                             |
+| ----------------------- | ------------------------------------------------- |
+| `PLATFORM_INTAKE_URL`   | the `event-registration-intake` Edge Function URL |
+| `PLATFORM_INTAKE_TOKEN` | its `EVENT_REGISTRATION_TOKEN` secret             |
 
 With either missing, the copy is skipped and registration behaves exactly as it
 did before. The copy runs only after the worksheet row is appended and flushed,

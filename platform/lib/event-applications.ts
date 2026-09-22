@@ -8,17 +8,19 @@
  * requested this" is a state, not a failure.
  */
 
-import { requireClient, readableError } from './supabase.js';
-import { bestEffortFunctionSync } from './api.js';
+import { requireClient, readableError } from "./supabase.js";
+import { bestEffortFunctionSync } from "./api.js";
 
 /** Outcomes register_event_position_application() can report. */
 export type RegisterOutcome =
-  | 'created'    // a new pending request was stored
-  | 'reopened'   // a cancelled or rejected request was reused
-  | 'pending'    // a pending request already existed
-  | 'approved'   // the member already holds this position
-  | 'closed'     // the opening is no longer accepting requests
-  | 'full';      // every opening is taken
+  | "created" // a new pending request was stored
+  | "reopened" // a cancelled or rejected request was reused
+  | "pending" // a pending request already existed
+  | "approved" // the member already holds this position
+  | "closed" // the opening is no longer accepting requests
+  | "not_open" // the opening has not reached its opening date yet
+  | "not_eligible" // the member's role is not among the eligible roles
+  | "full"; // every opening is taken
 
 export interface RegisterResult {
   outcome: RegisterOutcome;
@@ -28,9 +30,7 @@ export interface RegisterResult {
 
 /** Outcomes unregister_event_position_application() can report. */
 export type UnregisterOutcome =
-  | 'cancelled'
-  | 'already_closed'
-  | 'window_closed';
+  "cancelled" | "already_closed" | "window_closed";
 
 export interface UnregisterResult {
   outcome: UnregisterOutcome;
@@ -42,8 +42,8 @@ function rpcError(error: unknown): Error {
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
-  return typeof value === 'object' && value !== null
-    ? value as Record<string, unknown>
+  return typeof value === "object" && value !== null
+    ? (value as Record<string, unknown>)
     : {};
 }
 
@@ -55,7 +55,7 @@ export async function registerEventApplication(input: {
   const client = requireClient();
 
   const { data, error } = await client.rpc(
-    'register_event_position_application',
+    "register_event_position_application",
     {
       p_event_position_id: input.eventPositionId,
       p_availability: input.availability,
@@ -68,23 +68,31 @@ export async function registerEventApplication(input: {
   const payload = asRecord(data);
   const outcome = payload.outcome;
 
-  if (typeof outcome !== 'string') {
-    throw new Error('Supabase did not return the saved application record.');
+  if (typeof outcome !== "string") {
+    throw new Error("Supabase did not return the saved application record.");
   }
 
   /*
    * Google Sheets is a snapshot, not the record. Only refresh it when
    * something actually changed, and never let it undo a committed write.
    */
-  if (outcome === 'created' || outcome === 'reopened' || outcome === 'approved') {
-    await bestEffortFunctionSync('club-records-sheet-sync', { sheets: ['position_applications'] });
+  if (
+    outcome === "created" ||
+    outcome === "reopened" ||
+    outcome === "approved"
+  ) {
+    await bestEffortFunctionSync("club-records-sheet-sync", {
+      sheets: ["position_applications"],
+    });
   }
 
   return {
     outcome: outcome as RegisterOutcome,
-    status: typeof payload.status === 'string' ? payload.status : 'pending',
+    status: typeof payload.status === "string" ? payload.status : "pending",
     applicationId:
-      typeof payload.application_id === 'string' ? payload.application_id : null,
+      typeof payload.application_id === "string"
+        ? payload.application_id
+        : null,
   };
 }
 
@@ -94,7 +102,7 @@ export async function unregisterEventApplication(
   const client = requireClient();
 
   const { data, error } = await client.rpc(
-    'unregister_event_position_application',
+    "unregister_event_position_application",
     {
       p_application_id: applicationId,
     },
@@ -103,16 +111,19 @@ export async function unregisterEventApplication(
   if (error) throw rpcError(error);
 
   const payload = asRecord(data);
-  const outcome = typeof payload.outcome === 'string'
-    ? payload.outcome as UnregisterOutcome
-    : 'already_closed';
+  const outcome =
+    typeof payload.outcome === "string"
+      ? (payload.outcome as UnregisterOutcome)
+      : "already_closed";
 
-  if (outcome === 'cancelled') {
-    await bestEffortFunctionSync('club-records-sheet-sync', { sheets: ['position_applications'] });
+  if (outcome === "cancelled") {
+    await bestEffortFunctionSync("club-records-sheet-sync", {
+      sheets: ["position_applications"],
+    });
   }
 
   return {
     outcome,
-    status: typeof payload.status === 'string' ? payload.status : 'cancelled',
+    status: typeof payload.status === "string" ? payload.status : "cancelled",
   };
 }

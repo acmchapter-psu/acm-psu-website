@@ -4,11 +4,11 @@
 
 Inspected fetched `origin/main` in all three repositories:
 
-| Repository | Baseline |
-|---|---|
-| acm-psu-website | `4748062622a04b747639c1c52f634c6e79cff6e0` |
-| acm-programming-jam-2026 | `d415766` |
-| ACM-CTF-3.0. (trailing period) | `024cb70` |
+| Repository                     | Baseline                                   |
+| ------------------------------ | ------------------------------------------ |
+| acm-psu-website                | `4748062622a04b747639c1c52f634c6e79cff6e0` |
+| acm-programming-jam-2026       | `d415766`                                  |
+| ACM-CTF-3.0. (trailing period) | `024cb70`                                  |
 
 Both config files used the endpoint below. Jam's config installed a capture
 handler using iframe/postMessage, shared source tag and 20-second timeout,
@@ -23,7 +23,10 @@ Apps Script callers.
 A read-only live GET of the existing `/exec`, following redirects, returned:
 
 ```json
-{"status":"retired","message":"This Apps Script only prepares the ACM PSU Club Records workbook."}
+{
+  "status": "retired",
+  "message": "This Apps Script only prepares the ACM PSU Club Records workbook."
+}
 ```
 
 This proves the live deployment differed from current repository source. The
@@ -103,7 +106,11 @@ backend. Timeout means unconfirmed, not necessarily unwritten.
 GET returns only status/message/version, never workbook data:
 
 ```json
-{"status":"ok","message":"ACM PSU event registration endpoint is live.","version":"2026-09-05.1"}
+{
+  "status": "ok",
+  "message": "ACM PSU event registration endpoint is live.",
+  "version": "2026-09-05.1"
+}
 ```
 
 ## Platform mirror

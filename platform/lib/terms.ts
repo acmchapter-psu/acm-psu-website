@@ -42,34 +42,101 @@ export function isoDate(value: unknown): string | null {
 }
 
 export const PSU_TERMS: Term[] = [
-  { code: '251', label: 'First Semester 2025–2026', start: '2025-08-17', end: '2025-12-20' },
-  { code: '252', label: 'Second Semester 2025–2026', start: '2025-12-21', end: '2026-06-06' },
-  { code: '253', label: 'Summer Semester 2025–2026', start: '2026-06-07', end: '2026-08-08' },
-  { code: '261', label: 'First Semester 2026–2027', start: '2026-08-09', end: '2026-12-12' },
-  { code: '262', label: 'Second Semester 2026–2027', start: '2026-12-13', end: '2027-05-29' },
-  { code: '263', label: 'Summer Semester 2026–2027', start: '2027-05-30', end: '2027-08-21' },
-  { code: '271', label: 'First Semester 2027–2028', start: '2027-08-22', end: '2027-12-25' },
-  { code: '272', label: 'Second Semester 2027–2028', start: '2027-12-26', end: '2028-06-17' },
-  { code: '273', label: 'Summer Semester 2027–2028', start: '2028-06-18', end: '2028-08-19' },
-  { code: '281', label: 'First Semester 2028–2029', start: '2028-08-20', end: '2028-12-23' },
-  { code: '282', label: 'Second Semester 2028–2029', start: '2028-12-24', end: '2029-06-16' },
-  { code: '283', label: 'Summer Semester 2028–2029', start: '2029-06-17', end: '2029-08-16' },
+  {
+    code: "251",
+    label: "First Semester 2025–2026",
+    start: "2025-08-17",
+    end: "2025-12-20",
+  },
+  {
+    code: "252",
+    label: "Second Semester 2025–2026",
+    start: "2025-12-21",
+    end: "2026-06-06",
+  },
+  {
+    code: "253",
+    label: "Summer Semester 2025–2026",
+    start: "2026-06-07",
+    end: "2026-08-08",
+  },
+  {
+    code: "261",
+    label: "First Semester 2026–2027",
+    start: "2026-08-09",
+    end: "2026-12-12",
+  },
+  {
+    code: "262",
+    label: "Second Semester 2026–2027",
+    start: "2026-12-13",
+    end: "2027-05-29",
+  },
+  {
+    code: "263",
+    label: "Summer Semester 2026–2027",
+    start: "2027-05-30",
+    end: "2027-08-21",
+  },
+  {
+    code: "271",
+    label: "First Semester 2027–2028",
+    start: "2027-08-22",
+    end: "2027-12-25",
+  },
+  {
+    code: "272",
+    label: "Second Semester 2027–2028",
+    start: "2027-12-26",
+    end: "2028-06-17",
+  },
+  {
+    code: "273",
+    label: "Summer Semester 2027–2028",
+    start: "2028-06-18",
+    end: "2028-08-19",
+  },
+  {
+    code: "281",
+    label: "First Semester 2028–2029",
+    start: "2028-08-20",
+    end: "2028-12-23",
+  },
+  {
+    code: "282",
+    label: "Second Semester 2028–2029",
+    start: "2028-12-24",
+    end: "2029-06-16",
+  },
+  {
+    code: "283",
+    label: "Summer Semester 2028–2029",
+    start: "2029-06-17",
+    end: "2029-08-16",
+  },
 ];
 
 /** The term a single calendar date belongs to, or null if it is not a date. */
 export function termForDate(value: unknown): Term | null {
   const date = isoDate(value);
   if (!date) return null;
-  return PSU_TERMS.find((term) => term.start <= date && date <= term.end) ?? null;
+  return (
+    PSU_TERMS.find((term) => term.start <= date && date <= term.end) ?? null
+  );
 }
 
 /** The term containing today. */
 export function currentTerm(today = new Date()): Term {
-  return termForDate(today.toISOString().slice(0, 10)) ?? PSU_TERMS[PSU_TERMS.length - 1]!;
+  return (
+    termForDate(today.toISOString().slice(0, 10)) ??
+    PSU_TERMS[PSU_TERMS.length - 1]!
+  );
 }
 
 function step(term: Term): Term {
-  const index = PSU_TERMS.findIndex((candidate) => candidate.code === term.code);
+  const index = PSU_TERMS.findIndex(
+    (candidate) => candidate.code === term.code,
+  );
   return PSU_TERMS[Math.min(index + 1, PSU_TERMS.length - 1)]!;
 }
 
@@ -80,7 +147,11 @@ function step(term: Term): Term {
  * belongs to each term it overlaps. An open end is treated as "still running"
  * and stops at the current term rather than running away.
  */
-export function termsInSpan(start: unknown, end: unknown, today = new Date()): Term[] {
+export function termsInSpan(
+  start: unknown,
+  end: unknown,
+  today = new Date(),
+): Term[] {
   const from = isoDate(start);
   const to = isoDate(end);
   // A span with no dates at all cannot be placed in any term.

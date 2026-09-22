@@ -6,7 +6,7 @@
  * inside the admin view. The headings below are the ones the
  * club-records-sheet-sync Edge Function emits.
  */
-import { termForDate, termsInSpan, type Term } from './terms.js';
+import { termForDate, termsInSpan, type Term } from "./terms.js";
 
 /**
  * Some rows are a moment ('point') and some are a stretch ('span'). A
@@ -17,20 +17,24 @@ import { termForDate, termsInSpan, type Term } from './terms.js';
  * per-row date, so it cannot be split by term and is shown in full.
  */
 export type DateRule =
-  | { kind: 'point'; column: string }
-  | { kind: 'span'; from: string; to: string };
+  | { kind: "point"; column: string }
+  | { kind: "span"; from: string; to: string };
 
 export const DATE_RULES: Record<string, DateRule> = {
-  People: { kind: 'point', column: 'Registration Date' },
-  'Membership Applications': { kind: 'point', column: 'Registration Date' },
-  Members: { kind: 'point', column: 'Registration Date' },
-  'Club Positions': { kind: 'span', from: 'Assignment Start', to: 'Assignment End' },
-  'Opportunity Positions': { kind: 'point', column: 'Created At' },
-  'Position Applications': { kind: 'point', column: 'Applied At' },
-  'Event Participation': { kind: 'span', from: 'Started', to: 'Ended' },
-  Contributions: { kind: 'point', column: 'Occurred On' },
-  Inquiries: { kind: 'point', column: 'Received' },
-  'University Export Log': { kind: 'point', column: 'Generated At' },
+  People: { kind: "point", column: "Registration Date" },
+  "Membership Applications": { kind: "point", column: "Registration Date" },
+  Members: { kind: "point", column: "Registration Date" },
+  "Club Positions": {
+    kind: "span",
+    from: "Assignment Start",
+    to: "Assignment End",
+  },
+  "Opportunity Positions": { kind: "point", column: "Created At" },
+  "Position Applications": { kind: "point", column: "Applied At" },
+  "Event Participation": { kind: "span", from: "Started", to: "Ended" },
+  Contributions: { kind: "point", column: "Occurred On" },
+  Inquiries: { kind: "point", column: "Received" },
+  "University Export Log": { kind: "point", column: "Generated At" },
 };
 
 /**
@@ -39,7 +43,7 @@ export const DATE_RULES: Record<string, DateRule> = {
  * become filterable. They are recognised by the column the mirror always
  * writes instead.
  */
-const REGISTRATION_DATE = { kind: 'point', column: 'Registered At' } as const;
+const REGISTRATION_DATE = { kind: "point", column: "Registered At" } as const;
 
 /**
  * Builds the term lookup for one worksheet, or null when it cannot be placed
@@ -48,17 +52,25 @@ const REGISTRATION_DATE = { kind: 'point', column: 'Registered At' } as const;
  * the heading is gone the worksheet stops filtering instead of mis-filtering.
  */
 export function termsResolver(
-  columns: unknown[], sheetName: string,
+  columns: unknown[],
+  sheetName: string,
 ): ((row: unknown[]) => Term[]) | null {
-  const rule = DATE_RULES[sheetName]
-    ?? (columns.some((c) => String(c) === REGISTRATION_DATE.column) ? REGISTRATION_DATE : undefined);
+  const rule =
+    DATE_RULES[sheetName] ??
+    (columns.some((c) => String(c) === REGISTRATION_DATE.column)
+      ? REGISTRATION_DATE
+      : undefined);
   if (!rule) return null;
-  const indexOf = (name: string) => columns.findIndex((c) => String(c) === name);
+  const indexOf = (name: string) =>
+    columns.findIndex((c) => String(c) === name);
 
-  if (rule.kind === 'point') {
+  if (rule.kind === "point") {
     const at = indexOf(rule.column);
     if (at < 0) return null;
-    return (row) => { const t = termForDate(row[at]); return t ? [t] : []; };
+    return (row) => {
+      const t = termForDate(row[at]);
+      return t ? [t] : [];
+    };
   }
 
   const from = indexOf(rule.from);
@@ -71,7 +83,7 @@ export function termsResolver(
  *  injection — these exports carry text submitted by the public. Mirrors the
  *  same rule in the records-export Edge Function. */
 export function csvCell(value: unknown): string {
-  if (value === null || value === undefined) return '';
+  if (value === null || value === undefined) return "";
   let text = String(value);
   if (/^[=+\-@\t\r]/.test(text)) text = `'${text}`;
   return /[",\n\r]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
@@ -85,20 +97,24 @@ export function csvCell(value: unknown): string {
  * words, so the colour is a second signal rather than the only one — and the
  * workbook sync tints the same two states in Google Sheets.
  */
-export type RowTint = 'new' | 'interview';
+export type RowTint = "new" | "interview";
 
-interface TintRule { column: string; values: Record<string, RowTint> }
+interface TintRule {
+  column: string;
+  values: Record<string, RowTint>;
+}
 
 const TINT_RULES: Record<string, TintRule> = {
-  'Membership Applications': {
-    column: 'Status',
-    values: { submitted: 'new', interview: 'interview' },
+  "Membership Applications": {
+    column: "Status",
+    values: { submitted: "new", interview: "interview" },
   },
 };
 
 /** Builds the row-tint lookup for one worksheet, or null when it has none. */
 export function rowTintResolver(
-  columns: unknown[], sheetName: string,
+  columns: unknown[],
+  sheetName: string,
 ): ((row: unknown[]) => RowTint | null) | null {
   const rule = TINT_RULES[sheetName];
   if (!rule) return null;

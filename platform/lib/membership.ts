@@ -14,26 +14,26 @@ export interface Choice {
 }
 
 export const INTERESTS: Choice[] = [
-  { value: 'programming', label: 'Programming' },
-  { value: 'cybersecurity', label: 'Cybersecurity' },
-  { value: 'ai', label: 'AI & Machine Learning' },
-  { value: 'web-development', label: 'Web Development' },
-  { value: 'design-media', label: 'Design & Media' },
-  { value: 'event-organising', label: 'Event Organising' },
-  { value: 'workshops', label: 'Teaching & Workshops' },
-  { value: 'competitions', label: 'Competitions & CTFs' },
-  { value: 'documentation', label: 'Writing & Documentation' },
-  { value: 'community', label: 'Community & Outreach' },
+  { value: "programming", label: "Programming" },
+  { value: "cybersecurity", label: "Cybersecurity" },
+  { value: "ai", label: "AI & Machine Learning" },
+  { value: "web-development", label: "Web Development" },
+  { value: "design-media", label: "Design & Media" },
+  { value: "event-organising", label: "Event Organising" },
+  { value: "workshops", label: "Teaching & Workshops" },
+  { value: "competitions", label: "Competitions & CTFs" },
+  { value: "documentation", label: "Writing & Documentation" },
+  { value: "community", label: "Community & Outreach" },
 ];
 
 export const ACADEMIC_YEARS: Choice[] = [
-  'Foundation',
-  'Year 1',
-  'Year 2',
-  'Year 3',
-  'Year 4',
-  'Year 5+',
-  'Graduate',
+  "Foundation",
+  "Year 1",
+  "Year 2",
+  "Year 3",
+  "Year 4",
+  "Year 5+",
+  "Graduate",
 ].map((year) => ({ value: year, label: year }));
 
 /** Keeps only values that are actually in the catalogue. */

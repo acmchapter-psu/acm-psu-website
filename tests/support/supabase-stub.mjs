@@ -22,12 +22,23 @@ class Query {
     this.rows = () => (fixture.tables[table] ??= []);
   }
 
-  select() { return this; }
-  order() { return this; }
-  limit() { return this; }
-  eq(column, value) { this.filters.push([column, value]); return this; }
+  select() {
+    return this;
+  }
+  order() {
+    return this;
+  }
+  limit() {
+    return this;
+  }
+  eq(column, value) {
+    this.filters.push([column, value]);
+    return this;
+  }
 
-  get matched() { return this.rows().filter((row) => rowsMatch(row, this.filters)); }
+  get matched() {
+    return this.rows().filter((row) => rowsMatch(row, this.filters));
+  }
 
   async maybeSingle() {
     const failure = this.fixture.failures?.[`${this.table}.select`];
@@ -37,15 +48,17 @@ class Query {
 
   async single() {
     const { data, error } = await this.maybeSingle();
-    return { data, error: error ?? (data ? null : { message: 'no rows' }) };
+    return { data, error: error ?? (data ? null : { message: "no rows" }) };
   }
 
   // Awaiting the builder itself is the "many rows" form.
   then(resolve, reject) {
     const failure = this.fixture.failures?.[`${this.table}.select`];
-    return Promise.resolve(failure
-      ? { data: null, error: failure }
-      : { data: this.matched, error: null }).then(resolve, reject);
+    return Promise.resolve(
+      failure
+        ? { data: null, error: failure }
+        : { data: this.matched, error: null },
+    ).then(resolve, reject);
   }
 
   update(patch) {
@@ -57,7 +70,7 @@ class Query {
         for (const row of query.rows()) {
           if (row[column] === value) Object.assign(row, patch);
         }
-        query.fixture.writes.push({ table: query.table, op: 'update', patch });
+        query.fixture.writes.push({ table: query.table, op: "update", patch });
         return Promise.resolve({ data: null, error: null });
       },
     };
@@ -67,25 +80,25 @@ class Query {
     const failure = this.fixture.failures?.[`${this.table}.insert`];
     if (failure) return Promise.resolve({ data: null, error: failure });
     this.rows().push({ ...values });
-    this.fixture.writes.push({ table: this.table, op: 'insert', values });
+    this.fixture.writes.push({ table: this.table, op: "insert", values });
     return Promise.resolve({ data: null, error: null });
   }
 
   upsert(values, options = {}) {
     const failure = this.fixture.failures?.[`${this.table}.upsert`];
     if (failure) return Promise.resolve({ data: null, error: failure });
-    const key = options.onConflict ?? 'id';
+    const key = options.onConflict ?? "id";
     const existing = this.rows().find((row) => row[key] === values[key]);
     if (existing) Object.assign(existing, values);
     else this.rows().push({ ...values });
-    this.fixture.writes.push({ table: this.table, op: 'upsert', values });
+    this.fixture.writes.push({ table: this.table, op: "upsert", values });
     return Promise.resolve({ data: null, error: null });
   }
 }
 
 export function createClient(_url, key) {
   const fixture = globalThis.__supabaseFixture;
-  const isService = key === 'service-role-key';
+  const isService = key === "service-role-key";
   return {
     __isService: isService,
     auth: {
@@ -95,7 +108,7 @@ export function createClient(_url, key) {
     rpc: async (name, args) => {
       fixture.rpcCalls.push({ name, args, asService: isService });
       const answer = fixture.rpc?.[name];
-      if (typeof answer === 'function') return answer(args);
+      if (typeof answer === "function") return answer(args);
       return { data: answer ?? null, error: null };
     },
   };

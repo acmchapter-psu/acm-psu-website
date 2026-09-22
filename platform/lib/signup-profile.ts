@@ -24,8 +24,8 @@
  *     inconvenience; a sign-in that fails because of one is not.
  */
 
-import { requireClient } from './supabase.js';
-import { knownInterests } from './membership.js';
+import { requireClient } from "./supabase.js";
+import { knownInterests } from "./membership.js";
 
 /** The metadata keys the sign-up form writes. */
 interface SignupMetadata {
@@ -36,7 +36,7 @@ interface SignupMetadata {
 }
 
 function text(value: unknown): string {
-  return typeof value === 'string' ? value.trim() : '';
+  return typeof value === "string" ? value.trim() : "";
 }
 
 export async function applySignupMetadata(): Promise<void> {
@@ -50,44 +50,60 @@ export async function applySignupMetadata(): Promise<void> {
     const major = text(meta.major);
     const academicYear = text(meta.academic_year);
     const interests = knownInterests(
-      Array.isArray(meta.interests) ? meta.interests.map(text).filter(Boolean) : [],
+      Array.isArray(meta.interests)
+        ? meta.interests.map(text).filter(Boolean)
+        : [],
     );
 
     const [userRow, profileRow] = await Promise.all([
-      client.from('app_users').select('major').eq('id', auth.user.id).maybeSingle(),
-      client.from('member_profiles').select('academic_year, interests')
-        .eq('user_id', auth.user.id).maybeSingle(),
+      client
+        .from("app_users")
+        .select("major")
+        .eq("id", auth.user.id)
+        .maybeSingle(),
+      client
+        .from("member_profiles")
+        .select("academic_year, interests")
+        .eq("user_id", auth.user.id)
+        .maybeSingle(),
     ]);
 
     if (major && userRow.data && !text(userRow.data.major)) {
-      await client.from('app_users').update({ major }).eq('id', auth.user.id);
+      await client.from("app_users").update({ major }).eq("id", auth.user.id);
     }
 
-    const profile = profileRow.data as
-      { academic_year: string | null; interests: string[] | null } | null;
+    const profile = profileRow.data as {
+      academic_year: string | null;
+      interests: string[] | null;
+    } | null;
 
     if (!profile) return;
 
     const patch: { academic_year?: string; interests?: string[] } = {};
-    if (academicYear && !text(profile.academic_year)) patch.academic_year = academicYear;
-    if (interests.length && !(profile.interests ?? []).length) patch.interests = interests;
+    if (academicYear && !text(profile.academic_year))
+      patch.academic_year = academicYear;
+    if (interests.length && !(profile.interests ?? []).length)
+      patch.interests = interests;
 
     if (Object.keys(patch).length) {
-      await client.from('member_profiles').update(patch).eq('user_id', auth.user.id);
+      await client
+        .from("member_profiles")
+        .update(patch)
+        .eq("user_id", auth.user.id);
     }
 
     // The private university workbook is a snapshot of Supabase. Refresh its
     // Members tab after the signup answers have reached their source rows.
     // This is best-effort: a Google outage must never block account access.
     const { error: syncError } = await client.functions.invoke(
-      'club-records-sheet-sync',
-      { body: { sheets: ['people', 'members'] } },
+      "club-records-sheet-sync",
+      { body: { sheets: ["people", "members"] } },
     );
     if (syncError) {
-      console.error('Could not refresh the Members worksheet:', syncError);
+      console.error("Could not refresh the Members worksheet:", syncError);
     }
   } catch (error) {
     // Pre-filling is a convenience. Never let it break a sign-in.
-    console.error('Could not apply sign-up answers to the profile:', error);
+    console.error("Could not apply sign-up answers to the profile:", error);
   }
 }

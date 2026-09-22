@@ -10,12 +10,23 @@
  * see published public items, signed-in members additionally see internal
  * ones. The browser is not deciding that; the database is.
  */
-import { h, render } from '../lib/dom.js';
-import { isConfigured, supabase } from '../lib/supabase.js';
-import { archiveDate, fileSize } from '../lib/format.js';
-import { itemUrl, archiveItems, archiveFolders, projects, archiveCategories } from '../lib/api.js';
-import type { ArchiveFolder, ArchiveItem, ArchiveCategory, Project } from '../lib/types.js';
-import { svgIcon, type IconName } from '../lib/file-icons.js';
+import { h, render } from "../lib/dom.js";
+import { isConfigured, supabase } from "../lib/supabase.js";
+import { archiveDate, fileSize } from "../lib/format.js";
+import {
+  itemUrl,
+  archiveItems,
+  archiveFolders,
+  projects,
+  archiveCategories,
+} from "../lib/api.js";
+import type {
+  ArchiveFolder,
+  ArchiveItem,
+  ArchiveCategory,
+  Project,
+} from "../lib/types.js";
+import { svgIcon, type IconName } from "../lib/file-icons.js";
 
 /**
  * Which icon an item gets. The format and mime type say what the file is; the
@@ -23,27 +34,51 @@ import { svgIcon, type IconName } from '../lib/file-icons.js';
  * it is *for*, which is usually the more useful thing to show.
  */
 function iconName(item: ArchiveItem): IconName {
-  if (item.kind === 'link') return 'link';
+  if (item.kind === "link") return "link";
 
-  const format = `${item.format ?? ''} ${item.mime_type ?? ''}`.toLowerCase();
-  const category = item.category ?? '';
-  const label = `${item.kind_label ?? ''} ${item.name}`.toLowerCase();
+  const format = `${item.format ?? ""} ${item.mime_type ?? ""}`.toLowerCase();
+  const category = item.category ?? "";
+  const label = `${item.kind_label ?? ""} ${item.name}`.toLowerCase();
 
-  if (format.includes('image') || format.includes('png') || format.includes('jpg') ||
-      format.includes('jpeg') || format.includes('svg') || format.includes('webp') ||
-      category === 'poster' || category === 'photography' || category === 'branding') return 'image';
-  if (format.includes('video') || format.includes('mp4') || format.includes('mov')) return 'video';
-  if (format.includes('zip') || format.includes('tar') || format.includes('rar')) return 'zip';
-  if (category === 'source-code') return 'code';
-  if (format.includes('html') || item.kind === 'embed') return 'web';
+  if (
+    format.includes("image") ||
+    format.includes("png") ||
+    format.includes("jpg") ||
+    format.includes("jpeg") ||
+    format.includes("svg") ||
+    format.includes("webp") ||
+    category === "poster" ||
+    category === "photography" ||
+    category === "branding"
+  )
+    return "image";
+  if (
+    format.includes("video") ||
+    format.includes("mp4") ||
+    format.includes("mov")
+  )
+    return "video";
+  if (
+    format.includes("zip") ||
+    format.includes("tar") ||
+    format.includes("rar")
+  )
+    return "zip";
+  if (category === "source-code") return "code";
+  if (format.includes("html") || item.kind === "embed") return "web";
 
-  if (category === 'presentation' || format.includes('ppt') ||
-      /slide|deck|presentation/.test(label)) return 'slides';
-  if (/cheat sheet|checklist|quick reference/.test(label)) return 'list';
-  if (/template/.test(label)) return 'template';
-  if (category === 'report' || category === 'results' || /report/.test(label)) return 'report';
+  if (
+    category === "presentation" ||
+    format.includes("ppt") ||
+    /slide|deck|presentation/.test(label)
+  )
+    return "slides";
+  if (/cheat sheet|checklist|quick reference/.test(label)) return "list";
+  if (/template/.test(label)) return "template";
+  if (category === "report" || category === "results" || /report/.test(label))
+    return "report";
 
-  return 'doc';
+  return "doc";
 }
 
 function icon(item: ArchiveItem): string {
@@ -51,44 +86,67 @@ function icon(item: ArchiveItem): string {
 }
 
 function badge(item: ArchiveItem): string {
-  if (item.kind === 'link') return 'LINK';
-  return (item.format ?? item.mime_type?.split('/').pop() ?? 'FILE').toUpperCase();
+  if (item.kind === "link") return "LINK";
+  return (
+    item.format ??
+    item.mime_type?.split("/").pop() ??
+    "FILE"
+  ).toUpperCase();
 }
 
 async function start(): Promise<void> {
-  const host = document.getElementById('archive-browser');
+  const host = document.getElementById("archive-browser");
   if (!host) return;
 
   if (!isConfigured || !supabase) {
-    render(host, h('p', { class: 'mono-meta dim-text' },
-      'ARCHIVE INDEX UNAVAILABLE — browse the per-project archives from the projects page.'));
+    render(
+      host,
+      h(
+        "p",
+        { class: "mono-meta dim-text" },
+        "ARCHIVE INDEX UNAVAILABLE — browse the per-project archives from the projects page.",
+      ),
+    );
     return;
   }
 
   const [allProjects, allFolders, categories] = await Promise.all([
-    projects(), archiveFolders(), archiveCategories(),
+    projects(),
+    archiveFolders(),
+    archiveCategories(),
   ]);
 
-  const projectTitle = new Map(allProjects.map((p: Project) => [p.id, p.title]));
-  const folderName = new Map(allFolders.map((f: ArchiveFolder) => [f.id, f.name]));
+  const projectTitle = new Map(
+    allProjects.map((p: Project) => [p.id, p.title]),
+  );
+  const folderName = new Map(
+    allFolders.map((f: ArchiveFolder) => [f.id, f.name]),
+  );
 
-  let search = '';
-  let projectFilter = '';
-  let categoryFilter = '';
-  let folderId: string | null | undefined = undefined;   // undefined = every item
+  let search = "";
+  let projectFilter = "";
+  let categoryFilter = "";
+  let folderId: string | null | undefined = undefined; // undefined = every item
   let gridView = false;
 
-  const listHost = h('div', { class: 'browser-list' });
-  const crumbs = h('nav', { class: 'browser-crumbs', 'aria-label': 'Archive location' });
-  const countLabel = h('span', { class: 'mono-meta dim-text' });
+  const listHost = h("div", { class: "browser-list" });
+  const crumbs = h("nav", {
+    class: "browser-crumbs",
+    "aria-label": "Archive location",
+  });
+  const countLabel = h("span", { class: "mono-meta dim-text" });
 
   async function open(item: ArchiveItem): Promise<void> {
     const url = await itemUrl(item);
-    if (url) window.open(url, item.kind === 'link' ? '_blank' : '_self', 'noopener');
+    if (url)
+      window.open(url, item.kind === "link" ? "_blank" : "_self", "noopener");
   }
 
   async function draw(): Promise<void> {
-    render(listHost, h('div', { class: 'loading-state mono-meta' }, 'LOADING…'));
+    render(
+      listHost,
+      h("div", { class: "loading-state mono-meta" }, "LOADING…"),
+    );
 
     const items = await archiveItems({
       ...(projectFilter ? { projectId: projectFilter } : {}),
@@ -101,68 +159,127 @@ async function start(): Promise<void> {
       : items;
 
     // Folders belonging to the current location, so the browser can be walked.
-    const childFolders = allFolders.filter((folder: ArchiveFolder) =>
-      (!projectFilter || folder.project_id === projectFilter) &&
-      (folderId === undefined
-        ? folder.parent_id === null
-        : folder.parent_id === (folderId ?? null)) &&
-      !search);
+    const childFolders = allFolders.filter(
+      (folder: ArchiveFolder) =>
+        (!projectFilter || folder.project_id === projectFilter) &&
+        (folderId === undefined
+          ? folder.parent_id === null
+          : folder.parent_id === (folderId ?? null)) &&
+        !search,
+    );
 
-    render(crumbs,
-      h('button', { type: 'button', onclick: () => { folderId = undefined; void draw(); } },
-        'ARCHIVE'),
+    render(
+      crumbs,
+      h(
+        "button",
+        {
+          type: "button",
+          onclick: () => {
+            folderId = undefined;
+            void draw();
+          },
+        },
+        "ARCHIVE",
+      ),
       folderId
-        ? [h('span', { 'aria-hidden': 'true' }, '/'),
-           h('span', { class: 'accent-text' }, folderName.get(folderId) ?? '')]
-        : null);
+        ? [
+            h("span", { "aria-hidden": "true" }, "/"),
+            h("span", { class: "accent-text" }, folderName.get(folderId) ?? ""),
+          ]
+        : null,
+    );
 
-    countLabel.textContent = `${visible.length} RECORD${visible.length === 1 ? '' : 'S'}`;
+    countLabel.textContent = `${visible.length} RECORD${visible.length === 1 ? "" : "S"}`;
 
     if (!childFolders.length && !visible.length) {
-      render(listHost, h('div', { class: 'empty-state' },
-        h('span', { class: 'mono-meta' }, 'NO RECORDS'),
-        h('p', search ? 'Nothing matches that search.' : 'Nothing published here yet.')));
+      render(
+        listHost,
+        h(
+          "div",
+          { class: "empty-state" },
+          h("span", { class: "mono-meta" }, "NO RECORDS"),
+          h(
+            "p",
+            search
+              ? "Nothing matches that search."
+              : "Nothing published here yet.",
+          ),
+        ),
+      );
       return;
     }
 
-    render(listHost,
+    render(
+      listHost,
       childFolders.map((folder: ArchiveFolder) =>
-        h('button', {
-          type: 'button', class: 'browser-row',
-          onclick: () => { folderId = folder.id; void draw(); },
-        },
-          h('div', { class: 'fname' },
-            h('span', { class: 'icon', html: svgIcon('folder') }),
-            h('span', folder.name)),
-          h('span', { class: 'fcell' }, 'DIR'),
-          h('span', { class: 'fcell col-hide' },
-            folder.project_id ? projectTitle.get(folder.project_id) ?? '' : ''),
-          h('span', { class: 'fcell col-hide' }, folder.section.toUpperCase()),
-          h('span', { class: 'file-act' }, '→'))),
+        h(
+          "button",
+          {
+            type: "button",
+            class: "browser-row",
+            onclick: () => {
+              folderId = folder.id;
+              void draw();
+            },
+          },
+          h(
+            "div",
+            { class: "fname" },
+            h("span", { class: "icon", html: svgIcon("folder") }),
+            h("span", folder.name),
+          ),
+          h("span", { class: "fcell" }, "DIR"),
+          h(
+            "span",
+            { class: "fcell col-hide" },
+            folder.project_id
+              ? (projectTitle.get(folder.project_id) ?? "")
+              : "",
+          ),
+          h("span", { class: "fcell col-hide" }, folder.section.toUpperCase()),
+          h("span", { class: "file-act" }, "→"),
+        ),
+      ),
 
       visible.map((item: ArchiveItem) =>
-        h('button', {
-          type: 'button', class: 'browser-row',
-          onclick: () => void open(item),
-        },
-          h('div', { class: 'fname' },
-            h('span', { class: 'icon', html: icon(item) }),
-            h('span', item.name)),
-          h('span', { class: 'fcell' }, badge(item)),
-          h('span', { class: 'fcell col-hide' },
-            item.project_id ? projectTitle.get(item.project_id) ?? '' : ''),
-          h('span', { class: 'fcell col-hide' },
-            item.size_label ?? fileSize(item.size_bytes)),
-          h('span', { class: 'file-act' }, '›'))),
+        h(
+          "button",
+          {
+            type: "button",
+            class: "browser-row",
+            onclick: () => void open(item),
+          },
+          h(
+            "div",
+            { class: "fname" },
+            h("span", { class: "icon", html: icon(item) }),
+            h("span", item.name),
+          ),
+          h("span", { class: "fcell" }, badge(item)),
+          h(
+            "span",
+            { class: "fcell col-hide" },
+            item.project_id ? (projectTitle.get(item.project_id) ?? "") : "",
+          ),
+          h(
+            "span",
+            { class: "fcell col-hide" },
+            item.size_label ?? fileSize(item.size_bytes),
+          ),
+          h("span", { class: "file-act" }, "›"),
+        ),
+      ),
     );
   }
 
-  const searchInput = h('input', {
-    type: 'search', placeholder: 'Search the archive…', 'aria-label': 'Search the archive',
+  const searchInput = h("input", {
+    type: "search",
+    placeholder: "Search the archive…",
+    "aria-label": "Search the archive",
   }) as HTMLInputElement;
 
   let timer = 0;
-  searchInput.addEventListener('input', () => {
+  searchInput.addEventListener("input", () => {
     window.clearTimeout(timer);
     timer = window.setTimeout(() => {
       search = searchInput.value.trim();
@@ -171,18 +288,27 @@ async function start(): Promise<void> {
     }, 250);
   });
 
-  const projectSelect = h('select', { 'aria-label': 'Filter by project' },
-    h('option', { value: '' }, 'All projects'),
-    allProjects.map((p: Project) => h('option', { value: p.id }, p.title))) as HTMLSelectElement;
-  projectSelect.addEventListener('change', () => {
-    projectFilter = projectSelect.value; folderId = undefined; void draw();
+  const projectSelect = h(
+    "select",
+    { "aria-label": "Filter by project" },
+    h("option", { value: "" }, "All projects"),
+    allProjects.map((p: Project) => h("option", { value: p.id }, p.title)),
+  ) as HTMLSelectElement;
+  projectSelect.addEventListener("change", () => {
+    projectFilter = projectSelect.value;
+    folderId = undefined;
+    void draw();
   });
 
-  const categorySelect = h('select', { 'aria-label': 'Filter by category' },
-    h('option', { value: '' }, 'All categories'),
+  const categorySelect = h(
+    "select",
+    { "aria-label": "Filter by category" },
+    h("option", { value: "" }, "All categories"),
     categories.map((c: ArchiveCategory) =>
-      h('option', { value: c.slug }, c.label))) as HTMLSelectElement;
-  categorySelect.addEventListener('change', () => {
+      h("option", { value: c.slug }, c.label),
+    ),
+  ) as HTMLSelectElement;
+  categorySelect.addEventListener("change", () => {
     // Filtering is a question about the whole archive, not about the folder
     // that happens to be open — otherwise picking a category inside a folder
     // silently hides every match that lives anywhere else.
@@ -191,26 +317,45 @@ async function start(): Promise<void> {
     void draw();
   });
 
-  const viewButton = h('button', { type: 'button', class: 'btn-ghost' }, 'GRID');
-  viewButton.addEventListener('click', () => {
+  const viewButton = h(
+    "button",
+    { type: "button", class: "btn-ghost" },
+    "GRID",
+  );
+  viewButton.addEventListener("click", () => {
     gridView = !gridView;
-    listHost.classList.toggle('is-grid', gridView);
-    viewButton.textContent = gridView ? 'LIST' : 'GRID';
+    listHost.classList.toggle("is-grid", gridView);
+    viewButton.textContent = gridView ? "LIST" : "GRID";
   });
 
-  render(host,
-    h('div', { class: 'browser-toolbar' },
-      searchInput, projectSelect, categorySelect, viewButton, countLabel),
+  render(
+    host,
+    h(
+      "div",
+      { class: "browser-toolbar" },
+      searchInput,
+      projectSelect,
+      categorySelect,
+      viewButton,
+      countLabel,
+    ),
     crumbs,
-    listHost);
+    listHost,
+  );
 
   await draw();
 }
 
 void start().catch(() => {
-  const host = document.getElementById('archive-browser');
+  const host = document.getElementById("archive-browser");
   if (host) {
-    render(host, h('p', { class: 'mono-meta dim-text' },
-      'ARCHIVE INDEX UNAVAILABLE — the per-project archives are still browsable.'));
+    render(
+      host,
+      h(
+        "p",
+        { class: "mono-meta dim-text" },
+        "ARCHIVE INDEX UNAVAILABLE — the per-project archives are still browsable.",
+      ),
+    );
   }
 });

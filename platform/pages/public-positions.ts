@@ -15,7 +15,8 @@
  * Registering is a members-only action and happens in the portal, against the
  * same event_positions rows shown here.
  */
-import { isConfigured, supabase } from '../lib/supabase.js';
+import { isConfigured, supabase } from "../lib/supabase.js";
+import { categoryLabel } from "../lib/teams.js";
 
 /** One row of public_event_openings. */
 interface PublicOpening {
@@ -32,40 +33,44 @@ interface PublicOpening {
   project_summary: string | null;
   project_starts_on: string | null;
   project_site_path: string | null;
+  /** Primary team; absent until the team-structure migration is applied. */
+  category?: string | null;
+  opens_on?: string | null;
+  eligible_role_titles?: string[] | null;
 }
 
-const PORTAL_OPPORTUNITIES = '/portal/opportunities.html';
-const PORTAL_SIGN_IN = '/portal/login.html';
+const PORTAL_OPPORTUNITIES = "/portal/opportunities.html";
+const PORTAL_SIGN_IN = "/portal/login.html";
 
-const list = document.getElementById('position-list');
-const loadState = document.getElementById('positions-load-state');
+const list = document.getElementById("position-list");
+const loadState = document.getElementById("positions-load-state");
 const refresh = document.getElementById(
-  'positions-refresh',
+  "positions-refresh",
 ) as HTMLButtonElement | null;
 
 function escapeHtml(value: string | null | undefined): string {
-  const node = document.createElement('div');
-  node.textContent = String(value ?? '');
+  const node = document.createElement("div");
+  node.textContent = String(value ?? "");
   return node.innerHTML;
 }
 
 function escapeAttr(value: string | null | undefined): string {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
 
 /** Matches the date style the rest of the public site uses. */
 function displayDate(value: string | null): string {
-  if (!value) return 'Open until filled';
+  if (!value) return "Open until filled";
   const parsed = new Date(`${value}T00:00:00`);
-  if (Number.isNaN(parsed.getTime())) return 'Open until filled';
-  return parsed.toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
+  if (Number.isNaN(parsed.getTime())) return "Open until filled";
+  return parsed.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
   });
 }
 
@@ -73,15 +78,22 @@ function setState(message: string, isError = false): void {
   if (!loadState) return;
   loadState.hidden = false;
   loadState.textContent = message;
-  loadState.classList.toggle('is-error', isError);
+  loadState.classList.toggle("is-error", isError);
 }
 
 function card(opening: PublicOpening, signedIn: boolean): string {
   const full = opening.remaining <= 0;
+  const today = new Date().toISOString().slice(0, 10);
+  const opensLater = Boolean(opening.opens_on && opening.opens_on > today);
+  const openTo = opening.eligible_role_titles?.length
+    ? opening.eligible_role_titles.join(" · ")
+    : "All active members";
 
   const availability = full
-    ? 'POSITION FILLED'
-    : `${opening.remaining} OF ${opening.openings} PLACES REMAINING`;
+    ? "POSITION FILLED"
+    : opensLater
+      ? `OPENS ${displayDate(opening.opens_on ?? null).toUpperCase()}`
+      : `${opening.remaining} OF ${opening.openings} PLACES REMAINING`;
 
   /*
    * The call to action is a link, never a form. Registration requires an
@@ -90,29 +102,31 @@ function card(opening: PublicOpening, signedIn: boolean): string {
    */
   const href = signedIn ? PORTAL_OPPORTUNITIES : PORTAL_SIGN_IN;
   const label = full
-    ? 'View in member portal'
+    ? "View in member portal"
     : signedIn
-      ? 'Register in the member portal'
-      : 'Sign in to register';
+      ? "Register in the member portal"
+      : "Sign in to register";
 
   return (
     `<article class="position-card" data-position-id="${escapeAttr(opening.event_position_id)}">` +
     `<div class="position-card-index mono-meta">${escapeHtml(opening.project_slug)}</div>` +
     '<div class="position-card-main">' +
     '<div class="position-card-top"><div>' +
-    `<p class="mono-meta accent-text">${escapeHtml(opening.project_title)}</p>` +
+    `<p class="mono-meta accent-text"><span>${escapeHtml(opening.project_title)}</span> · <span>${escapeHtml(categoryLabel(opening.category))}</span></p>` +
     `<h3>${escapeHtml(opening.title)}</h3></div>` +
-    `<span class="position-status ${full ? 'is-full' : ''}">${availability}</span></div>` +
+    `<span class="position-status ${full ? "is-full" : ""}">${availability}</span></div>` +
     `<p class="position-summary">${escapeHtml(
-      opening.description ?? opening.project_summary ?? '',
+      opening.description ?? opening.project_summary ?? "",
     )}</p>` +
     '<dl class="position-meta">' +
     `<div><dt>Event</dt><dd>${escapeHtml(opening.project_title)}</dd></div>` +
+    `<div><dt>Team</dt><dd>${escapeHtml(categoryLabel(opening.category))}</dd></div>` +
+    `<div><dt>Open to</dt><dd>${escapeHtml(openTo)}</dd></div>` +
     `<div><dt>Closes</dt><dd>${escapeHtml(displayDate(opening.closes_on))}</dd></div>` +
     `<div><dt>Places</dt><dd>${opening.filled} of ${opening.openings} filled</dd></div>` +
-    '</dl>' +
+    "</dl>" +
     `<a class="btn-submit position-apply" href="${href}">${label}</a>` +
-    '</div></article>'
+    "</div></article>"
   );
 }
 
@@ -122,30 +136,27 @@ function render(openings: PublicOpening[], signedIn: boolean): void {
   if (!openings.length) {
     list.innerHTML =
       '<div class="positions-empty">' +
-      '<strong>NO OPEN ASSIGNMENTS</strong>' +
-      '<span>Check back when the next project sprint begins. ' +
-      'Members are notified in the portal as soon as a role opens.</span>' +
-      '</div>';
+      "<strong>NO OPEN ASSIGNMENTS</strong>" +
+      "<span>Check back when the next project sprint begins. " +
+      "Members are notified in the portal as soon as a role opens.</span>" +
+      "</div>";
     return;
   }
 
-  list.innerHTML = openings.map((opening) => card(opening, signedIn)).join('');
+  list.innerHTML = openings.map((opening) => card(opening, signedIn)).join("");
 }
 
 async function load(): Promise<void> {
   if (!list) return;
 
   if (!isConfigured || !supabase) {
-    setState(
-      'REGISTRY NOT CONFIGURED — see docs/SETUP.md step 1.',
-      true,
-    );
-    list.innerHTML = '';
+    setState("REGISTRY NOT CONFIGURED — see docs/SETUP.md step 1.", true);
+    list.innerHTML = "";
     return;
   }
 
   if (refresh) refresh.disabled = true;
-  setState('SYNCING AVAILABILITY...');
+  setState("SYNCING AVAILABILITY...");
 
   try {
     /*
@@ -154,10 +165,10 @@ async function load(): Promise<void> {
      */
     const [openings, session] = await Promise.all([
       supabase
-        .from('public_event_openings')
-        .select('*')
-        .order('project_title')
-        .order('title'),
+        .from("public_event_openings")
+        .select("*")
+        .order("project_title")
+        .order("title"),
       supabase.auth.getSession().catch(() => null),
     ]);
 
@@ -170,9 +181,9 @@ async function load(): Promise<void> {
 
     if (loadState) loadState.hidden = true;
   } catch (error) {
-    console.error('Could not load the public position registry:', error);
+    console.error("Could not load the public position registry:", error);
     setState(
-      'REGISTRY UNAVAILABLE — refresh the page or contact the chapter board.',
+      "REGISTRY UNAVAILABLE — refresh the page or contact the chapter board.",
       true,
     );
   } finally {
@@ -181,6 +192,6 @@ async function load(): Promise<void> {
 }
 
 if (list) {
-  refresh?.addEventListener('click', () => void load());
+  refresh?.addEventListener("click", () => void load());
   void load();
 }

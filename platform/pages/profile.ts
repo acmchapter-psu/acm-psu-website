@@ -7,7 +7,7 @@
  * looking for where to edit their own position.
  */
 
-import { h, render, formValues, textOf, asArray } from '../lib/dom.js';
+import { h, render, formValues, textOf, asArray } from "../lib/dom.js";
 
 import {
   shell,
@@ -21,53 +21,154 @@ import {
   submitButton,
   loading,
   toast,
-} from '../lib/ui.js';
+} from "../lib/ui.js";
 
 import {
   requireMember,
   loadViewer,
   displayName,
   isInstructor,
-} from '../lib/session.js';
+} from "../lib/session.js";
 
-import {
-  saveProfile,
-  saveName,
-  positionHistory,
-} from '../lib/api.js';
+import { saveProfile, saveName, positionHistory } from "../lib/api.js";
 
-import { requireClient } from '../lib/supabase.js';
+import { requireClient, readableError } from "../lib/supabase.js";
 
-import {
-  archiveDate,
-  enumLabel,
-  safeHref,
-  term,
-} from '../lib/format.js';
+import { archiveDate, enumLabel, safeHref, term } from "../lib/format.js";
 
 const INTERESTS = [
-  'programming',
-  'cybersecurity',
-  'ai',
-  'web-development',
-  'design-media',
-  'event-organising',
-  'workshops',
-  'competitions',
-  'documentation',
-  'community',
+  "programming",
+  "cybersecurity",
+  "ai",
+  "web-development",
+  "design-media",
+  "event-organising",
+  "workshops",
+  "competitions",
+  "documentation",
+  "community",
 ].map((value) => ({
   value,
   label: value
-    .split('-')
+    .split("-")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' '),
+    .join(" "),
 }));
+
+/**
+ * Changing the password from inside the portal.
+ *
+ * The current password is checked first by signing in with it again. A
+ * signed-in session alone is not enough: anyone at an unattended browser
+ * could otherwise lock the owner out of their own account. The new password
+ * follows the same rule as sign-up and reset.
+ */
+function passwordPanel(email: string): HTMLElement {
+  const status = h("div");
+  const form = h(
+    "form",
+    { class: "portal-form", novalidate: true },
+    field({
+      label: "Current password",
+      name: "current",
+      type: "password",
+      required: true,
+    }),
+    field({
+      label: "New password",
+      name: "password",
+      type: "password",
+      required: true,
+      hint: "At least 8 characters.",
+    }),
+    field({
+      label: "Confirm new password",
+      name: "confirm",
+      type: "password",
+      required: true,
+    }),
+    status,
+    submitButton("Update password"),
+  ) as HTMLFormElement;
+
+  for (const [name, autocomplete] of [
+    ["current", "current-password"],
+    ["password", "new-password"],
+    ["confirm", "new-password"],
+  ]) {
+    form
+      .querySelector(`input[name="${name}"]`)
+      ?.setAttribute("autocomplete", autocomplete!);
+  }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!form.reportValidity()) return;
+
+    const values = formValues(form);
+    const current = textOf(values, "current");
+    const password = textOf(values, "password");
+
+    if (password.length < 8) {
+      status.replaceChildren(
+        notice("err", "Choose a password of at least 8 characters."),
+      );
+      return;
+    }
+    if (password !== textOf(values, "confirm")) {
+      status.replaceChildren(notice("err", "The two new passwords do not match."));
+      return;
+    }
+    if (password === current) {
+      status.replaceChildren(
+        notice("err", "The new password must be different from the current one."),
+      );
+      return;
+    }
+
+    const button = form.querySelector("button")!;
+    button.disabled = true;
+    status.replaceChildren(notice("info", "UPDATING PASSWORD…"));
+
+    try {
+      const client = requireClient();
+      const verified = await client.auth.signInWithPassword({
+        email,
+        password: current,
+      });
+      if (verified.error) {
+        status.replaceChildren(
+          notice("err", "Your current password is not correct. Nothing was changed."),
+        );
+        return;
+      }
+
+      const { error } = await client.auth.updateUser({ password });
+      if (error) {
+        status.replaceChildren(notice("err", readableError(error)));
+        return;
+      }
+
+      form.reset();
+      status.replaceChildren(
+        notice("ok", "Password updated. Use the new password next time you sign in."),
+      );
+      toast("Password updated.");
+    } catch (error) {
+      console.error("Could not update password:", error);
+      status.replaceChildren(notice("err", readableError(error)));
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  return panel("Password", form);
+}
 
 async function start(): Promise<void> {
   const viewer = await requireMember();
 
-  const content = shell(viewer, 'member', 'My profile');
+  const content = shell(viewer, "member", "My profile");
 
   render(content, loading());
 
@@ -76,75 +177,90 @@ async function start(): Promise<void> {
 
     const profile = viewer.profile;
     const instructor = isInstructor(viewer);
-    const status = h('div');
+    const status = h("div");
     const extraLinks = profile?.extra_links ?? [];
 
-    const extraLinksList = h('div', { class: 'extra-links-editor' });
-    const addExtraLinkRow = (link: { label?: string; url?: string } = {}): void => {
-      const row = h('div', { class: 'field-pair', dataset: { extraLinkRow: 'true' } },
+    const extraLinksList = h("div", { class: "extra-links-editor" });
+    const addExtraLinkRow = (
+      link: { label?: string; url?: string } = {},
+    ): void => {
+      const row = h(
+        "div",
+        { class: "field-pair", dataset: { extraLinkRow: "true" } },
         field({
-          label: 'Other link — label', name: 'extra_link_label', maxlength: 40,
-          value: link.label, hint: 'Optional, e.g. "Behance".',
+          label: "Other link — label",
+          name: "extra_link_label",
+          maxlength: 40,
+          value: link.label,
+          hint: 'Optional, e.g. "Behance".',
         }),
         field({
-          label: 'Other link — URL', name: 'extra_link_url', type: 'url',
-          value: link.url, placeholder: 'https://…',
+          label: "Other link — URL",
+          name: "extra_link_url",
+          type: "url",
+          value: link.url,
+          placeholder: "https://…",
         }),
-        h('button', {
-          class: 'btn-ghost', type: 'button',
-          onclick: () => row.remove(),
-        }, 'Remove link'),
+        h(
+          "button",
+          {
+            class: "btn-ghost",
+            type: "button",
+            onclick: () => row.remove(),
+          },
+          "Remove link",
+        ),
       );
       extraLinksList.append(row);
     };
     for (const link of extraLinks) addExtraLinkRow(link);
 
     const form = h(
-      'form',
+      "form",
       {
-        class: 'portal-form',
+        class: "portal-form",
         novalidate: true,
       },
 
       h(
-        'div',
-        { class: 'field-pair' },
+        "div",
+        { class: "field-pair" },
 
         field({
-          label: 'Full name',
-          name: 'full_name',
+          label: "Full name",
+          name: "full_name",
           required: true,
           maxlength: 120,
           value: viewer.user.full_name,
         }),
 
         field({
-          label: 'Display name',
-          name: 'display_name',
+          label: "Display name",
+          name: "display_name",
           maxlength: 120,
           value: profile?.display_name,
-          hint: 'Optional. Shown instead of your full name.',
+          hint: "Optional. Shown instead of your full name.",
         }),
       ),
 
       field({
-        label: 'Academic year',
-        name: 'academic_year',
-        type: 'select',
+        label: "Academic year",
+        name: "academic_year",
+        type: "select",
         value: profile?.academic_year,
         options: [
           {
-            value: '',
-            label: '—',
+            value: "",
+            label: "—",
           },
           ...[
-            'Foundation',
-            'Year 1',
-            'Year 2',
-            'Year 3',
-            'Year 4',
-            'Year 5+',
-            'Graduate',
+            "Foundation",
+            "Year 1",
+            "Year 2",
+            "Year 3",
+            "Year 4",
+            "Year 5+",
+            "Graduate",
           ].map((year) => ({
             value: year,
             label: year,
@@ -153,93 +269,90 @@ async function start(): Promise<void> {
       }),
 
       field({
-        label: 'Bio',
-        name: 'bio',
-        type: 'textarea',
+        label: "Bio",
+        name: "bio",
+        type: "textarea",
         rows: 6,
         maxlength: 5000,
         value: profile?.bio,
-        hint: 'Shown on your public profile if you choose to be listed.',
+        hint: "Shown on your public profile if you choose to be listed.",
       }),
 
       h(
-        'div',
-        { class: 'form-field' },
+        "div",
+        { class: "form-field" },
 
-        h(
-          'span',
-          { class: 'mono-meta' },
-          'INTERESTS',
-        ),
+        h("span", { class: "mono-meta" }, "INTERESTS"),
 
-        chipPicker(
-          'interests',
-          INTERESTS,
-          profile?.interests ?? [],
-        ),
+        chipPicker("interests", INTERESTS, profile?.interests ?? []),
       ),
 
       h(
-        'div',
-        { class: 'field-pair' },
+        "div",
+        { class: "field-pair" },
 
         field({
-          label: 'LinkedIn',
-          name: 'linkedin_url',
-          type: 'url',
+          label: "LinkedIn",
+          name: "linkedin_url",
+          type: "url",
           value: profile?.linkedin_url,
-          placeholder: 'https://linkedin.com/in/…',
+          placeholder: "https://linkedin.com/in/…",
         }),
 
         field({
-          label: 'GitHub',
-          name: 'github_url',
-          type: 'url',
+          label: "GitHub",
+          name: "github_url",
+          type: "url",
           value: profile?.github_url,
-          placeholder: 'https://github.com/…',
+          placeholder: "https://github.com/…",
         }),
       ),
 
       field({
-        label: 'Portfolio or personal website',
-        name: 'website_url',
-        type: 'url',
+        label: "Portfolio or personal website",
+        name: "website_url",
+        type: "url",
         value: profile?.website_url,
-        placeholder: 'https://…',
+        placeholder: "https://…",
       }),
 
       extraLinksList,
-      h('button', {
-        class: 'btn-ghost', type: 'button',
-        onclick: () => addExtraLinkRow(),
-      }, 'Add another link'),
+      h(
+        "button",
+        {
+          class: "btn-ghost",
+          type: "button",
+          onclick: () => addExtraLinkRow(),
+        },
+        "Add another link",
+      ),
 
       field({
-        label: 'Profile visibility',
-        name: 'visibility',
-        type: 'select',
-        value: profile?.visibility ?? 'private',
+        label: "Profile visibility",
+        name: "visibility",
+        type: "select",
+        value: profile?.visibility ?? "private",
         options: [
           {
-            value: 'private',
-            label: 'Private — only you and ACM admins can see it',
+            value: "private",
+            label: "Private — only you and ACM admins can see it",
           },
           {
-            value: 'public',
-            label: 'Public — listed on the ACM team page',
+            value: "public",
+            label: "Public — listed on the ACM team page",
           },
         ],
         hint:
-          'You can change this whenever you like. Making a profile private does ' +
-          'not affect your membership or your verified record.',
+          "You can change this whenever you like. Making a profile private does " +
+          "not affect your membership or your verified record.",
       }),
 
       status,
 
-      submitButton('Save profile'),
+      submitButton("Save profile"),
     ) as HTMLFormElement;
 
-    form.addEventListener('submit', async (event) => {
+    form.addEventListener("submit", async (event) => {
       event.preventDefault();
 
       if (!form.reportValidity()) {
@@ -248,7 +361,7 @@ async function start(): Promise<void> {
 
       const values = formValues(form);
 
-      const button = form.querySelector<HTMLButtonElement>('button');
+      const button = form.querySelector<HTMLButtonElement>("button");
 
       if (!button) {
         return;
@@ -256,14 +369,20 @@ async function start(): Promise<void> {
 
       button.disabled = true;
 
-      status.replaceChildren(
-        notice('info', 'SAVING…'),
-      );
+      status.replaceChildren(notice("info", "SAVING…"));
 
-      const links = Array.from(form.querySelectorAll<HTMLElement>('[data-extra-link-row]'))
+      const links = Array.from(
+        form.querySelectorAll<HTMLElement>("[data-extra-link-row]"),
+      )
         .map((row) => ({
-          label: (row.querySelector<HTMLInputElement>('[name="extra_link_label"]')?.value ?? '').trim(),
-          url: (row.querySelector<HTMLInputElement>('[name="extra_link_url"]')?.value ?? '').trim(),
+          label: (
+            row.querySelector<HTMLInputElement>('[name="extra_link_label"]')
+              ?.value ?? ""
+          ).trim(),
+          url: (
+            row.querySelector<HTMLInputElement>('[name="extra_link_url"]')
+              ?.value ?? ""
+          ).trim(),
         }))
         .filter((link) => link.label && link.url);
 
@@ -277,74 +396,59 @@ async function start(): Promise<void> {
        * link comes back as a Postgres constraint name.
        */
       const namedLinks: Array<[string, string]> = [
-        ['LinkedIn', textOf(values, 'linkedin_url')],
-        ['GitHub', textOf(values, 'github_url')],
-        ['Website', textOf(values, 'website_url')],
+        ["LinkedIn", textOf(values, "linkedin_url")],
+        ["GitHub", textOf(values, "github_url")],
+        ["Website", textOf(values, "website_url")],
       ];
-      const badLink = [...namedLinks, ...links.map((link): [string, string] => [link.label, link.url])]
-        .find(([, url]) => url && safeHref(url) === '#');
+      const badLink = [
+        ...namedLinks,
+        ...links.map((link): [string, string] => [link.label, link.url]),
+      ].find(([, url]) => url && safeHref(url) === "#");
 
       if (badLink) {
-        status.replaceChildren(notice(
-          'err',
-          `The ${badLink[0]} link must start with http:// or https://. ` +
-          'Links on a public profile can only point at ordinary web pages.',
-        ));
+        status.replaceChildren(
+          notice(
+            "err",
+            `The ${badLink[0]} link must start with http:// or https://. ` +
+              "Links on a public profile can only point at ordinary web pages.",
+          ),
+        );
         button.disabled = false;
         return;
       }
 
       try {
-        await saveName(
-          viewer.userId,
-          textOf(values, 'full_name'),
-        );
+        await saveName(viewer.userId, textOf(values, "full_name"));
 
         await saveProfile(viewer.userId, {
-          display_name:
-            textOf(values, 'display_name') || null,
+          display_name: textOf(values, "display_name") || null,
 
-          academic_year:
-            textOf(values, 'academic_year') || null,
+          academic_year: textOf(values, "academic_year") || null,
 
-          bio:
-            textOf(values, 'bio'),
+          bio: textOf(values, "bio"),
 
-          interests:
-            asArray(values.interests),
+          interests: asArray(values.interests),
 
-          linkedin_url:
-            textOf(values, 'linkedin_url') || null,
+          linkedin_url: textOf(values, "linkedin_url") || null,
 
-          github_url:
-            textOf(values, 'github_url') || null,
+          github_url: textOf(values, "github_url") || null,
 
-          website_url:
-            textOf(values, 'website_url') || null,
+          website_url: textOf(values, "website_url") || null,
 
           extra_links: links,
 
           visibility:
-            textOf(values, 'visibility') === 'public'
-              ? 'public'
-              : 'private',
+            textOf(values, "visibility") === "public" ? "public" : "private",
         });
 
         await loadViewer(true);
 
-        status.replaceChildren(
-          notice('ok', 'PROFILE SAVED.'),
-        );
+        status.replaceChildren(notice("ok", "PROFILE SAVED."));
 
-        toast('Profile saved.');
+        toast("Profile saved.");
       } catch (error) {
         status.replaceChildren(
-          notice(
-            'err',
-            error instanceof Error
-              ? error.message
-              : String(error),
-          ),
+          notice("err", error instanceof Error ? error.message : String(error)),
         );
       } finally {
         button.disabled = false;
@@ -356,12 +460,12 @@ async function start(): Promise<void> {
      * the storage policy is what actually enforces that.
      */
 
-    const avatarInput = h('input', {
-      type: 'file',
-      accept: 'image/png,image/jpeg,image/webp',
+    const avatarInput = h("input", {
+      type: "file",
+      accept: "image/png,image/jpeg,image/webp",
     }) as HTMLInputElement;
 
-    avatarInput.addEventListener('change', async () => {
+    avatarInput.addEventListener("change", async () => {
       const file = avatarInput.files?.[0];
 
       if (!file) {
@@ -369,34 +473,21 @@ async function start(): Promise<void> {
       }
 
       if (file.size > 2 * 1024 * 1024) {
-        toast(
-          'Profile photos must be under 2 MB.',
-          'err',
-        );
+        toast("Profile photos must be under 2 MB.", "err");
         return;
       }
 
       try {
-        const safeName = file.name.replace(
-          /[^\w.-]+/g,
-          '-',
-        );
+        const safeName = file.name.replace(/[^\w.-]+/g, "-");
 
-        const path =
-          `${viewer.userId}/` +
-          `${crypto.randomUUID()}-${safeName}`;
+        const path = `${viewer.userId}/` + `${crypto.randomUUID()}-${safeName}`;
 
         const { error } = await requireClient()
-          .storage
-          .from('avatars')
-          .upload(
-            path,
-            file,
-            {
-              upsert: false,
-              contentType: file.type,
-            },
-          );
+          .storage.from("avatars")
+          .upload(path, file, {
+            upsert: false,
+            contentType: file.type,
+          });
 
         if (error) {
           throw new Error(error.message);
@@ -408,14 +499,9 @@ async function start(): Promise<void> {
 
         await loadViewer(true);
 
-        toast('Photo updated.');
+        toast("Photo updated.");
       } catch (error) {
-        toast(
-          error instanceof Error
-            ? error.message
-            : String(error),
-          'err',
-        );
+        toast(error instanceof Error ? error.message : String(error), "err");
       }
     });
 
@@ -423,152 +509,125 @@ async function start(): Promise<void> {
       content,
 
       pageHeader(
-        instructor ? 'FACULTY / PROFILE' : 'MEMBER / PROFILE',
+        instructor ? "FACULTY / PROFILE" : "MEMBER / PROFILE",
         displayName(viewer),
 
         h(
-          'a',
+          "a",
           {
-            class: 'btn-ghost',
-            href: '/portal/index.html',
+            class: "btn-ghost",
+            href: "/portal/index.html",
           },
-          'Back to dashboard',
+          "Back to dashboard",
         ),
       ),
 
       notice(
-        'info',
+        "info",
         instructor
-          ? 'You control your public faculty profile. ACM maintains your verified chapter role and service record.'
-          : 'Members control who they are. ACM verifies what they did. ' +
-            'Everything on this page is yours to edit; the record below is maintained by admins.',
+          ? "You control your public faculty profile. ACM maintains your verified chapter role and service record."
+          : "Members control who they are. ACM verifies what they did. " +
+              "Everything on this page is yours to edit; the record below is maintained by admins.",
       ),
 
       h(
-        'div',
-        { class: 'panel-grid' },
+        "div",
+        { class: "panel-grid" },
 
-        panel(
-          'About you',
-          form,
-        ),
+        panel("About you", form),
 
         h(
-          'div',
+          "div",
           {
             style: {
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '1.5rem',
+              display: "flex",
+              flexDirection: "column",
+              gap: "1.5rem",
             },
           },
 
           panel(
-            'Profile photo',
+            "Profile photo",
 
             h(
-              'p',
-              { class: 'mono-meta dim-text' },
+              "p",
+              { class: "mono-meta dim-text" },
               profile?.avatar_path
-                ? 'A photo is on file.'
-                : 'No photo on file.',
+                ? "A photo is on file."
+                : "No photo on file.",
             ),
 
-            h(
-              'div',
-              { class: 'form-field' },
-              avatarInput,
-            ),
+            h("div", { class: "form-field" }, avatarInput),
           ),
 
-          panel(
-            'Verified by ACM',
+          passwordPanel(viewer.email),
 
-            metaList(instructor ? [
-              [
-                'Account type',
-                enumLabel(viewer.user.university_role),
-              ],
-              [
-                'Current position',
-                viewer.currentPosition ?? 'Instructor',
-              ],
-              [
-                'ACM role since',
-                archiveDate(history.find((row) => !row.ended_on)?.started_on ?? history[0]?.started_on),
-              ],
-              [
-                'PSU email',
-                viewer.email,
-              ],
-            ] : [
-              [
-                'Membership',
-                statusPill(viewer.membership?.status),
-              ],
-              [
-                'Current position',
-                viewer.currentPosition ?? 'Member',
-              ],
-              [
-                'Member since',
-                archiveDate(
-                  viewer.membership?.started_on,
-                ),
-              ],
-              [
-                'Student ID',
-                viewer.user.student_id ?? '—',
-              ],
-              [
-                'Major',
-                viewer.user.major ?? '—',
-              ],
-              [
-                'PSU email',
-                viewer.email,
-              ],
-            ]),
+          panel(
+            "Verified by ACM",
+
+            metaList(
+              instructor
+                ? [
+                    ["Account type", enumLabel(viewer.user.university_role)],
+                    [
+                      "Current position",
+                      viewer.currentPosition ?? "Instructor",
+                    ],
+                    [
+                      "ACM role since",
+                      archiveDate(
+                        history.find((row) => !row.ended_on)?.started_on ??
+                          history[0]?.started_on,
+                      ),
+                    ],
+                    ["PSU email", viewer.email],
+                  ]
+                : [
+                    ["Membership", statusPill(viewer.membership?.status)],
+                    ["Current position", viewer.currentPosition ?? "Member"],
+                    [
+                      "Member since",
+                      archiveDate(viewer.membership?.started_on),
+                    ],
+                    ["Student ID", viewer.user.student_id ?? "—"],
+                    ["Major", viewer.user.major ?? "—"],
+                    ["PSU email", viewer.email],
+                  ],
+            ),
 
             history.length
               ? h(
-                'div',
-                { class: 'history-list' },
+                  "div",
+                  { class: "history-list" },
 
-                history.map((row) =>
-                  h(
-                    'div',
-                    { class: 'history-row' },
-
+                  history.map((row) =>
                     h(
-                      'span',
-                      { class: 'mono-meta' },
-                      term(
-                        row.started_on,
-                        row.ended_on,
+                      "div",
+                      { class: "history-row" },
+
+                      h(
+                        "span",
+                        { class: "mono-meta" },
+                        term(row.started_on, row.ended_on),
                       ),
-                    ),
 
-                    h(
-                      'strong',
-                      row.title_snapshot,
+                      h("strong", row.title_snapshot),
                     ),
                   ),
-                ),
-              )
+                )
               : null,
 
             h(
-              'div',
-              { class: 'button-row' },
+              "div",
+              { class: "button-row" },
 
               h(
-                'a',
+                "a",
                 {
-                  class: 'btn-ghost',
-                  href: '/portal/requests.html',
+                  class: "btn-ghost",
+                  href: "/portal/requests.html",
                 },
-                'Request a change',
+                "Request a change",
               ),
             ),
           ),
@@ -576,33 +635,30 @@ async function start(): Promise<void> {
       ),
     );
   } catch (error) {
-    console.error(
-      'Profile page failed to load:',
-      error,
-    );
+    console.error("Profile page failed to load:", error);
 
     render(
       content,
 
       pageHeader(
-        'MEMBER / PROFILE',
-        'Profile unavailable',
+        "MEMBER / PROFILE",
+        "Profile unavailable",
 
         h(
-          'a',
+          "a",
           {
-            class: 'btn-ghost',
-            href: '/portal/index.html',
+            class: "btn-ghost",
+            href: "/portal/index.html",
           },
-          'Back to dashboard',
+          "Back to dashboard",
         ),
       ),
 
       notice(
-        'err',
+        "err",
         error instanceof Error
           ? `Your profile could not load: ${error.message}`
-          : 'Your profile could not load.',
+          : "Your profile could not load.",
       ),
     );
   }

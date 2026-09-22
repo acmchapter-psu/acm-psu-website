@@ -6,12 +6,7 @@
  * row no longer matches the member's UPDATE policy in the database.
  */
 
-import {
-  h,
-  render,
-  formValues,
-  textOf,
-} from '../lib/dom.js';
+import { h, render, formValues, textOf } from "../lib/dom.js";
 
 import {
   shell,
@@ -26,12 +21,9 @@ import {
   toast,
   action,
   emptyState,
-} from '../lib/ui.js';
+} from "../lib/ui.js";
 
-import {
-  requireParticipant,
-  canSubmit,
-} from '../lib/session.js';
+import { requireParticipant, canSubmit } from "../lib/session.js";
 
 import {
   myContributions,
@@ -39,53 +31,40 @@ import {
   projects,
   saveContribution,
   uploadPrivate,
-} from '../lib/api.js';
+} from "../lib/api.js";
 
-import {
-  requireClient,
-} from '../lib/supabase.js';
+import { requireClient } from "../lib/supabase.js";
 
-import {
-  archiveDate,
-  enumLabel,
-} from '../lib/format.js';
+import { archiveDate, enumLabel } from "../lib/format.js";
 
-import type {
-  Contribution,
-  ContributionType,
-  Project,
-} from '../lib/types.js';
+import type { Contribution, ContributionType, Project } from "../lib/types.js";
 
-const MAX_EVIDENCE_BYTES =
-  10 * 1024 * 1024;
+const MAX_EVIDENCE_BYTES = 10 * 1024 * 1024;
 
-const ALLOWED_EVIDENCE_EXTENSIONS =
-  new Set([
-    'pdf',
-    'png',
-    'jpg',
-    'jpeg',
-    'webp',
-    'txt',
-    'zip',
-  ]);
+const ALLOWED_EVIDENCE_EXTENSIONS = new Set([
+  "pdf",
+  "png",
+  "jpg",
+  "jpeg",
+  "webp",
+  "txt",
+  "zip",
+]);
 
-function errorMessage(
-  error: unknown,
-): string {
+function errorMessage(error: unknown): string {
   if (error instanceof Error) {
     return error.message;
   }
 
   if (
-    typeof error === 'object' &&
+    typeof error === "object" &&
     error !== null &&
-    'message' in error &&
+    "message" in error &&
     typeof (
       error as {
         message?: unknown;
       }
-    ).message === 'string'
+    ).message === "string"
   ) {
     return (
       error as {
@@ -94,110 +73,64 @@ function errorMessage(
     ).message;
   }
 
-  return 'An unknown error occurred.';
+  return "An unknown error occurred.";
 }
 
-function cleanLinks(
-  raw: string,
-): string[] {
+function cleanLinks(raw: string): string[] {
   return raw
-    .split('\n')
-    .map(
-      (line) =>
-        line.trim(),
-    )
+    .split("\n")
+    .map((line) => line.trim())
     .filter(Boolean)
-    .slice(
-      0,
-      10,
-    );
+    .slice(0, 10);
 }
 
-function fileExtension(
-  fileName: string,
-): string {
-  const last =
-    fileName
-      .split('.')
-      .pop();
+function fileExtension(fileName: string): string {
+  const last = fileName.split(".").pop();
 
-  return (
-    last ??
-    ''
-  ).toLowerCase();
+  return (last ?? "").toLowerCase();
 }
 
 async function start(): Promise<void> {
-  const viewer =
-    await requireParticipant();
+  const viewer = await requireParticipant();
 
-  const content =
-    shell(
-      viewer,
-      'member',
-      'Contributions',
-    );
+  const content = shell(viewer, "member", "Contributions");
 
-  render(
-    content,
-    loading(),
-  );
+  render(content, loading());
 
-  let types:
-    ContributionType[] =
-    [];
+  let types: ContributionType[] = [];
 
-  let projectList:
-    Project[] =
-    [];
+  let projectList: Project[] = [];
 
   try {
-    [
-      types,
-      projectList,
-    ] =
-      await Promise.all([
-        contributionTypes(),
-        projects(),
-      ]);
+    [types, projectList] = await Promise.all([contributionTypes(), projects()]);
   } catch (error) {
-    console.error(
-      'Could not load contribution metadata:',
-      error,
-    );
+    console.error("Could not load contribution metadata:", error);
 
     render(
       content,
 
-      pageHeader(
-        'MEMBER / CONTRIBUTIONS',
-        'Contributions unavailable',
-      ),
+      pageHeader("MEMBER / CONTRIBUTIONS", "Contributions unavailable"),
 
       notice(
-        'err',
+        "err",
         `Could not load contribution options: ${errorMessage(error)}`,
       ),
 
       h(
-        'div',
+        "div",
         {
-          class:
-            'button-row',
+          class: "button-row",
         },
 
         h(
-          'button',
+          "button",
           {
-            type: 'button',
-            class:
-              'btn-ghost',
+            type: "button",
+            class: "btn-ghost",
 
-            onclick:
-              () =>
-                window.location.reload(),
+            onclick: () => window.location.reload(),
           },
-          'TRY AGAIN',
+          "TRY AGAIN",
         ),
       ),
     );
@@ -205,104 +138,57 @@ async function start(): Promise<void> {
     return;
   }
 
-  const projectTitle =
-    new Map(
-      projectList.map(
-        (
-          project:
-            Project,
-        ) => [
-            project.id,
-            project.title,
-          ],
-      ),
-    );
+  const projectTitle = new Map(
+    projectList.map((project: Project) => [project.id, project.title]),
+  );
 
-  function editor(
-    existing:
-      Contribution |
-      null,
-  ): void {
-    const status =
-      h(
-        'div',
-      );
+  function editor(existing: Contribution | null): void {
+    const status = h("div");
 
-    const fileInput =
-      h(
-        'input',
-        {
-          type:
-            'file',
+    const fileInput = h("input", {
+      type: "file",
 
-          accept:
-            '.pdf,.png,.jpg,.jpeg,.webp,.txt,.zip',
-        },
-      ) as HTMLInputElement;
+      accept: ".pdf,.png,.jpg,.jpeg,.webp,.txt,.zip",
+    }) as HTMLInputElement;
 
-    const typeOptions =
-      types.map(
-        (
-          type:
-            ContributionType,
-        ) => ({
-          value:
-            type.slug,
-          label:
-            type.label,
-        }),
-      );
+    const typeOptions = types.map((type: ContributionType) => ({
+      value: type.slug,
+      label: type.label,
+    }));
 
     const form = h(
-      'form',
+      "form",
       {
-        class:
-          'portal-form',
-        novalidate:
-          true,
+        class: "portal-form",
+        novalidate: true,
       },
 
       field({
-        label:
-          'Title',
-        name:
-          'title',
-        required:
-          true,
-        maxlength:
-          200,
-        value:
-          existing?.title,
-        placeholder:
-          'e.g. Built the CTF 3.0 registration site',
+        label: "Title",
+        name: "title",
+        required: true,
+        maxlength: 200,
+        value: existing?.title,
+        placeholder: "e.g. Built the CTF 3.0 registration site",
       }),
 
       h(
-        'div',
+        "div",
         {
-          class:
-            'field-pair',
+          class: "field-pair",
         },
 
         field({
-          label:
-            'Type',
-          name:
-            'type_slug',
-          type:
-            'select',
-          required:
-            true,
-          value:
-            existing?.type_slug ??
-            '',
+          label: "Type",
+          name: "type_slug",
+          type: "select",
+          required: true,
+          value: existing?.type_slug ?? "",
 
           options: [
             {
-              value:
-                '',
-              label:
-                'Select…',
+              value: "",
+              label: "Select…",
             },
 
             ...typeOptions,
@@ -310,681 +196,452 @@ async function start(): Promise<void> {
         }),
 
         field({
-          label:
-            'Related project or event',
-          name:
-            'project_id',
-          type:
-            'select',
-          value:
-            existing?.project_id ??
-            '',
+          label: "Related project or event",
+          name: "project_id",
+          type: "select",
+          value: existing?.project_id ?? "",
 
           options: [
             {
-              value:
-                '',
-              label:
-                '— none —',
+              value: "",
+              label: "— none —",
             },
 
-            ...projectList.map(
-              (
-                project:
-                  Project,
-              ) => ({
-                value:
-                  project.id,
-                label:
-                  project.title,
-              }),
-            ),
+            ...projectList.map((project: Project) => ({
+              value: project.id,
+              label: project.title,
+            })),
           ],
         }),
       ),
 
       h(
-        'div',
+        "div",
         {
-          class:
-            'field-pair',
+          class: "field-pair",
         },
 
         field({
-          label:
-            'Your role',
-          name:
-            'role_text',
-          maxlength:
-            120,
-          value:
-            existing?.role_text,
-          placeholder:
-            'e.g. Lead developer',
+          label: "Your role",
+          name: "role_text",
+          maxlength: 120,
+          value: existing?.role_text,
+          placeholder: "e.g. Lead developer",
         }),
 
         field({
-          label:
-            'Date',
-          name:
-            'occurred_on',
-          type:
-            'date',
-          value:
-            existing?.occurred_on,
+          label: "Date",
+          name: "occurred_on",
+          type: "date",
+          value: existing?.occurred_on,
         }),
       ),
 
       field({
-        label:
-          'What did you do?',
-        name:
-          'description',
-        type:
-          'textarea',
-        rows:
-          5,
-        value:
-          existing?.description,
-        hint:
-          'Enough detail for a reviewer to recognise the work.',
+        label: "What did you do?",
+        name: "description",
+        type: "textarea",
+        rows: 5,
+        value: existing?.description,
+        hint: "Enough detail for a reviewer to recognise the work.",
       }),
 
       field({
-        label:
-          'Links',
-        name:
-          'links',
-        type:
-          'textarea',
-        rows:
-          2,
+        label: "Links",
+        name: "links",
+        type: "textarea",
+        rows: 2,
 
-        value:
-          existing?.links
-            .join(
-              '\n',
-            ),
+        value: existing?.links.join("\n"),
 
-        hint:
-          'One per line. Repository, live page, slides — whatever applies.',
+        hint: "One per line. Repository, live page, slides — whatever applies.",
       }),
 
       field({
-        label:
-          'Note for the reviewer',
-        name:
-          'member_note',
-        type:
-          'textarea',
-        rows:
-          2,
-        value:
-          existing?.member_note,
-        hint:
-          'Optional.',
+        label: "Note for the reviewer",
+        name: "member_note",
+        type: "textarea",
+        rows: 2,
+        value: existing?.member_note,
+        hint: "Optional.",
       }),
 
       h(
-        'div',
+        "div",
         {
-          class:
-            'form-field',
+          class: "form-field",
         },
 
         h(
-          'span',
+          "span",
           {
-            class:
-              'mono-meta',
+            class: "mono-meta",
           },
-          'EVIDENCE (OPTIONAL)',
+          "EVIDENCE (OPTIONAL)",
         ),
 
         h(
-          'p',
+          "p",
           {
-            class:
-              'field-hint mono-meta dim-text',
+            class: "field-hint mono-meta dim-text",
           },
-          'A file that shows the work. Stored privately — only you and reviewers can open it.',
+          "A file that shows the work. Stored privately — only you and reviewers can open it.",
         ),
 
         fileInput,
 
         h(
-          'p',
+          "p",
           {
-            class:
-              'field-hint mono-meta dim-text',
+            class: "field-hint mono-meta dim-text",
           },
-          'PDF, PNG, JPG, WEBP, TXT or ZIP. Maximum 10 MB.',
+          "PDF, PNG, JPG, WEBP, TXT or ZIP. Maximum 10 MB.",
         ),
       ),
 
       status,
     ) as HTMLFormElement;
 
-    const modal =
-      dialog(
-        existing
-          ? 'Edit contribution'
-          : 'Submit a contribution',
+    const modal = dialog(
+      existing ? "Edit contribution" : "Submit a contribution",
 
-        form,
+      form,
 
-        h(
-          'div',
-          {
-            class:
-              'button-row',
-          },
+      h(
+        "div",
+        {
+          class: "button-row",
+        },
 
-          action(
-            existing
-              ? 'Save changes'
-              : 'Submit for verification',
+        action(
+          existing ? "Save changes" : "Submit for verification",
 
-            async () => {
-              if (
-                !form.reportValidity()
-              ) {
-                return;
-              }
+          async () => {
+            if (!form.reportValidity()) {
+              return;
+            }
 
-              const values =
-                formValues(
-                  form,
-                );
+            const values = formValues(form);
 
-              const title =
-                textOf(
-                  values,
-                  'title',
-                ).trim();
+            const title = textOf(values, "title").trim();
 
-              const typeSlug =
-                textOf(
-                  values,
-                  'type_slug',
-                );
+            const typeSlug = textOf(values, "type_slug");
 
-              if (!title) {
+            if (!title) {
+              status.replaceChildren(
+                notice("err", "Enter a contribution title."),
+              );
+
+              return;
+            }
+
+            if (!typeSlug) {
+              status.replaceChildren(
+                notice("err", "Choose a contribution type."),
+              );
+
+              return;
+            }
+
+            const file = fileInput.files?.[0] ?? null;
+
+            if (file) {
+              const extension = fileExtension(file.name);
+
+              if (!ALLOWED_EVIDENCE_EXTENSIONS.has(extension)) {
                 status.replaceChildren(
                   notice(
-                    'err',
-                    'Enter a contribution title.',
+                    "err",
+                    "Evidence must be a PDF, PNG, JPG, WEBP, TXT or ZIP file.",
                   ),
                 );
 
                 return;
               }
 
-              if (!typeSlug) {
+              if (file.size > MAX_EVIDENCE_BYTES) {
                 status.replaceChildren(
-                  notice(
-                    'err',
-                    'Choose a contribution type.',
-                  ),
+                  notice("err", "Evidence files must be 10 MB or smaller."),
                 );
 
                 return;
               }
+            }
 
-              const file =
-                fileInput
-                  .files?.[0] ??
-                null;
+            status.replaceChildren(
+              notice("info", existing ? "SAVING…" : "SUBMITTING…"),
+            );
+
+            try {
+              const saved = await saveContribution({
+                ...(existing
+                  ? {
+                      id: existing.id,
+                    }
+                  : {}),
+
+                user_id: viewer.userId,
+
+                title,
+
+                type_slug: typeSlug,
+
+                project_id: textOf(values, "project_id") || null,
+
+                role_text: textOf(values, "role_text").trim() || null,
+
+                description: textOf(values, "description").trim() || null,
+
+                occurred_on: textOf(values, "occurred_on") || null,
+
+                links: cleanLinks(textOf(values, "links")),
+
+                member_note: textOf(values, "member_note").trim() || null,
+
+                status: "submitted",
+              });
 
               if (file) {
-                const extension =
-                  fileExtension(
-                    file.name,
+                try {
+                  const upload = await uploadPrivate(
+                    "evidence",
+                    viewer.userId,
+                    file,
                   );
 
-                if (
-                  !ALLOWED_EVIDENCE_EXTENSIONS.has(
-                    extension,
-                  )
-                ) {
-                  status.replaceChildren(
-                    notice(
-                      'err',
-                      'Evidence must be a PDF, PNG, JPG, WEBP, TXT or ZIP file.',
-                    ),
+                  const { error } = await requireClient()
+                    .from("contribution_evidence")
+                    .insert({
+                      contribution_id: saved.id,
+
+                      storage_bucket: upload.bucket,
+
+                      storage_path: upload.path,
+
+                      file_name: upload.fileName,
+
+                      mime_type: upload.mimeType,
+
+                      size_bytes: upload.size,
+                    });
+
+                  if (error) {
+                    throw new Error(error.message);
+                  }
+                } catch (error) {
+                  console.error(
+                    "Contribution saved but evidence upload/record failed:",
+                    error,
                   );
 
-                  return;
-                }
-
-                if (
-                  file.size >
-                  MAX_EVIDENCE_BYTES
-                ) {
                   status.replaceChildren(
                     notice(
-                      'err',
-                      'Evidence files must be 10 MB or smaller.',
+                      "warn",
+                      `Your contribution was saved, but the evidence file could not be attached: ${errorMessage(error)}. You can close this window and edit the contribution again.`,
                     ),
                   );
 
                   return;
                 }
               }
+
+              modal.close();
+
+              toast(
+                existing
+                  ? "Contribution updated and sent for verification."
+                  : "Sent for verification.",
+              );
+
+              await draw();
+            } catch (error) {
+              console.error("Could not save contribution:", error);
 
               status.replaceChildren(
                 notice(
-                  'info',
-                  existing
-                    ? 'SAVING…'
-                    : 'SUBMITTING…',
+                  "err",
+                  `Could not save contribution: ${errorMessage(error)}`,
                 ),
               );
+            }
+          },
 
-              try {
-                const saved =
-                  await saveContribution({
-                    ...(
-                      existing
-                        ? {
-                          id:
-                            existing.id,
-                        }
-                        : {}
-                    ),
-
-                    user_id:
-                      viewer.userId,
-
-                    title,
-
-                    type_slug:
-                      typeSlug,
-
-                    project_id:
-                      textOf(
-                        values,
-                        'project_id',
-                      ) ||
-                      null,
-
-                    role_text:
-                      textOf(
-                        values,
-                        'role_text',
-                      ).trim() ||
-                      null,
-
-                    description:
-                      textOf(
-                        values,
-                        'description',
-                      ).trim() ||
-                      null,
-
-                    occurred_on:
-                      textOf(
-                        values,
-                        'occurred_on',
-                      ) ||
-                      null,
-
-                    links:
-                      cleanLinks(
-                        textOf(
-                          values,
-                          'links',
-                        ),
-                      ),
-
-                    member_note:
-                      textOf(
-                        values,
-                        'member_note',
-                      ).trim() ||
-                      null,
-
-                    status:
-                      'submitted',
-                  });
-
-                if (file) {
-                  try {
-                    const upload =
-                      await uploadPrivate(
-                        'evidence',
-                        viewer.userId,
-                        file,
-                      );
-
-                    const {
-                      error,
-                    } =
-                      await requireClient()
-                        .from(
-                          'contribution_evidence',
-                        )
-                        .insert({
-                          contribution_id:
-                            saved.id,
-
-                          storage_bucket:
-                            upload.bucket,
-
-                          storage_path:
-                            upload.path,
-
-                          file_name:
-                            upload.fileName,
-
-                          mime_type:
-                            upload.mimeType,
-
-                          size_bytes:
-                            upload.size,
-                        });
-
-                    if (error) {
-                      throw new Error(
-                        error.message,
-                      );
-                    }
-                  } catch (error) {
-                    console.error(
-                      'Contribution saved but evidence upload/record failed:',
-                      error,
-                    );
-
-                    status.replaceChildren(
-                      notice(
-                        'warn',
-                        `Your contribution was saved, but the evidence file could not be attached: ${errorMessage(error)}. You can close this window and edit the contribution again.`,
-                      ),
-                    );
-
-                    return;
-                  }
-                }
-
-                modal.close();
-
-                toast(
-                  existing
-                    ? 'Contribution updated and sent for verification.'
-                    : 'Sent for verification.',
-                );
-
-                await draw();
-              } catch (error) {
-                console.error(
-                  'Could not save contribution:',
-                  error,
-                );
-
-                status.replaceChildren(
-                  notice(
-                    'err',
-                    `Could not save contribution: ${errorMessage(error)}`,
-                  ),
-                );
-              }
-            },
-
-            'primary',
-          ),
+          "primary",
         ),
-      );
+      ),
+    );
   }
 
   async function draw(): Promise<void> {
-    render(
-      content,
-      loading(),
-    );
+    render(content, loading());
 
     try {
-      const rows =
-        await myContributions(
-          viewer.userId,
-        );
+      const rows = await myContributions(viewer.userId);
 
-      const editable =
-        (
-          contribution:
-            Contribution,
-        ): boolean =>
-          [
-            'draft',
-            'submitted',
-            'changes_requested',
-          ].includes(
-            contribution.status,
-          );
+      const editable = (contribution: Contribution): boolean =>
+        ["draft", "submitted", "changes_requested"].includes(
+          contribution.status,
+        );
 
       render(
         content,
 
         pageHeader(
-          'MEMBER / CONTRIBUTIONS',
-          'Contributions',
+          "MEMBER / CONTRIBUTIONS",
+          "Contributions",
 
-          canSubmit(
-            viewer,
-          )
+          canSubmit(viewer)
             ? h(
-              'button',
-              {
-                type:
-                  'button',
-                class:
-                  'btn-submit',
+                "button",
+                {
+                  type: "button",
+                  class: "btn-submit",
 
-                style: {
-                  marginTop:
-                    '0',
+                  style: {
+                    marginTop: "0",
+                  },
+
+                  onclick: () => editor(null),
                 },
-
-                onclick:
-                  () =>
-                    editor(
-                      null,
-                    ),
-              },
-              'Submit a contribution',
-            )
+                "Submit a contribution",
+              )
             : null,
         ),
 
         notice(
-          'info',
-          'Describe work you did for the club. An admin reviews it, and once approved it ' +
-          'becomes a verified item on your ACM record.',
+          "info",
+          "Describe work you did for the club. An admin reviews it, and once approved it " +
+            "becomes a verified item on your ACM record.",
         ),
 
         panel(
-          'Your submissions',
+          "Your submissions",
 
           rows.length
             ? filterableTable(
-              [
-                'Title',
-                'Type',
-                'Project',
-                'Date',
-                'Status',
-                '',
-              ],
+                ["Title", "Type", "Project", "Date", "Status", ""],
 
-              rows.map(
-                (
-                  contribution,
-                ) => [
-                    h(
-                      'div',
-                      {},
+                rows.map((contribution) => [
+                  h(
+                    "div",
+                    {},
 
-                      h(
-                        'strong',
-                        contribution.title,
-                      ),
+                    h("strong", contribution.title),
 
-                      contribution.review_note
-                        ? h(
-                          'p',
+                    contribution.review_note
+                      ? h(
+                          "p",
                           {
-                            class:
-                              'mono-meta dim-text',
+                            class: "mono-meta dim-text",
                           },
                           `REVIEWER: ${contribution.review_note}`,
                         )
-                        : null,
-                    ),
+                      : null,
+                  ),
 
-                    h(
-                      'span',
-                      {
-                        class:
-                          'mono-meta',
-                      },
-                      enumLabel(
-                        contribution.type_slug,
-                      ),
-                    ),
+                  h(
+                    "span",
+                    {
+                      class: "mono-meta",
+                    },
+                    enumLabel(contribution.type_slug),
+                  ),
 
-                    contribution.project_id
-                      ? projectTitle.get(
-                        contribution.project_id,
-                      ) ??
-                      '—'
-                      : '—',
+                  contribution.project_id
+                    ? (projectTitle.get(contribution.project_id) ?? "—")
+                    : "—",
 
-                    h(
-                      'span',
-                      {
-                        class:
-                          'mono-meta',
-                      },
-                      archiveDate(
-                        contribution.occurred_on,
-                      ),
-                    ),
+                  h(
+                    "span",
+                    {
+                      class: "mono-meta",
+                    },
+                    archiveDate(contribution.occurred_on),
+                  ),
 
-                    statusPill(
-                      contribution.status,
-                    ),
+                  statusPill(contribution.status),
 
-                    editable(
-                      contribution,
-                    )
-                      ? h(
-                        'button',
+                  editable(contribution)
+                    ? h(
+                        "button",
                         {
-                          type:
-                            'button',
-                          class:
-                            'link-button',
+                          type: "button",
+                          class: "link-button",
 
-                          onclick:
-                            () =>
-                              editor(
-                                contribution,
-                              ),
+                          onclick: () => editor(contribution),
                         },
-                        'EDIT',
+                        "EDIT",
                       )
-                      : h(
-                        'span',
+                    : h(
+                        "span",
                         {
-                          class:
-                            'mono-meta dim-text',
+                          class: "mono-meta dim-text",
                         },
-                        'LOCKED',
+                        "LOCKED",
                       ),
-                  ],
-              ),
-            )
+                ]),
+              )
             : emptyState(
-              'Nothing submitted yet.',
-              'Organised an event? Built something? Ran a workshop? It belongs here.',
-            ),
+                "Nothing submitted yet.",
+                "Organised an event? Built something? Ran a workshop? It belongs here.",
+              ),
         ),
 
         panel(
-          'What counts',
+          "What counts",
+
+          h("p", "Anything you did that helped the club run. Some examples:"),
 
           h(
-            'p',
-            'Anything you did that helped the club run. Some examples:',
-          ),
-
-          h(
-            'div',
+            "div",
             {
-              class:
-                'interest-picker',
+              class: "interest-picker",
             },
 
-            types.map(
-              (
-                type:
-                  ContributionType,
-              ) =>
-                h(
-                  'span',
-                  {
-                    class:
-                      'tag',
+            types.map((type: ContributionType) =>
+              h(
+                "span",
+                {
+                  class: "tag",
 
-                    style: {
-                      marginRight:
-                        '0.4rem',
-                    },
+                  style: {
+                    marginRight: "0.4rem",
                   },
-                  type.label,
-                ),
+                },
+                type.label,
+              ),
             ),
           ),
         ),
       );
     } catch (error) {
-      console.error(
-        'Contributions page failed to load:',
-        error,
-      );
+      console.error("Contributions page failed to load:", error);
 
       render(
         content,
 
-        pageHeader(
-          'MEMBER / CONTRIBUTIONS',
-          'Contributions unavailable',
-        ),
+        pageHeader("MEMBER / CONTRIBUTIONS", "Contributions unavailable"),
 
         notice(
-          'err',
+          "err",
           `Your contributions could not load: ${errorMessage(error)}`,
         ),
 
         h(
-          'div',
+          "div",
           {
-            class:
-              'button-row',
+            class: "button-row",
           },
 
           h(
-            'button',
+            "button",
             {
-              type:
-                'button',
-              class:
-                'btn-ghost',
+              type: "button",
+              class: "btn-ghost",
 
-              onclick:
-                () =>
-                  void draw(),
+              onclick: () => void draw(),
             },
-            'TRY AGAIN',
+            "TRY AGAIN",
           ),
         ),
       );

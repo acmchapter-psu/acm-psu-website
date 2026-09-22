@@ -1,9 +1,8 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- Content-Security-Policy.
          GitHub Pages cannot set response headers, so the policy is stated here.
@@ -21,7 +20,9 @@
          *.supabase.co rather than the project ref, so moving projects does not
          mean editing every page; the ref is public in assets/js/app/env.js
          either way. -->
-    <meta http-equiv="Content-Security-Policy" content="
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
         default-src 'self';
         base-uri 'self';
         object-src 'none';
@@ -32,99 +33,170 @@
         img-src 'self' data: blob: https://*.supabase.co;
         connect-src 'self' https://*.supabase.co wss://*.supabase.co;
         frame-src 'none';
-    ">
+    "
+    />
     <title>Open Positions — ACM PSU</title>
-    <meta name="description"
-        content="Claim an open assignment on an active ACM PSU project. Every role includes its responsibilities, requirements, capacity, and selection method.">
-    <link rel="canonical" href="https://acmchapter-psu.github.io/acm-psu-website/positions.html">
-    <link rel="icon" href="/assets/img/favicon.ico" sizes="any">
-    <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
-    <link rel="mask-icon" href="/assets/img/safari-pinned-tab.svg?v=20260916-1" color="#5bbad5">
-    <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png?v=20260916">
-    <link rel="manifest" href="/site.webmanifest">
-    <meta name="theme-color" content="#050507">
-    <meta property="og:type" content="website">
-    <meta property="og:site_name" content="ACM PSU">
-    <meta property="og:title" content="Open Positions — ACM PSU">
-    <meta property="og:description" content="Open project assignments for ACM PSU members.">
-    <meta property="og:url" content="https://acmchapter-psu.github.io/acm-psu-website/positions.html">
-    <meta property="og:image" content="https://acmchapter-psu.github.io/acm-psu-website/assets/img/acm-banner.png">
-    <link rel="stylesheet" href="assets/css/main.css?v=20260908-3">
-</head>
+    <meta
+      name="description"
+      content="Claim an open assignment on an active ACM PSU project. Every role includes its responsibilities, requirements, capacity, and selection method."
+    />
+    <link
+      rel="canonical"
+      href="https://acmchapter-psu.github.io/acm-psu-website/positions.html"
+    />
+    <link rel="icon" href="/assets/img/favicon.ico" sizes="any" />
+    <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml" />
+    <link
+      rel="mask-icon"
+      href="/assets/img/safari-pinned-tab.svg?v=20260916-1"
+      color="#5bbad5"
+    />
+    <link
+      rel="apple-touch-icon"
+      href="/assets/img/apple-touch-icon.png?v=20260916"
+    />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#050507" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ACM PSU" />
+    <meta property="og:title" content="Open Positions — ACM PSU" />
+    <meta
+      property="og:description"
+      content="Open project assignments for ACM PSU members."
+    />
+    <meta
+      property="og:url"
+      content="https://acmchapter-psu.github.io/acm-psu-website/positions.html"
+    />
+    <meta
+      property="og:image"
+      content="https://acmchapter-psu.github.io/acm-psu-website/assets/img/acm-banner.png"
+    />
+    <script src="assets/js/theme.js?v=20260922-1"></script>
+    <link rel="stylesheet" href="assets/css/main.css?v=20260922-4" />
+  </head>
 
-<body>
+  <body>
     <a class="skip-link" href="#main">Skip to content</a>
     <div class="ambient-glow ambient-glow--corner"></div>
 
     <nav>
-        <div class="container nav-inner">
-            <a class="nav-logo" href="index.html" aria-label="ACM PSU — home">
-                <img src="assets/img/acm.png" alt=""><span>ACM</span><span class="divider">/</span><span>PSU</span>
-            </a>
-            <button class="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false"
-                aria-controls="nav-links">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    aria-hidden="true">
-                    <path d="M4 7h16M4 12h16M4 17h16" />
-                </svg>
-            </button>
-            <div class="nav-links" id="nav-links">
-                <a href="index.html#about">About</a>
-                <a href="positions.html" class="active" aria-current="page">Positions</a>
-                <a href="projects.html">Projects</a>
-                <a href="archive.html">Archive</a>
-                <a href="team.html">Team</a>
-                <a href="join.html">Join</a>
-                <a href="contact.html">Contact</a>
-                <a href="/portal/index.html" class="accent-text">Portal</a>
-            </div>
-            <div class="nav-meta mono-meta">STATUS: RECRUITING</div>
+      <div class="container nav-inner">
+        <a class="nav-logo" href="index.html" aria-label="ACM PSU — home">
+          <img src="assets/img/acm.png" alt="" /><span>ACM</span
+          ><span class="divider">/</span><span>PSU</span>
+        </a>
+        <button
+          class="nav-toggle"
+          type="button"
+          aria-label="Toggle navigation"
+          aria-expanded="false"
+          aria-controls="nav-links"
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+          >
+            <path d="M4 7h16M4 12h16M4 17h16" />
+          </svg>
+        </button>
+        <div class="nav-links" id="nav-links">
+          <a href="index.html#about">About</a>
+          <a href="positions.html" class="active" aria-current="page"
+            >Positions</a
+          >
+          <a href="projects.html">Projects</a>
+          <a href="archive.html">Archive</a>
+          <a href="team.html">Team</a>
+          <a href="join.html">Join</a>
+          <a href="contact.html">Contact</a>
+          <a href="/portal/index.html" class="accent-text">Portal</a>
         </div>
+        <div class="nav-meta mono-meta">STATUS: RECRUITING</div>
+      </div>
     </nav>
 
     <main id="main" class="container positions-page">
-        <header class="page-header positions-header">
-            <div class="mono-meta accent-text">DIR: /PROJECTS/OPEN_ASSIGNMENTS</div>
-            <h1 class="page-title">Choose Your<br>Contribution.</h1>
-            <div class="positions-intro">
-                <p>Every opening shows the same information to every member: the work, the event it belongs to,
-                    capacity and closing date. Registration happens in the member portal, where a request is recorded
-                    against your account and reviewed by an organizer.</p>
-                <div class="fairness-note mono-meta"><span>FAIR_ACCESS_PROTOCOL</span> Members may request more than one
-                    role. Registration closes automatically at capacity, and every request is timestamped on your
-                    verified record.</div>
-            </div>
-        </header>
+      <header class="page-header positions-header">
+        <div class="mono-meta accent-text">DIR: /PROJECTS/OPEN_ASSIGNMENTS</div>
+        <h1 class="page-title">Choose Your<br />Contribution.</h1>
+        <div class="positions-intro">
+          <p>
+            Every opening shows the same information to every member: the work,
+            the event it belongs to, capacity and closing date. Registration
+            happens in the member portal, where a request is recorded against
+            your account and reviewed by an organizer.
+          </p>
+          <div class="fairness-note mono-meta">
+            <span>FAIR_ACCESS_PROTOCOL</span> Members may request more than one
+            role. Registration closes automatically at capacity, and every
+            request is timestamped on your verified record.
+          </div>
+        </div>
+      </header>
 
-        <section aria-labelledby="open-positions-title">
-            <div class="positions-toolbar">
-                <div>
-                    <p class="mono-meta accent-text">LIVE REGISTRY</p>
-                    <h2 id="open-positions-title">Open assignments</h2>
-                </div>
-                <button class="btn-ghost positions-refresh" id="positions-refresh" type="button">Refresh
-                    availability</button>
-            </div>
-            <p class="positions-load-state mono-meta" id="positions-load-state" role="status">CONNECTING TO ASSIGNMENT
-                REGISTRY...</p>
-            <div class="position-list" id="position-list" aria-live="polite"></div>
-        </section>
+      <section aria-labelledby="open-positions-title">
+        <div class="positions-toolbar">
+          <div>
+            <p class="mono-meta accent-text">LIVE REGISTRY</p>
+            <h2 id="open-positions-title">Open assignments</h2>
+          </div>
+          <button
+            class="btn-ghost positions-refresh"
+            id="positions-refresh"
+            type="button"
+          >
+            Refresh availability
+          </button>
+        </div>
+        <p
+          class="positions-load-state mono-meta"
+          id="positions-load-state"
+          role="status"
+        >
+          CONNECTING TO ASSIGNMENT REGISTRY...
+        </p>
+        <div class="position-list" id="position-list" aria-live="polite"></div>
+      </section>
     </main>
 
-
     <footer class="container site-footer mono-meta">
-        <div>© <span data-current-year>2026</span> ACM PRINCE SULTAN UNIVERSITY</div>
-        <div class="footer-logos"><img src="assets/img/acm.png" alt="Association for Computing Machinery"><img
-                src="assets/img/prince-sultan-univeristy.png" alt="Prince Sultan University"><img
-                src="assets/img/ccis-logo.png" alt="College of Computer and Information Sciences"></div>
-        <div>ACCESS: <span class="meta-value">ALL_MEMBERS</span></div>
-        <div>MADE BY <a href="https://blueprint.shoug-tech.com/" rel="noopener">BLUEPRINT ↗</a></div>
+      <div>
+        © <span data-current-year>2026</span> ACM PRINCE SULTAN UNIVERSITY
+      </div>
+      <div class="footer-logos">
+        <img
+          src="assets/img/acm.png"
+          alt="Association for Computing Machinery"
+        /><img
+          src="assets/img/prince-sultan-univeristy.png"
+          alt="Prince Sultan University"
+        /><img
+          src="assets/img/ccis-logo.png"
+          alt="College of Computer and Information Sciences"
+        />
+      </div>
+      <div>ACCESS: <span class="meta-value">ALL_MEMBERS</span></div>
+      <div>
+        MADE BY
+        <a href="https://blueprint.shoug-tech.com/" rel="noopener"
+          >BLUEPRINT ↗</a
+        >
+      </div>
     </footer>
 
-    <script src="assets/js/i18n.js?v=20260908-2" defer></script>
-    <script src="assets/js/main.js?v=20260905-1" defer></script>
-    <script src="/assets/js/app/env.js?v=20260901-1"></script>
-    <script type="module" src="/assets/js/app/public-positions.js?v=20260901-1"></script>
-</body>
-
+    <script src="assets/js/i18n.js?v=20260922-5" defer></script>
+    <script src="assets/js/project-names.js?v=20260922-2" defer></script>
+    <script src="assets/js/main.js?v=20260922-4" defer></script>
+    <script src="/assets/js/app/env.js?v=20260922-6"></script>
+    <script
+      type="module"
+      src="/assets/js/app/public-positions.js?v=20260922-6"
+    ></script>
+  </body>
 </html>

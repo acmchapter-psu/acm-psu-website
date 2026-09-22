@@ -162,7 +162,7 @@ require a reason.
 
 **Admin → Audit History**. Filter by category, decision, admin, project or date
 range, or search across actions, people and reasons. Click any row for the full
-detail: who decided (with the position they held *at the time*), what changed
+detail: who decided (with the position they held _at the time_), what changed
 field by field, the reason they gave, and everything else that happened in the
 same transaction.
 

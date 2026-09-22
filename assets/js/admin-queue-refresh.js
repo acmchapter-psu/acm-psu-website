@@ -8,13 +8,13 @@
  * an admin is part-way through reviewing.
  */
 (function () {
-    'use strict';
-    window.setInterval(function () {
-        if (
-            document.visibilityState === 'visible' &&
-            !document.querySelector('dialog[open]')
-        ) {
-            window.location.reload();
-        }
-    }, 10000);
-}());
+  "use strict";
+  window.setInterval(function () {
+    if (
+      document.visibilityState === "visible" &&
+      !document.querySelector("dialog[open]")
+    ) {
+      window.location.reload();
+    }
+  }, 10000);
+})();

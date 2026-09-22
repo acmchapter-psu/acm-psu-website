@@ -23,11 +23,11 @@ Do this **before** anything else, while you still have access.
 
 Roles are hierarchical:
 
-| Role | Can do |
-|---|---|
-| **Super admin** | Everything, including granting and revoking admin roles |
-| **Club admin** | Applications, members, positions, projects, archive, exports |
-| **Reviewer** | Review queues only — no member management, settings or exports |
+| Role            | Can do                                                         |
+| --------------- | -------------------------------------------------------------- |
+| **Super admin** | Everything, including granting and revoking admin roles        |
+| **Club admin**  | Applications, members, positions, projects, archive, exports   |
+| **Reviewer**    | Review queues only — no member management, settings or exports |
 
 Give people the smallest role that lets them do their job. A committee member
 who only reviews workshop uploads should be a Reviewer.
@@ -58,13 +58,13 @@ wanted a verified record in the first place.
 The platform depends on services owned by accounts, not by the repository.
 Move each to a club-owned account, or add the incoming lead:
 
-| Service | What to do | Where |
-|---|---|---|
-| **Supabase** | Add the new lead as an Organization member (Owner) | Supabase → Organization → Team |
-| **GitHub** | Add them as a repository admin | Repository → Settings → Collaborators |
-| **Domain / DNS** | Transfer or share the registrar login | Registrar |
-| **Cloudflare** | Add them to the account (only if the AI assistant is on) | Cloudflare → Manage Account → Members |
-| **Google Cloud** | Add them as Project Owner (only if Sheets export is on) | Console → IAM |
+| Service          | What to do                                               | Where                                 |
+| ---------------- | -------------------------------------------------------- | ------------------------------------- |
+| **Supabase**     | Add the new lead as an Organization member (Owner)       | Supabase → Organization → Team        |
+| **GitHub**       | Add them as a repository admin                           | Repository → Settings → Collaborators |
+| **Domain / DNS** | Transfer or share the registrar login                    | Registrar                             |
+| **Cloudflare**   | Add them to the account (only if the AI assistant is on) | Cloudflare → Manage Account → Members |
+| **Google Cloud** | Add them as Project Owner (only if Sheets export is on)  | Console → IAM                         |
 
 Put every credential in a club password manager, not in a personal one.
 

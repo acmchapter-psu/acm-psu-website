@@ -1,8 +1,8 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- Content-Security-Policy.
          GitHub Pages cannot set response headers, so the policy is stated here.
@@ -20,7 +20,9 @@
          *.supabase.co rather than the project ref, so moving projects does not
          mean editing every page; the ref is public in assets/js/app/env.js
          either way. -->
-    <meta http-equiv="Content-Security-Policy" content="
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
         default-src 'self';
         base-uri 'self';
         object-src 'none';
@@ -31,33 +33,49 @@
         img-src 'self' data: blob: https://*.supabase.co;
         connect-src 'self' https://*.supabase.co wss://*.supabase.co;
         frame-src 'none';
-    ">
+    "
+    />
     <title>Archive review — ACM PSU</title>
-    <meta name="description" content="Review and publish archive submissions.">
-    <meta name="robots" content="noindex, nofollow">
+    <meta
+      name="description"
+      content="Review and publish archive submissions."
+    />
+    <meta name="robots" content="noindex, nofollow" />
 
-    <link rel="icon" href="/assets/img/favicon.ico" sizes="any">
-    <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
-    <link rel="mask-icon" href="/assets/img/safari-pinned-tab.svg?v=20260916-1" color="#5bbad5">
-    <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png?v=20260916">
-    <meta name="theme-color" content="#050507">
+    <link rel="icon" href="/assets/img/favicon.ico" sizes="any" />
+    <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml" />
+    <link
+      rel="mask-icon"
+      href="/assets/img/safari-pinned-tab.svg?v=20260916-1"
+      color="#5bbad5"
+    />
+    <link
+      rel="apple-touch-icon"
+      href="/assets/img/apple-touch-icon.png?v=20260916"
+    />
+    <meta name="theme-color" content="#050507" />
 
-    <link rel="stylesheet" href="/assets/css/main.css?v=20260908-3">
-    <link rel="stylesheet" href="/assets/css/portal.css?v=20260901-1">
-</head>
-<body class="portal-body">
-
+    <script src="/assets/js/theme.js?v=20260922-1"></script>
+    <link rel="stylesheet" href="/assets/css/main.css?v=20260922-4" />
+    <link rel="stylesheet" href="/assets/css/portal.css?v=20260922-3" />
+  </head>
+  <body class="portal-body">
     <noscript>
-        <div class="noscript-notice">
-            <h1>JavaScript required</h1>
-            <p>The ACM member portal needs JavaScript. The
-               <a href="/index.html">public website</a> works without it.</p>
-        </div>
+      <div class="noscript-notice">
+        <h1>JavaScript required</h1>
+        <p>
+          The ACM member portal needs JavaScript. The
+          <a href="/index.html">public website</a> works without it.
+        </p>
+      </div>
     </noscript>
 
     <div id="app" class="app-root"></div>
 
-    <script src="/assets/js/app/env.js?v=20260901-1"></script>
-    <script type="module" src="/assets/js/app/admin-submissions.js?v=20260901-1"></script>
-</body>
+    <script src="/assets/js/app/env.js?v=20260922-6"></script>
+    <script
+      type="module"
+      src="/assets/js/app/admin-submissions.js?v=20260922-6"
+    ></script>
+  </body>
 </html>

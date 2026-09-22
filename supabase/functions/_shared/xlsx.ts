@@ -39,14 +39,17 @@ const CONTROL_CHARS = /[\x00-\x08\x0B\x0C\x0E-\x1F]/g;
 
 function escapeXml(value: string): string {
   return value
-    .replace(CONTROL_CHARS, '')
-    .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;').replaceAll("'", '&apos;');
+    .replace(CONTROL_CHARS, "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&apos;");
 }
 
 /** 1 -> A, 27 -> AA */
 function columnName(index: number): string {
-  let name = '';
+  let name = "";
   let n = index;
   while (n > 0) {
     const rem = (n - 1) % 26;
@@ -57,17 +60,22 @@ function columnName(index: number): string {
 }
 
 function sheetXml(matrix: Array<Array<unknown>>): string {
-  const rows = matrix.map((row, r) => {
-    const cells = row.map((value, c) => {
-      const ref = `${columnName(c + 1)}${r + 1}`;
-      const text = value === null || value === undefined ? '' : String(value);
-      if (text === '') return `<c r="${ref}" t="inlineStr"/>`;
-      // Row 1 is the header; s="1" selects the bold style defined below.
-      const style = r === 0 ? ' s="1"' : '';
-      return `<c r="${ref}"${style} t="inlineStr"><is><t xml:space="preserve">${escapeXml(text)}</t></is></c>`;
-    }).join('');
-    return `<row r="${r + 1}">${cells}</row>`;
-  }).join('');
+  const rows = matrix
+    .map((row, r) => {
+      const cells = row
+        .map((value, c) => {
+          const ref = `${columnName(c + 1)}${r + 1}`;
+          const text =
+            value === null || value === undefined ? "" : String(value);
+          if (text === "") return `<c r="${ref}" t="inlineStr"/>`;
+          // Row 1 is the header; s="1" selects the bold style defined below.
+          const style = r === 0 ? ' s="1"' : "";
+          return `<c r="${ref}"${style} t="inlineStr"><is><t xml:space="preserve">${escapeXml(text)}</t></is></c>`;
+        })
+        .join("");
+      return `<row r="${r + 1}">${cells}</row>`;
+    })
+    .join("");
 
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
@@ -76,22 +84,38 @@ function sheetXml(matrix: Array<Array<unknown>>): string {
 }
 
 /* ---------------------------------------------------------------------- ZIP */
-interface Entry { name: string; length: number; crc: number; offset: number }
+interface Entry {
+  name: string;
+  length: number;
+  crc: number;
+  offset: number;
+}
 
 function dosDateTime(date: Date): { time: number; date: number } {
   return {
-    time: (date.getHours() << 11) | (date.getMinutes() << 5) | (date.getSeconds() >> 1),
-    date: ((date.getFullYear() - 1980) << 9) | ((date.getMonth() + 1) << 5) | date.getDate(),
+    time:
+      (date.getHours() << 11) |
+      (date.getMinutes() << 5) |
+      (date.getSeconds() >> 1),
+    date:
+      ((date.getFullYear() - 1980) << 9) |
+      ((date.getMonth() + 1) << 5) |
+      date.getDate(),
   };
 }
 
-export function zip(files: Array<{ name: string; content: string }>): Uint8Array {
+export function zip(
+  files: Array<{ name: string; content: string }>,
+): Uint8Array {
   const stamp = dosDateTime(new Date());
   const entries: Entry[] = [];
   const chunks: Uint8Array[] = [];
   let offset = 0;
 
-  const push = (bytes: Uint8Array) => { chunks.push(bytes); offset += bytes.length; };
+  const push = (bytes: Uint8Array) => {
+    chunks.push(bytes);
+    offset += bytes.length;
+  };
 
   for (const file of files) {
     const nameBytes = encoder.encode(file.name);
@@ -101,10 +125,10 @@ export function zip(files: Array<{ name: string; content: string }>): Uint8Array
 
     const header = new Uint8Array(30 + nameBytes.length);
     const view = new DataView(header.buffer);
-    view.setUint32(0, 0x04034b50, true);   // local file header signature
-    view.setUint16(4, 20, true);           // version needed to extract
-    view.setUint16(6, 0x0800, true);       // flag: UTF-8 filenames
-    view.setUint16(8, 0, true);            // method 0 = stored
+    view.setUint32(0, 0x04034b50, true); // local file header signature
+    view.setUint16(4, 20, true); // version needed to extract
+    view.setUint16(6, 0x0800, true); // flag: UTF-8 filenames
+    view.setUint16(8, 0, true); // method 0 = stored
     view.setUint16(10, stamp.time, true);
     view.setUint16(12, stamp.date, true);
     view.setUint32(14, crc, true);
@@ -122,7 +146,7 @@ export function zip(files: Array<{ name: string; content: string }>): Uint8Array
     const nameBytes = encoder.encode(entry.name);
     const record = new Uint8Array(46 + nameBytes.length);
     const view = new DataView(record.buffer);
-    view.setUint32(0, 0x02014b50, true);   // central directory signature
+    view.setUint32(0, 0x02014b50, true); // central directory signature
     view.setUint16(4, 20, true);
     view.setUint16(6, 20, true);
     view.setUint16(8, 0x0800, true);
@@ -149,17 +173,25 @@ export function zip(files: Array<{ name: string; content: string }>): Uint8Array
 
   const out = new Uint8Array(offset);
   let cursor = 0;
-  for (const chunk of chunks) { out.set(chunk, cursor); cursor += chunk.length; }
+  for (const chunk of chunks) {
+    out.set(chunk, cursor);
+    cursor += chunk.length;
+  }
   return out;
 }
 
 /* -------------------------------------------------------------------- xlsx */
-export function buildXlsx(sheetName: string, matrix: Array<Array<unknown>>): Uint8Array {
-  const safeName = escapeXml(sheetName.slice(0, 31).replace(/[\\/*?:[\]]/g, ' '));
+export function buildXlsx(
+  sheetName: string,
+  matrix: Array<Array<unknown>>,
+): Uint8Array {
+  const safeName = escapeXml(
+    sheetName.slice(0, 31).replace(/[\\/*?:[\]]/g, " "),
+  );
 
   return zip([
     {
-      name: '[Content_Types].xml',
+      name: "[Content_Types].xml",
       content: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
 <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
@@ -170,20 +202,20 @@ export function buildXlsx(sheetName: string, matrix: Array<Array<unknown>>): Uin
 </Types>`,
     },
     {
-      name: '_rels/.rels',
+      name: "_rels/.rels",
       content: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
 <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
 </Relationships>`,
     },
     {
-      name: 'xl/workbook.xml',
+      name: "xl/workbook.xml",
       content: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
 <sheets><sheet name="${safeName}" sheetId="1" r:id="rId1"/></sheets></workbook>`,
     },
     {
-      name: 'xl/_rels/workbook.xml.rels',
+      name: "xl/_rels/workbook.xml.rels",
       content: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
 <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
@@ -191,7 +223,7 @@ export function buildXlsx(sheetName: string, matrix: Array<Array<unknown>>): Uin
 </Relationships>`,
     },
     {
-      name: 'xl/styles.xml',
+      name: "xl/styles.xml",
       content: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
 <fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>
@@ -201,6 +233,6 @@ export function buildXlsx(sheetName: string, matrix: Array<Array<unknown>>): Uin
 <cellXfs count="2"><xf xfId="0"/><xf fontId="1" applyFont="1" xfId="0"/></cellXfs>
 </styleSheet>`,
     },
-    { name: 'xl/worksheets/sheet1.xml', content: sheetXml(matrix) },
+    { name: "xl/worksheets/sheet1.xml", content: sheetXml(matrix) },
   ]);
 }

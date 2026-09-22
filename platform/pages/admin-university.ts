@@ -13,10 +13,7 @@
  * LinkedIn, portfolio and privacy preferences are deliberately not exported.
  */
 
-import {
-  h,
-  render,
-} from '../lib/dom.js';
+import { h, render } from "../lib/dom.js";
 
 import {
   shell,
@@ -28,28 +25,20 @@ import {
   toast,
   action,
   emptyState,
-} from '../lib/ui.js';
+} from "../lib/ui.js";
 
-import {
-  requireAdmin,
-  isSuperAdmin,
-} from '../lib/session.js';
+import { requireAdmin, isSuperAdmin } from "../lib/session.js";
 
 import {
   runExport,
   exportHistory,
   syncClubRecordsWorkbook,
   type Dataset,
-} from '../lib/admin.js';
+} from "../lib/admin.js";
 
-import {
-  privateSetting,
-  setting,
-} from '../lib/api.js';
+import { privateSetting, setting } from "../lib/api.js";
 
-import {
-  archiveDateTime,
-} from '../lib/format.js';
+import { archiveDateTime } from "../lib/format.js";
 
 interface ExportHistoryRow {
   created_at: string;
@@ -79,85 +68,76 @@ const DATASETS: Array<{
   columns: string[];
   note: string;
 }> = [
-    {
-      key: 'members',
+  {
+    key: "members",
 
-      title: 'Members',
+    title: "Members",
 
-      columns: [
-        'Name',
-        'University Role',
-        'Student ID',
-        'PSU Email',
-        'Major',
-        'Academic Year',
-        'Position',
-        'Membership Status',
-        'Join Date',
-      ],
+    columns: [
+      "Name",
+      "University Role",
+      "Student ID",
+      "PSU Email",
+      "Major",
+      "Academic Year",
+      "Position",
+      "Membership Status",
+      "Join Date",
+    ],
 
-      note:
-        'Every live account, including instructors and other university affiliates.',
-    },
+    note: "Every live account, including instructors and other university affiliates.",
+  },
 
-    {
-      key: 'participation',
+  {
+    key: "participation",
 
-      title:
-        'Event participation',
+    title: "Event participation",
 
-      columns: [
-        'Student ID',
-        'Member Name',
-        'Event',
-        'Position/Role',
-        'Participation Status',
-        'Date',
-      ],
+    columns: [
+      "Student ID",
+      "Member Name",
+      "Event",
+      "Position/Role",
+      "Participation Status",
+      "Date",
+    ],
 
-      note:
-        'Who took part in what, and in which role.',
-    },
+    note: "Who took part in what, and in which role.",
+  },
 
-    {
-      key: 'contributions',
+  {
+    key: "contributions",
 
-      title:
-        'Contributions',
+    title: "Contributions",
 
-      columns: [
-        'Student ID',
-        'Member',
-        'Event/Project',
-        'Contribution',
-        'Type',
-        'Date',
-        'Verification Status',
-      ],
+    columns: [
+      "Student ID",
+      "Member",
+      "Event/Project",
+      "Contribution",
+      "Type",
+      "Date",
+      "Verification Status",
+    ],
 
-      note:
-        'Submitted work with its verification state.',
-    },
-  ];
+    note: "Submitted work with its verification state.",
+  },
+];
 
-function errorMessage(
-  error: unknown,
-): string {
-  if (
-    error instanceof Error
-  ) {
+function errorMessage(error: unknown): string {
+  if (error instanceof Error) {
     return error.message;
   }
 
   if (
-    typeof error === 'object' &&
+    typeof error === "object" &&
     error !== null &&
-    'message' in error &&
+    "message" in error &&
     typeof (
       error as {
         message?: unknown;
       }
-    ).message === 'string'
+    ).message === "string"
   ) {
     return (
       error as {
@@ -166,28 +146,18 @@ function errorMessage(
     ).message;
   }
 
-  return 'An unknown error occurred.';
+  return "An unknown error occurred.";
 }
 
 async function start(): Promise<void> {
-  const viewer =
-    await requireAdmin(
-      'club_admin',
-    );
+  const viewer = await requireAdmin("club_admin");
 
-  const content =
-    shell(
-      viewer,
-      'admin',
-      'University records',
-    );
+  const content = shell(viewer, "admin", "University records");
 
-  render(
-    content,
-    loading(),
-  );
+  render(content, loading());
 
-  let lastSync: Awaited<ReturnType<typeof syncClubRecordsWorkbook>> | null = null;
+  let lastSync: Awaited<ReturnType<typeof syncClubRecordsWorkbook>> | null =
+    null;
 
   /*
    * The export log only grows, so it is paged rather than listed in full.
@@ -198,8 +168,7 @@ async function start(): Promise<void> {
 
   let historyPage = 0;
 
-  let sheetsEnabled =
-    false;
+  let sheetsEnabled = false;
 
   /*
    * Google Sheets is optional.
@@ -208,293 +177,250 @@ async function start(): Promise<void> {
    * available rather than taking down the entire page.
    */
   try {
-    sheetsEnabled =
-      await setting<boolean>(
-        'google_sheets_enabled',
-        false,
-      );
+    sheetsEnabled = await setting<boolean>("google_sheets_enabled", false);
   } catch (error) {
-    console.error(
-      'Could not load Google Sheets export setting:',
-      error,
-    );
+    console.error("Could not load Google Sheets export setting:", error);
 
-    sheetsEnabled =
-      false;
+    sheetsEnabled = false;
   }
 
-  clubRecordsWorkbook = await privateSetting('club_records_workbook_url');
+  clubRecordsWorkbook = await privateSetting("club_records_workbook_url");
 
   async function runDatasetExport(
     dataset: Dataset,
-    format:
-      'csv' |
-      'xlsx',
+    format: "csv" | "xlsx",
   ): Promise<void> {
     try {
-      const result =
-        await runExport(
-          dataset,
-          format,
-        );
+      const result = await runExport(dataset, format);
 
-      if (
-        format ===
-        'xlsx'
-      ) {
-        toast(
-          'XLSX downloaded.',
-        );
+      if (format === "xlsx") {
+        toast("XLSX downloaded.");
       } else {
-        toast(
-          'CSV downloaded.',
-        );
+        toast("CSV downloaded.");
       }
 
       await draw();
     } catch (error) {
-      console.error(
-        `Could not export ${dataset} as ${format}:`,
-        error,
-      );
+      console.error(`Could not export ${dataset} as ${format}:`, error);
 
       const label = format.toUpperCase();
 
-      toast(
-        `Could not generate ${label}: ${errorMessage(error)}`,
-        'err',
-      );
+      toast(`Could not generate ${label}: ${errorMessage(error)}`, "err");
     }
   }
 
   async function draw(): Promise<void> {
-    render(
-      content,
-      loading(),
-    );
+    render(content, loading());
 
     try {
-      const {
-        rows: rawHistory,
-        total: historyTotal,
-      } =
-        await exportHistory(
-          historyPageSize,
-          historyPage * historyPageSize,
-        );
+      const { rows: rawHistory, total: historyTotal } = await exportHistory(
+        historyPageSize,
+        historyPage * historyPageSize,
+      );
 
-      const history =
-        rawHistory as unknown as ExportHistoryRow[];
+      const history = rawHistory as unknown as ExportHistoryRow[];
 
       /*
        * A deletion elsewhere can leave the viewer past the end of the log.
        * Rather than showing an empty table, fall back to the last real page.
        */
-      if (
-        !history.length &&
-        historyPage > 0 &&
-        historyTotal > 0
-      ) {
-        historyPage =
-          Math.max(
-            0,
-            Math.ceil(
-              historyTotal /
-              historyPageSize,
-            ) - 1,
-          );
+      if (!history.length && historyPage > 0 && historyTotal > 0) {
+        historyPage = Math.max(
+          0,
+          Math.ceil(historyTotal / historyPageSize) - 1,
+        );
 
         await draw();
 
         return;
       }
 
-      const historyPageCount =
-        Math.max(
-          1,
-          Math.ceil(
-            historyTotal /
-            historyPageSize,
-          ),
-        );
+      const historyPageCount = Math.max(
+        1,
+        Math.ceil(historyTotal / historyPageSize),
+      );
 
-      const historyFirst =
-        historyPage *
-        historyPageSize;
+      const historyFirst = historyPage * historyPageSize;
 
       render(
         content,
 
-        pageHeader(
-          'ADMIN / UNIVERSITY RECORDS',
-          'University records',
-        ),
+        pageHeader("ADMIN / UNIVERSITY RECORDS", "University records"),
 
         notice(
-          'warn',
-          'This page contains student identifiers. It is restricted to club admins — ' +
-          'reviewers and members cannot reach it, and the database returns no rows to them ' +
-          'even if they try. Share generated files only with the university.',
+          "warn",
+          "This page contains student identifiers. It is restricted to club admins — " +
+            "reviewers and members cannot reach it, and the database returns no rows to them " +
+            "even if they try. Share generated files only with the university.",
         ),
 
         panel(
-          'Private Google workbook',
-          h('p', 'Update the private Google workbook with the latest club records.'),
-          h('div', { class: 'button-row' },
+          "Private Google workbook",
+          h(
+            "p",
+            "Update the private Google workbook with the latest club records.",
+          ),
+          h(
+            "div",
+            { class: "button-row" },
             clubRecordsWorkbook
-              ? h('a', {
-                  class: 'btn-ghost', href: clubRecordsWorkbook,
-                  target: '_blank', rel: 'noopener',
-                }, 'OPEN GOOGLE SHEET')
+              ? h(
+                  "a",
+                  {
+                    class: "btn-ghost",
+                    href: clubRecordsWorkbook,
+                    target: "_blank",
+                    rel: "noopener",
+                  },
+                  "OPEN GOOGLE SHEET",
+                )
               : null,
-            h('a', { class: 'btn-ghost', href: '/admin/records-backup.html' },
-              'OPEN WEBSITE BACKUP')),
+            h(
+              "a",
+              { class: "btn-ghost", href: "/admin/records-backup.html" },
+              "OPEN WEBSITE BACKUP",
+            ),
+          ),
           isSuperAdmin(viewer)
-            ? action('Update Google Sheet', async () => {
-                if (!window.confirm('This exports names, PSU emails, student IDs where applicable, roles, memberships, and operational club records to the configured private Google workbook. Continue?')) return;
-                try {
-                  toast('Updating every Google Sheet tab…');
-                  lastSync = await syncClubRecordsWorkbook();
-                  const failures = Object.values(lastSync.sheets).filter((sheet) => sheet.status === 'failed').length;
-                  toast(failures ? `${failures} worksheet(s) failed. See the results below.` : 'Every workbook tab updated.', failures ? 'err' : 'ok');
-                  await draw();
-                } catch (error) {
-                  toast(`Could not update workbook: ${errorMessage(error)}`, 'err');
-                }
-              }, 'primary')
-            : notice('info', 'Only a super admin can refresh the complete private workbook.'),
-          lastSync ? dataTable(['Worksheet', 'Rows', 'Result'],
-            Object.entries(lastSync.sheets).map(([name, result]) => [name, String(result.rows),
-              result.status === 'updated' ? 'Updated' : `Failed: ${result.error ?? 'Unknown error'}`])) : null,
+            ? action(
+                "Update Google Sheet",
+                async () => {
+                  if (
+                    !window.confirm(
+                      "This exports names, PSU emails, student IDs where applicable, roles, memberships, and operational club records to the configured private Google workbook. Continue?",
+                    )
+                  )
+                    return;
+                  try {
+                    toast("Updating every Google Sheet tab…");
+                    lastSync = await syncClubRecordsWorkbook();
+                    const failures = Object.values(lastSync.sheets).filter(
+                      (sheet) => sheet.status === "failed",
+                    ).length;
+                    toast(
+                      failures
+                        ? `${failures} worksheet(s) failed. See the results below.`
+                        : "Every workbook tab updated.",
+                      failures ? "err" : "ok",
+                    );
+                    await draw();
+                  } catch (error) {
+                    toast(
+                      `Could not update workbook: ${errorMessage(error)}`,
+                      "err",
+                    );
+                  }
+                },
+                "primary",
+              )
+            : notice(
+                "info",
+                "Only a super admin can refresh the complete private workbook.",
+              ),
+          lastSync
+            ? dataTable(
+                ["Worksheet", "Rows", "Result"],
+                Object.entries(lastSync.sheets).map(([name, result]) => [
+                  name,
+                  String(result.rows),
+                  result.status === "updated"
+                    ? "Updated"
+                    : `Failed: ${result.error ?? "Unknown error"}`,
+                ]),
+              )
+            : null,
         ),
 
-        DATASETS.map(
-          (
-            dataset,
-          ) =>
-            panel(
-              dataset.title,
+        DATASETS.map((dataset) =>
+          panel(
+            dataset.title,
 
-              h(
-                'p',
-                dataset.note,
-              ),
+            h("p", dataset.note),
 
-              h(
-                'p',
-                {
-                  class:
-                    'mono-meta dim-text',
-                },
-                'COLUMNS: ' +
-                dataset.columns.join(
-                  ' · ',
-                ),
-              ),
-
-              h(
-                'div',
-                {
-                  class:
-                    'button-row',
-                },
-
-                action(
-                  'Download CSV',
-
-                  async () => {
-                    await runDatasetExport(
-                      dataset.key,
-                      'csv',
-                    );
-                  },
-
-                  'primary',
-                ),
-
-                action(
-                  'Download XLSX',
-
-                  async () => {
-                    await runDatasetExport(
-                      dataset.key,
-                      'xlsx',
-                    );
-                  },
-                ),
-
-                null,
-              ),
+            h(
+              "p",
+              {
+                class: "mono-meta dim-text",
+              },
+              "COLUMNS: " + dataset.columns.join(" · "),
             ),
+
+            h(
+              "div",
+              {
+                class: "button-row",
+              },
+
+              action(
+                "Download CSV",
+
+                async () => {
+                  await runDatasetExport(dataset.key, "csv");
+                },
+
+                "primary",
+              ),
+
+              action(
+                "Download XLSX",
+
+                async () => {
+                  await runDatasetExport(dataset.key, "xlsx");
+                },
+              ),
+
+              null,
+            ),
+          ),
         ),
 
         sheetsEnabled
           ? null
           : notice(
-            'info',
-            'CSV and XLSX work without Google Sheets. Pushing directly into the private ' +
-            'university workbook requires the service account configuration and the ' +
-            'google_sheets_enabled setting.',
-          ),
+              "info",
+              "CSV and XLSX work without Google Sheets. Pushing directly into the private " +
+                "university workbook requires the service account configuration and the " +
+                "google_sheets_enabled setting.",
+            ),
 
         panel(
-          'Export history',
+          "Export history",
 
           h(
-            'div',
+            "div",
             {
-              class:
-                'button-row pager',
+              class: "button-row pager",
             },
 
             h(
-              'label',
+              "label",
               {
-                class:
-                  'mono-meta dim-text',
+                class: "mono-meta dim-text",
               },
-              'ROWS PER PAGE ',
+              "ROWS PER PAGE ",
 
               (() => {
-                const chooser =
-                  h(
-                    'select',
-                    {},
+                const chooser = h(
+                  "select",
+                  {},
 
-                    ...[
-                      5,
-                      10,
-                      20,
-                    ].map(
-                      (
-                        size,
-                      ) =>
-                        h(
-                          'option',
-                          {
-                            value:
-                              String(
-                                size,
-                              ),
-                            selected:
-                              size ===
-                              historyPageSize,
-                          },
-                          String(
-                            size,
-                          ),
-                        ),
+                  ...[5, 10, 20].map((size) =>
+                    h(
+                      "option",
+                      {
+                        value: String(size),
+                        selected: size === historyPageSize,
+                      },
+                      String(size),
                     ),
-                  ) as HTMLSelectElement;
+                  ),
+                ) as HTMLSelectElement;
 
                 chooser.addEventListener(
-                  'change',
+                  "change",
 
                   () => {
-                    historyPageSize =
-                      Number(
-                        chooser.value,
-                      );
+                    historyPageSize = Number(chooser.value);
 
                     // A new page size makes the old page number meaningless.
                     historyPage = 0;
@@ -508,223 +434,169 @@ async function start(): Promise<void> {
             ),
 
             h(
-              'span',
+              "span",
               {
-                class:
-                  'mono-meta dim-text',
+                class: "mono-meta dim-text",
               },
               historyTotal
                 ? `${historyFirst + 1}–${historyFirst + history.length} OF ${historyTotal}`
-                : '0 RECORDS',
+                : "0 RECORDS",
             ),
           ),
 
           history.length
             ? dataTable(
-              [
-                'When',
-                'Dataset',
-                'Format',
-                'Rows',
-                'By',
-                'Destination',
-              ],
+                ["When", "Dataset", "Format", "Rows", "By", "Destination"],
 
-              history.map(
-                (
-                  row,
-                ) => [
-                    h(
-                      'span',
-                      {
-                        class:
-                          'mono-meta',
-                      },
-                      archiveDateTime(
-                        row.created_at,
-                      ),
-                    ),
+                history.map((row) => [
+                  h(
+                    "span",
+                    {
+                      class: "mono-meta",
+                    },
+                    archiveDateTime(row.created_at),
+                  ),
 
-                    h(
-                      'span',
-                      {
-                        class:
-                          'mono-meta',
-                      },
-                      row.dataset
-                        .toUpperCase(),
-                    ),
+                  h(
+                    "span",
+                    {
+                      class: "mono-meta",
+                    },
+                    row.dataset.toUpperCase(),
+                  ),
 
-                    h(
-                      'span',
-                      {
-                        class:
-                          'mono-meta',
-                      },
-                      row.format
-                        .toUpperCase(),
-                    ),
+                  h(
+                    "span",
+                    {
+                      class: "mono-meta",
+                    },
+                    row.format.toUpperCase(),
+                  ),
 
-                    h(
-                      'span',
-                      {
-                        class:
-                          'mono-meta',
-                      },
-                      row.row_count ===
-                        null
-                        ? '—'
-                        : String(
-                          row.row_count,
-                        ),
-                    ),
+                  h(
+                    "span",
+                    {
+                      class: "mono-meta",
+                    },
+                    row.row_count === null ? "—" : String(row.row_count),
+                  ),
 
-                    row.admin
-                      ?.full_name ??
-                    '—',
+                  row.admin?.full_name ?? "—",
 
-                    row.destination
-                      ? h(
-                        'a',
+                  row.destination
+                    ? h(
+                        "a",
                         {
-                          href:
-                            row.destination,
-                          rel:
-                            'noopener',
-                          target:
-                            '_blank',
+                          href: row.destination,
+                          rel: "noopener",
+                          target: "_blank",
                         },
-                        'Open sheet',
+                        "Open sheet",
                       )
-                      : '—',
-                  ],
-              ),
-            )
-            : emptyState(
-              'No exports generated yet.',
-            ),
+                    : "—",
+                ]),
+              )
+            : emptyState("No exports generated yet."),
 
           historyPageCount > 1
             ? h(
-              'div',
-              {
-                class:
-                  'button-row pager',
-              },
-
-              (() => {
-                const previous =
-                  h(
-                    'button',
-                    {
-                      type:
-                        'button',
-                      class:
-                        'btn-ghost',
-
-                      onclick:
-                        () => {
-                          historyPage -= 1;
-
-                          void draw();
-                        },
-                    },
-                    'PREVIOUS',
-                  ) as HTMLButtonElement;
-
-                previous.disabled =
-                  historyPage <= 0;
-
-                return previous;
-              })(),
-
-              (() => {
-                const next =
-                  h(
-                    'button',
-                    {
-                      type:
-                        'button',
-                      class:
-                        'btn-ghost',
-
-                      onclick:
-                        () => {
-                          historyPage += 1;
-
-                          void draw();
-                        },
-                    },
-                    'NEXT',
-                  ) as HTMLButtonElement;
-
-                next.disabled =
-                  historyPage >=
-                  historyPageCount - 1;
-
-                return next;
-              })(),
-
-              h(
-                'span',
+                "div",
                 {
-                  class:
-                    'mono-meta dim-text',
+                  class: "button-row pager",
                 },
-                `PAGE ${historyPage + 1} OF ${historyPageCount}`,
-              ),
-            )
+
+                (() => {
+                  const previous = h(
+                    "button",
+                    {
+                      type: "button",
+                      class: "btn-ghost",
+
+                      onclick: () => {
+                        historyPage -= 1;
+
+                        void draw();
+                      },
+                    },
+                    "PREVIOUS",
+                  ) as HTMLButtonElement;
+
+                  previous.disabled = historyPage <= 0;
+
+                  return previous;
+                })(),
+
+                (() => {
+                  const next = h(
+                    "button",
+                    {
+                      type: "button",
+                      class: "btn-ghost",
+
+                      onclick: () => {
+                        historyPage += 1;
+
+                        void draw();
+                      },
+                    },
+                    "NEXT",
+                  ) as HTMLButtonElement;
+
+                  next.disabled = historyPage >= historyPageCount - 1;
+
+                  return next;
+                })(),
+
+                h(
+                  "span",
+                  {
+                    class: "mono-meta dim-text",
+                  },
+                  `PAGE ${historyPage + 1} OF ${historyPageCount}`,
+                ),
+              )
             : null,
 
           h(
-            'p',
+            "p",
             {
-              class:
-                'mono-meta dim-text',
+              class: "mono-meta dim-text",
             },
-            'Export history',
+            "Export history",
           ),
         ),
       );
     } catch (error) {
-      console.error(
-        'University records page failed to load:',
-        error,
-      );
+      console.error("University records page failed to load:", error);
 
       render(
         content,
 
         pageHeader(
-          'ADMIN / UNIVERSITY RECORDS',
-          'University records unavailable',
+          "ADMIN / UNIVERSITY RECORDS",
+          "University records unavailable",
         ),
 
         notice(
-          'err',
+          "err",
           `The university records page could not load: ${errorMessage(error)}`,
         ),
 
         h(
-          'div',
+          "div",
           {
-            class:
-              'button-row',
+            class: "button-row",
           },
 
           h(
-            'button',
+            "button",
             {
-              type:
-                'button',
-              class:
-                'btn-ghost',
+              type: "button",
+              class: "btn-ghost",
 
-              onclick:
-                () =>
-                  void draw(),
+              onclick: () => void draw(),
             },
-            'TRY AGAIN',
+            "TRY AGAIN",
           ),
         ),
       );

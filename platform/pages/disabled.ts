@@ -6,43 +6,30 @@
  * impression that their contributions have been erased.
  */
 
-import {
-  h,
-} from '../lib/dom.js';
+import { h } from "../lib/dom.js";
 
-import {
-  authShell,
-  notice,
-} from '../lib/ui.js';
+import { authShell, notice } from "../lib/ui.js";
 
-import {
-  signOut,
-} from '../lib/session.js';
+import { signOut } from "../lib/session.js";
 
-import {
-  setting,
-} from '../lib/api.js';
+import { setting } from "../lib/api.js";
 
-import {
-  isConfigured,
-} from '../lib/supabase.js';
+import { isConfigured } from "../lib/supabase.js";
 
-function errorMessage(
-  error: unknown,
-): string {
+function errorMessage(error: unknown): string {
   if (error instanceof Error) {
     return error.message;
   }
 
   if (
-    typeof error === 'object' &&
+    typeof error === "object" &&
     error !== null &&
-    'message' in error &&
+    "message" in error &&
     typeof (
       error as {
         message?: unknown;
       }
-    ).message === 'string'
+    ).message === "string"
   ) {
     return (
       error as {
@@ -51,99 +38,76 @@ function errorMessage(
     ).message;
   }
 
-  return 'An unknown error occurred.';
+  return "An unknown error occurred.";
 }
 
 async function start(): Promise<void> {
-  let email =
-    'acmchapter@psu.edu.sa';
+  let email = "acmchapter@psu.edu.sa";
 
-  if (
-    isConfigured
-  ) {
+  if (isConfigured) {
     try {
-      email =
-        await setting<string>(
-          'club_email',
-          'acmchapter@psu.edu.sa',
-        );
+      email = await setting<string>("club_email", "acmchapter@psu.edu.sa");
     } catch (error) {
       console.error(
-        'Could not load club email on disabled-account page:',
+        "Could not load club email on disabled-account page:",
         error,
       );
     }
   }
 
-  const signOutStatus =
-    h(
-      'div',
-    );
+  const signOutStatus = h("div");
 
   authShell(
-    'Account disabled',
-    'This account cannot currently be used to sign in.',
+    "Account disabled",
+    "This account cannot currently be used to sign in.",
 
     h(
-      'p',
+      "p",
       {
-        class:
-          'mono-meta dim-text',
+        class: "mono-meta dim-text",
       },
-      'Your membership record, position history and verified contributions are unchanged. ' +
-      'If you think this is a mistake, contact the club.',
+      "Your membership record, position history and verified contributions are unchanged. " +
+        "If you think this is a mistake, contact the club.",
     ),
 
     signOutStatus,
 
     h(
-      'div',
+      "div",
       {
-        class:
-          'button-row',
+        class: "button-row",
       },
 
       h(
-        'a',
+        "a",
         {
-          class:
-            'btn-ghost',
-          href:
-            `mailto:${email}`,
+          class: "btn-ghost",
+          href: `mailto:${email}`,
         },
-        'Contact ACM',
+        "Contact ACM",
       ),
 
       h(
-        'button',
+        "button",
         {
-          type:
-            'button',
-          class:
-            'btn-ghost',
+          type: "button",
+          class: "btn-ghost",
 
-          onclick:
-            async () => {
-              signOutStatus.replaceChildren();
+          onclick: async () => {
+            signOutStatus.replaceChildren();
 
-              try {
-                await signOut();
-              } catch (error) {
-                console.error(
-                  'Could not sign out disabled account:',
-                  error,
-                );
+            try {
+              await signOut();
+            } catch (error) {
+              console.error("Could not sign out disabled account:", error);
 
-                signOutStatus.replaceChildren(
-                  notice(
-                    'err',
-                    `Could not sign out: ${errorMessage(error)}`,
-                  ),
-                );
-              }
-            },
+              signOutStatus.replaceChildren(
+                notice("err", `Could not sign out: ${errorMessage(error)}`),
+              );
+            }
+          },
         },
-        'Sign out',
+        "Sign out",
       ),
     ),
   );

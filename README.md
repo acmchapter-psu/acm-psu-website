@@ -89,13 +89,13 @@ design-template/      Original design mockups. Reference only — not deployed.
 
 ## Documentation
 
-| Document | Read it when |
-|---|---|
-| **[docs/SETUP.md](docs/SETUP.md)** | Setting up Supabase, Cloudflare or Google Sheets |
-| **[docs/OPERATIONS.md](docs/OPERATIONS.md)** | Doing the everyday committee tasks |
-| **[docs/HANDOVER.md](docs/HANDOVER.md)** | Passing the system to next year's committee |
-| **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** | Understanding why it is built this way |
-| **[docs/AUDIT.md](docs/AUDIT.md)** | Working out who decided something, and why |
+| Document                                         | Read it when                                     |
+| ------------------------------------------------ | ------------------------------------------------ |
+| **[docs/SETUP.md](docs/SETUP.md)**               | Setting up Supabase, Cloudflare or Google Sheets |
+| **[docs/OPERATIONS.md](docs/OPERATIONS.md)**     | Doing the everyday committee tasks               |
+| **[docs/HANDOVER.md](docs/HANDOVER.md)**         | Passing the system to next year's committee      |
+| **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** | Understanding why it is built this way           |
+| **[docs/AUDIT.md](docs/AUDIT.md)**               | Working out who decided something, and why       |
 
 ---
 

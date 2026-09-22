@@ -6,12 +6,7 @@
  * to invent a folder or section it never produced.
  */
 
-import {
-  h,
-  render,
-  formValues,
-  textOf,
-} from '../lib/dom.js';
+import { h, render, formValues, textOf } from "../lib/dom.js";
 
 import {
   registrationSection,
@@ -23,7 +18,7 @@ import {
   sheetNameProblem,
   type RegistrationTemplate,
   type RegistrationForm,
-} from '../lib/registration-setup.js';
+} from "../lib/registration-setup.js";
 
 import {
   shell,
@@ -43,15 +38,12 @@ import {
   confirmDialog,
   reasonField,
   checkReason,
-} from '../lib/ui.js';
+  chipPicker,
+} from "../lib/ui.js";
 
-import {
-  historyPanel,
-} from '../lib/history.js';
+import { historyPanel } from "../lib/history.js";
 
-import {
-  requireAdmin,
-} from '../lib/session.js';
+import { requireAdmin } from "../lib/session.js";
 
 import {
   projects,
@@ -63,59 +55,55 @@ import {
   itemUrl,
   setting,
   bestEffortFunctionSync,
-} from '../lib/api.js';
+  positions,
+} from "../lib/api.js";
 
 import {
-  requireClient,
-} from '../lib/supabase.js';
+  CATEGORY_LEAD_SLUG,
+  OPPORTUNITY_CATEGORIES,
+  TEAM_MEMBER_SLUG,
+  categoryLabel,
+} from "../lib/teams.js";
 
-import {
-  members,
-  setArchiveVisibility,
-} from '../lib/admin.js';
+import { requireClient } from "../lib/supabase.js";
 
-import {
-  archiveDate,
-  enumLabel,
-  fileSize,
-} from '../lib/format.js';
+import { members, setArchiveVisibility } from "../lib/admin.js";
+
+import { archiveDate, enumLabel, fileSize } from "../lib/format.js";
 
 import type {
   ArchiveFolder,
   ArchiveItem,
+  EventPositionAvailability,
+  OpportunityCategory,
+  Position,
   Project,
-} from '../lib/types.js';
+} from "../lib/types.js";
 
-const KINDS = [
-  'event',
-  'project',
-  'workshop_series',
-  'initiative',
-].map((value) => ({
-  value,
-  label: enumLabel(value),
-}));
+const KINDS = ["event", "project", "workshop_series", "initiative"].map(
+  (value) => ({
+    value,
+    label: enumLabel(value),
+  }),
+);
 
-const STATUSES = [
-  'planning',
-  'active',
-  'completed',
-  'archived',
-].map((value) => ({
-  value,
-  label: enumLabel(value),
-}));
+const STATUSES = ["planning", "active", "completed", "archived"].map(
+  (value) => ({
+    value,
+    label: enumLabel(value),
+  }),
+);
 
 const SECTIONS = [
-  'overview',
-  'files',
-  'website',
-  'workshops',
-  'documents',
-  'media',
-  'branding',
-  'results',
-  'organizers',
+  "overview",
+  "files",
+  "website",
+  "workshops",
+  "documents",
+  "media",
+  "branding",
+  "results",
+  "organizers",
 ].map((value) => ({
   value,
   label: enumLabel(value),
@@ -132,32 +120,22 @@ interface OrganizerRow {
   } | null;
 }
 
-interface OpeningRow {
-  event_position_id: string;
-  title: string;
-  filled: number;
-  openings: number;
-  pending: number;
-  closes_on: string | null;
-  is_open: boolean;
-}
+type OpeningRow = EventPositionAvailability;
 
-function errorMessage(
-  error: unknown,
-): string {
+function errorMessage(error: unknown): string {
   if (error instanceof Error) {
     return error.message;
   }
 
   if (
-    typeof error === 'object' &&
+    typeof error === "object" &&
     error !== null &&
-    'message' in error &&
+    "message" in error &&
     typeof (
       error as {
         message?: unknown;
       }
-    ).message === 'string'
+    ).message === "string"
   ) {
     return (
       error as {
@@ -166,70 +144,33 @@ function errorMessage(
     ).message;
   }
 
-  return 'An unknown error occurred.';
+  return "An unknown error occurred.";
 }
 
-function slugify(
-  text: string,
-): string {
+function slugify(text: string): string {
   return text
     .toLowerCase()
-    .replace(
-      /[^a-z0-9]+/g,
-      '-',
-    )
-    .replace(
-      /^-|-$/g,
-      '',
-    )
-    .slice(
-      0,
-      60,
-    );
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 60);
 }
 
 async function start(): Promise<void> {
-  const viewer =
-    await requireAdmin(
-      'club_admin',
-    );
+  const viewer = await requireAdmin("club_admin");
 
-  const content =
-    shell(
-      viewer,
-      'admin',
-      'Projects & events',
-    );
+  const content = shell(viewer, "admin", "Projects & events");
 
-  render(
-    content,
-    loading(),
-  );
+  render(content, loading());
 
-  let chapter =
-    String(
-      new Date().getFullYear(),
-    );
+  let chapter = String(new Date().getFullYear());
 
   try {
-    chapter =
-      await setting<string>(
-        'current_chapter_year',
-        chapter,
-      );
+    chapter = await setting<string>("current_chapter_year", chapter);
   } catch (error) {
-    console.error(
-      'Could not load current chapter year:',
-      error,
-    );
+    console.error("Could not load current chapter year:", error);
   }
 
-  let selectedId =
-    new URLSearchParams(
-      window.location.search,
-    ).get(
-      'project',
-    );
+  let selectedId = new URLSearchParams(window.location.search).get("project");
 
   /* Removed projects are hidden until asked for: they are the exception, and
      an admin looking for one already knows they removed it. */
@@ -244,116 +185,90 @@ async function start(): Promise<void> {
    * project that vanished with no explanation is the record a future committee
    * will most want and least have.
    */
-  function deleteProjectDialog(
-    project: Project,
-  ): void {
+  function deleteProjectDialog(project: Project): void {
     const form = h(
-      'form',
+      "form",
       {
-        class: 'portal-form',
+        class: "portal-form",
         novalidate: true,
       },
 
       notice(
-        'warn',
+        "warn",
         `This removes “${project.title}” from the projects list. Nothing attached to it is ` +
-        'deleted: archive items, participation, contributions and any recorded registrations ' +
-        'are all kept, and an admin can restore it from Removed projects.',
+          "deleted: archive items, participation, contributions and any recorded registrations " +
+          "are all kept, and an admin can restore it from Removed projects.",
       ),
 
       notice(
-        'info',
-        'If this event has public registration, its form is closed so no new signups can ' +
-        'arrive. The Google worksheet and every registration already in it are untouched.',
+        "info",
+        "If this event has public registration, its form is closed so no new signups can " +
+          "arrive. The Google worksheet and every registration already in it are untouched.",
       ),
 
       field({
-        label: 'Reason',
-        name: 'reason',
-        type: 'textarea',
+        label: "Reason",
+        name: "reason",
+        type: "textarea",
         rows: 3,
         required: true,
-        placeholder:
-          'Why is this being removed?',
+        placeholder: "Why is this being removed?",
       }),
     ) as HTMLFormElement;
 
-    const modal =
-      dialog(
-        `Remove — ${project.title}`,
+    const modal = dialog(
+      `Remove — ${project.title}`,
 
-        form,
+      form,
 
-        h(
-          'div',
-          {
-            class:
-              'button-row',
+      h(
+        "div",
+        {
+          class: "button-row",
+        },
+
+        action(
+          "REMOVE PROJECT",
+
+          async () => {
+            if (!form.reportValidity()) {
+              return;
+            }
+
+            const reason = textOf(formValues(form), "reason").trim();
+
+            try {
+              await deleteProject(project.id, reason);
+
+              modal.close();
+
+              toast(
+                "Project removed. It can be restored from Removed projects.",
+              );
+
+              /* The open detail pane is describing a project that is
+                   no longer listed, so clear the selection with it. */
+              if (selectedId === project.id) {
+                selectedId = null;
+
+                history.replaceState(null, "", window.location.pathname);
+              }
+
+              await draw();
+            } catch (error) {
+              console.error("Could not remove project:", error);
+
+              toast(
+                `Could not remove the project: ${errorMessage(error)}`,
+                "err",
+              );
+            }
           },
 
-          action(
-            'REMOVE PROJECT',
-
-            async () => {
-              if (
-                !form.reportValidity()
-              ) {
-                return;
-              }
-
-              const reason =
-                textOf(
-                  formValues(form),
-                  'reason',
-                ).trim();
-
-              try {
-                await deleteProject(
-                  project.id,
-                  reason,
-                );
-
-                modal.close();
-
-                toast(
-                  'Project removed. It can be restored from Removed projects.',
-                );
-
-                /* The open detail pane is describing a project that is
-                   no longer listed, so clear the selection with it. */
-                if (
-                  selectedId ===
-                  project.id
-                ) {
-                  selectedId =
-                    null;
-
-                  history.replaceState(
-                    null,
-                    '',
-                    window.location
-                      .pathname,
-                  );
-                }
-
-                await draw();
-              } catch (error) {
-                console.error(
-                  'Could not remove project:',
-                  error,
-                );
-
-                toast(
-                  `Could not remove the project: ${errorMessage(error)}`,
-                  'err',
-                );
-              }
-            },
-
-            'danger',
-          ),
+          "danger",
         ),
-      );
+      ),
+    );
   }
 
   /*
@@ -363,38 +278,21 @@ async function start(): Promise<void> {
    * without the registration block rather than refusing to open it — editing
    * a title should not depend on Google.
    */
-  async function openProjectEditor(
-    existing: Project | null,
-  ): Promise<void> {
+  async function openProjectEditor(existing: Project | null): Promise<void> {
     try {
-      const templates =
-        await registrationTemplates();
+      const templates = await registrationTemplates();
 
-      const registration =
-        existing
-          ? await eventRegistrationForm(
-              existing.id,
-            )
-          : null;
+      const registration = existing
+        ? await eventRegistrationForm(existing.id)
+        : null;
 
-      const locked =
-        registration
-          ? await registrationFormLocked(
-              registration.event_key,
-            )
-          : false;
+      const locked = registration
+        ? await registrationFormLocked(registration.event_key)
+        : false;
 
-      projectEditor(
-        existing,
-        templates,
-        registration,
-        locked,
-      );
+      projectEditor(existing, templates, registration, locked);
     } catch (error) {
-      console.warn(
-        'Registration setup is unavailable:',
-        error,
-      );
+      console.warn("Registration setup is unavailable:", error);
 
       projectEditor(existing);
     }
@@ -413,1218 +311,1012 @@ async function start(): Promise<void> {
      * with the Kind select, so the block follows that choice rather than the
      * value it happened to have when the dialog opened.
      */
-    const registrationBlock =
-      templates.length
-        ? registrationSection({
-            templates,
-            existing: registration,
-            locked: registrationLocked,
-            title: existing?.title ?? '',
-            term: existing?.chapter_year,
-            projectId: existing?.id ?? null,
-          })
-        : null;
+    const registrationBlock = templates.length
+      ? registrationSection({
+          templates,
+          existing: registration,
+          locked: registrationLocked,
+          title: existing?.title ?? "",
+          term: existing?.chapter_year,
+          projectId: existing?.id ?? null,
+        })
+      : null;
 
     const form = h(
-      'form',
+      "form",
       {
-        class: 'portal-form',
+        class: "portal-form",
         novalidate: true,
       },
 
+      h(
+        "div",
+        { class: "field-pair" },
+        field({
+          label: "Title",
+          name: "title",
+          required: true,
+          maxlength: 140,
+          value: existing?.title,
+          hint: "Renaming updates the name everywhere it appears on the public site and in the portal.",
+        }),
+        field({
+          label: "Title (Arabic)",
+          name: "title_ar",
+          maxlength: 140,
+          value: existing?.title_ar ?? "",
+          hint: "Shown when the site is in Arabic. Leave blank to use the English title.",
+        }),
+      ),
+
+      h(
+        "div",
+        {
+          class: "field-pair",
+        },
+
+        field({
+          label: "Kind",
+          name: "kind",
+          type: "select",
+          value: existing?.kind ?? "event",
+          options: KINDS,
+        }),
+
+        field({
+          label: "Status",
+          name: "status",
+          type: "select",
+          value: existing?.status ?? "planning",
+          options: STATUSES,
+        }),
+      ),
+
+      h(
+        "div",
+        {
+          class: "field-pair",
+        },
+
+        field({
+          label: "Starts",
+          name: "starts_on",
+          type: "date",
+          value: existing?.starts_on,
+        }),
+
+        field({
+          label: "Ends",
+          name: "ends_on",
+          type: "date",
+          value: existing?.ends_on,
+        }),
+      ),
+
+      h(
+        "div",
+        {
+          class: "field-pair",
+        },
+
+        field({
+          label: "Chapter year",
+          name: "chapter_year",
+          value: existing?.chapter_year ?? chapter,
+        }),
+
+        field({
+          label: "Filter category",
+          name: "category",
+          value: existing?.category,
+          hint: "Matches the public projects page tabs, e.g. ctf, jam, workshops.",
+        }),
+      ),
+
       field({
-        label: 'Title',
-        name: 'title',
-        required: true,
-        maxlength: 140,
-        value:
-          existing?.title,
-      }),
-
-      h(
-        'div',
-        {
-          class: 'field-pair',
-        },
-
-        field({
-          label: 'Kind',
-          name: 'kind',
-          type: 'select',
-          value:
-            existing?.kind ??
-            'event',
-          options:
-            KINDS,
-        }),
-
-        field({
-          label: 'Status',
-          name: 'status',
-          type: 'select',
-          value:
-            existing?.status ??
-            'planning',
-          options:
-            STATUSES,
-        }),
-      ),
-
-      h(
-        'div',
-        {
-          class: 'field-pair',
-        },
-
-        field({
-          label: 'Starts',
-          name: 'starts_on',
-          type: 'date',
-          value:
-            existing?.starts_on,
-        }),
-
-        field({
-          label: 'Ends',
-          name: 'ends_on',
-          type: 'date',
-          value:
-            existing?.ends_on,
-        }),
-      ),
-
-      h(
-        'div',
-        {
-          class: 'field-pair',
-        },
-
-        field({
-          label: 'Chapter year',
-          name: 'chapter_year',
-          value:
-            existing?.chapter_year ??
-            chapter,
-        }),
-
-        field({
-          label: 'Filter category',
-          name: 'category',
-          value:
-            existing?.category,
-          hint:
-            'Matches the public projects page tabs, e.g. ctf, jam, workshops.',
-        }),
-      ),
-
-      field({
-        label: 'Summary',
-        name: 'summary',
-        type: 'textarea',
+        label: "Summary",
+        name: "summary",
+        type: "textarea",
         rows: 2,
-        value:
-          existing?.summary,
+        value: existing?.summary,
       }),
 
       h(
-        'div',
+        "div",
         {
-          class: 'field-pair',
+          class: "field-pair",
         },
 
         field({
-          label: 'Page on the website',
-          name: 'site_path',
-          value:
-            existing?.site_path,
-          placeholder:
-            '/projects/ctfs/ctf-3.0/',
+          label: "Page on the website",
+          name: "site_path",
+          value: existing?.site_path,
+          placeholder: "/projects/ctfs/ctf-3.0/",
         }),
 
         field({
-          label: 'Repository',
-          name: 'repo_url',
-          type: 'url',
-          value:
-            existing?.repo_url,
+          label: "Repository",
+          name: "repo_url",
+          type: "url",
+          value: existing?.repo_url,
         }),
       ),
 
       field({
-        label: 'Visibility',
-        name: 'visibility',
-        type: 'select',
-        value:
-          existing?.visibility ??
-          'internal',
+        label: "Visibility",
+        name: "visibility",
+        type: "select",
+        value: existing?.visibility ?? "internal",
 
         options: [
           {
-            value: 'internal',
-            label:
-              'Internal — members and admins',
+            value: "internal",
+            label: "Internal — members and admins",
           },
           {
-            value: 'public',
-            label:
-              'Public — anyone',
+            value: "public",
+            label: "Public — anyone",
           },
         ],
       }),
 
-      registrationBlock
-        ?.element ??
-        null,
+      registrationBlock?.element ?? null,
     ) as HTMLFormElement;
 
-    const kindControl =
-      form.elements.namedItem(
-        'kind',
-      ) as HTMLSelectElement | null;
+    const kindControl = form.elements.namedItem(
+      "kind",
+    ) as HTMLSelectElement | null;
 
     function paintRegistration(): void {
-      if (
-        !registrationBlock
-      ) {
+      if (!registrationBlock) {
         return;
       }
 
       registrationBlock.element.hidden =
-        (kindControl?.value ??
-          'event') !== 'event';
+        (kindControl?.value ?? "event") !== "event";
     }
 
     paintRegistration();
 
-    kindControl?.addEventListener(
-      'change',
-      paintRegistration,
-    );
+    kindControl?.addEventListener("change", paintRegistration);
 
-    const modal =
-      dialog(
-        existing
-          ? `Edit — ${existing.title}`
-          : 'New project or event',
+    const modal = dialog(
+      existing ? `Edit — ${existing.title}` : "New project or event",
 
-        form,
+      form,
 
-        h(
-          'div',
-          {
-            class:
-              'button-row',
+      h(
+        "div",
+        {
+          class: "button-row",
+        },
+
+        action(
+          existing ? "Save" : "Create",
+
+          async () => {
+            if (!form.reportValidity()) {
+              return;
+            }
+
+            const values = formValues(form);
+
+            const title = textOf(values, "title").trim();
+
+            if (!title) {
+              toast("Enter a title.", "err");
+
+              return;
+            }
+
+            const startsOn = textOf(values, "starts_on") || null;
+
+            const endsOn = textOf(values, "ends_on") || null;
+
+            if (startsOn && endsOn && endsOn < startsOn) {
+              toast("The end date cannot be before the start date.", "err");
+
+              return;
+            }
+
+            const patch = {
+              title,
+
+              title_ar: textOf(values, "title_ar").trim() || null,
+
+              kind: textOf(values, "kind"),
+
+              status: textOf(values, "status"),
+
+              starts_on: startsOn,
+
+              ends_on: endsOn,
+
+              chapter_year: textOf(values, "chapter_year") || null,
+
+              category: textOf(values, "category") || null,
+
+              summary: textOf(values, "summary") || null,
+
+              site_path: textOf(values, "site_path") || null,
+
+              repo_url: textOf(values, "repo_url") || null,
+
+              visibility: textOf(values, "visibility"),
+            };
+
+            try {
+              const client = requireClient();
+
+              if (existing) {
+                const { error } = await client
+                  .from("projects")
+                  .update(patch)
+                  .eq("id", existing.id);
+
+                if (error) {
+                  throw new Error(error.message);
+                }
+              } else {
+                const slug = slugify(title);
+
+                if (!slug) {
+                  toast(
+                    "The title must contain at least one letter or number.",
+                    "err",
+                  );
+
+                  return;
+                }
+
+                const { data, error } = await client
+                  .from("projects")
+                  .insert({
+                    ...patch,
+                    slug,
+                    created_by: viewer.userId,
+                  })
+                  .select("id")
+                  .single();
+
+                if (error) {
+                  throw new Error(error.message);
+                }
+
+                selectedId = data.id;
+
+                history.replaceState(null, "", `?project=${data.id}`);
+              }
+
+              /*
+               * The project is saved. Registration is a separate step
+               * because it talks to Google, and a worksheet that could not
+               * be created must never undo a project that was.
+               */
+              const wanted = registrationBlock?.read();
+
+              const isEvent = (kindControl?.value ?? "event") === "event";
+
+              let registrationNote = "";
+
+              if (
+                wanted &&
+                isEvent &&
+                (existing?.id ?? selectedId) &&
+                (wanted.enabled || registration)
+              ) {
+                const problem = wanted.enabled
+                  ? sheetNameProblem(wanted.sheet_name)
+                  : null;
+
+                if (problem) {
+                  registrationNote = problem;
+                } else {
+                  try {
+                    registrationNote = provisionSummary(
+                      await provisionRegistration({
+                        project_id: (existing?.id ?? selectedId) as string,
+                        enabled: wanted.enabled,
+                        template_key: wanted.template_key,
+                        sheet_name: wanted.sheet_name,
+                        label: title,
+                      }),
+                    );
+                  } catch (registrationError) {
+                    registrationNote = `Saved, but registration setup failed: ${
+                      registrationError instanceof Error
+                        ? registrationError.message
+                        : String(registrationError)
+                    }`;
+                  }
+                }
+              }
+
+              modal.close();
+
+              toast(
+                registrationNote ||
+                  (existing ? "Project updated." : "Project created."),
+                registrationNote.includes("failed") ? "err" : "ok",
+              );
+
+              void bestEffortFunctionSync("club-records-sheet-sync", {
+                sheets: ["people", "opportunity_positions"],
+              });
+
+              await draw();
+            } catch (error) {
+              console.error(
+                existing
+                  ? "Could not update project:"
+                  : "Could not create project:",
+                error,
+              );
+
+              toast(
+                existing
+                  ? `Could not update project: ${errorMessage(error)}`
+                  : `Could not create project: ${errorMessage(error)}`,
+                "err",
+              );
+            }
           },
 
-          action(
-            existing
-              ? 'Save'
-              : 'Create',
-
-            async () => {
-              if (
-                !form.reportValidity()
-              ) {
-                return;
-              }
-
-              const values =
-                formValues(
-                  form,
-                );
-
-              const title =
-                textOf(
-                  values,
-                  'title',
-                ).trim();
-
-              if (!title) {
-                toast(
-                  'Enter a title.',
-                  'err',
-                );
-
-                return;
-              }
-
-              const startsOn =
-                textOf(
-                  values,
-                  'starts_on',
-                ) || null;
-
-              const endsOn =
-                textOf(
-                  values,
-                  'ends_on',
-                ) || null;
-
-              if (
-                startsOn &&
-                endsOn &&
-                endsOn < startsOn
-              ) {
-                toast(
-                  'The end date cannot be before the start date.',
-                  'err',
-                );
-
-                return;
-              }
-
-              const patch = {
-                title,
-
-                kind:
-                  textOf(
-                    values,
-                    'kind',
-                  ),
-
-                status:
-                  textOf(
-                    values,
-                    'status',
-                  ),
-
-                starts_on:
-                  startsOn,
-
-                ends_on:
-                  endsOn,
-
-                chapter_year:
-                  textOf(
-                    values,
-                    'chapter_year',
-                  ) ||
-                  null,
-
-                category:
-                  textOf(
-                    values,
-                    'category',
-                  ) ||
-                  null,
-
-                summary:
-                  textOf(
-                    values,
-                    'summary',
-                  ) ||
-                  null,
-
-                site_path:
-                  textOf(
-                    values,
-                    'site_path',
-                  ) ||
-                  null,
-
-                repo_url:
-                  textOf(
-                    values,
-                    'repo_url',
-                  ) ||
-                  null,
-
-                visibility:
-                  textOf(
-                    values,
-                    'visibility',
-                  ),
-              };
-
-              try {
-                const client =
-                  requireClient();
-
-                if (existing) {
-                  const {
-                    error,
-                  } = await client
-                    .from(
-                      'projects',
-                    )
-                    .update(
-                      patch,
-                    )
-                    .eq(
-                      'id',
-                      existing.id,
-                    );
-
-                  if (error) {
-                    throw new Error(
-                      error.message,
-                    );
-                  }
-                } else {
-                  const slug =
-                    slugify(
-                      title,
-                    );
-
-                  if (!slug) {
-                    toast(
-                      'The title must contain at least one letter or number.',
-                      'err',
-                    );
-
-                    return;
-                  }
-
-                  const {
-                    data,
-                    error,
-                  } = await client
-                    .from(
-                      'projects',
-                    )
-                    .insert({
-                      ...patch,
-                      slug,
-                      created_by:
-                        viewer.userId,
-                    })
-                    .select(
-                      'id',
-                    )
-                    .single();
-
-                  if (error) {
-                    throw new Error(
-                      error.message,
-                    );
-                  }
-
-                  selectedId =
-                    data.id;
-
-                  history.replaceState(
-                    null,
-                    '',
-                    `?project=${data.id}`,
-                  );
-                }
-
-                /*
-                 * The project is saved. Registration is a separate step
-                 * because it talks to Google, and a worksheet that could not
-                 * be created must never undo a project that was.
-                 */
-                const wanted =
-                  registrationBlock?.read();
-
-                const isEvent =
-                  (kindControl?.value ??
-                    'event') === 'event';
-
-                let registrationNote =
-                  '';
-
-                if (
-                  wanted &&
-                  isEvent &&
-                  (existing?.id ??
-                    selectedId) &&
-                  (wanted.enabled ||
-                    registration)
-                ) {
-                  const problem =
-                    wanted.enabled
-                      ? sheetNameProblem(
-                          wanted.sheet_name,
-                        )
-                      : null;
-
-                  if (problem) {
-                    registrationNote =
-                      problem;
-                  } else {
-                    try {
-                      registrationNote =
-                        provisionSummary(
-                          await provisionRegistration(
-                            {
-                              project_id:
-                                (existing?.id ??
-                                  selectedId) as string,
-                              enabled:
-                                wanted.enabled,
-                              template_key:
-                                wanted.template_key,
-                              sheet_name:
-                                wanted.sheet_name,
-                              label:
-                                title,
-                            },
-                          ),
-                        );
-                    } catch (registrationError) {
-                      registrationNote = `Saved, but registration setup failed: ${
-                        registrationError instanceof Error
-                          ? registrationError.message
-                          : String(registrationError)
-                      }`;
-                    }
-                  }
-                }
-
-                modal.close();
-
-                toast(
-                  registrationNote ||
-                    (existing
-                      ? 'Project updated.'
-                      : 'Project created.'),
-                  registrationNote.includes(
-                    'failed',
-                  )
-                    ? 'err'
-                    : 'ok',
-                );
-
-                void bestEffortFunctionSync(
-                  'club-records-sheet-sync',
-                  { sheets: ['people', 'opportunity_positions'] },
-                );
-
-                await draw();
-              } catch (error) {
-                console.error(
-                  existing
-                    ? 'Could not update project:'
-                    : 'Could not create project:',
-                  error,
-                );
-
-                toast(
-                  existing
-                    ? `Could not update project: ${errorMessage(error)}`
-                    : `Could not create project: ${errorMessage(error)}`,
-                  'err',
-                );
-              }
-            },
-
-            'primary',
-          ),
+          "primary",
         ),
-      );
+      ),
+    );
   }
 
   /* --------------------------------------------------------- opportunities */
 
-  function opportunityEditor(
+  /**
+   * Create or edit one opportunity.
+   *
+   * Primary category and eligible roles are separate controls on purpose: a
+   * "Workshop Presenter — Cybersecurity" belongs to Workshops but is open to
+   * Tech Team Members, Workshop Team Members and Members alike. Choosing a
+   * category only suggests a lead and eligible roles for a NEW opening; it
+   * never rewrites choices an admin already made.
+   */
+  async function opportunityEditor(
     project: Project,
-  ): void {
-    const form = h(
-      'form',
-      {
-        class: 'portal-form',
-        novalidate: true,
-      },
+    existing: OpeningRow | null = null,
+  ): Promise<void> {
+    let catalogue: Position[];
+    try {
+      catalogue = await positions();
+    } catch (error) {
+      toast(`Could not load club roles: ${errorMessage(error)}`, "err");
+      return;
+    }
 
+    const leads = catalogue.filter((position) => position.category === "lead");
+    const membershipRoles = catalogue.filter(
+      (position) =>
+        position.category === "team" || position.category === "general",
+    );
+    const slugToId = new Map(
+      catalogue.map((position) => [position.slug, position.id]),
+    );
+
+    const categoryField = field({
+      label: "Primary team / category",
+      name: "category",
+      type: "select",
+      required: true,
+      value: existing?.category ?? "general",
+      options: OPPORTUNITY_CATEGORIES.map((item) => ({
+        value: item.value,
+        label: item.label,
+      })),
+    });
+    const leadField = field({
+      label: "Assigned lead",
+      name: "lead_position_id",
+      type: "select",
+      value: existing?.lead_position_id ?? "",
+      options: [
+        { value: "", label: "No assigned lead" },
+        ...leads.map((lead) => ({ value: lead.id, label: lead.title })),
+      ],
+    });
+    const eligiblePicker = chipPicker(
+      "eligible_roles",
+      membershipRoles.map((role) => ({ value: role.id, label: role.title })),
+      existing
+        ? (existing.eligible_role_ids ?? [])
+        : [slugToId.get("member") ?? ""],
+    );
+
+    const categorySelect = categoryField.querySelector(
+      "select",
+    ) as HTMLSelectElement | null;
+    const leadSelect = leadField.querySelector(
+      "select",
+    ) as HTMLSelectElement | null;
+    if (!existing) {
+      categorySelect?.addEventListener("change", () => {
+        const category = categorySelect.value as OpportunityCategory;
+        const leadSlug = CATEGORY_LEAD_SLUG[category];
+        if (leadSelect)
+          leadSelect.value = leadSlug ? (slugToId.get(leadSlug) ?? "") : "";
+        const suggested = new Set([
+          category === "general"
+            ? null
+            : slugToId.get(TEAM_MEMBER_SLUG[category]),
+          slugToId.get("member"),
+        ]);
+        eligiblePicker
+          .querySelectorAll<HTMLInputElement>('input[type="checkbox"]')
+          .forEach((box) => {
+            box.checked = suggested.has(box.value);
+          });
+      });
+    }
+
+    const form = h(
+      "form",
+      { class: "portal-form", novalidate: true },
       field({
-        label: 'Role title',
-        name: 'title',
+        label: "Position title",
+        name: "title",
         required: true,
         maxlength: 80,
-        placeholder:
-          'e.g. Workshop Assistant',
+        value: existing?.title,
+        placeholder: "e.g. Workshop Presenter — Cybersecurity",
       }),
-
+      h("div", { class: "field-pair" }, categoryField, leadField),
       h(
-        'div',
-        {
-          class: 'field-pair',
-        },
-
+        "div",
+        { class: "form-field" },
+        h("span", { class: "mono-meta" }, "ELIGIBLE MEMBERSHIP ROLES"),
+        eligiblePicker,
+        h(
+          "p",
+          { class: "field-hint mono-meta dim-text" },
+          "Who may register. Leave everything unticked to open it to every active member. Leads and executives can always register.",
+        ),
+      ),
+      h(
+        "div",
+        { class: "field-pair" },
         field({
-          label: 'Openings',
-          name: 'openings',
-          type: 'number',
+          label: "Available spots",
+          name: "openings",
+          type: "number",
           required: true,
-          value: '1',
+          min: "1",
+          value: String(existing?.openings ?? 1),
         }),
-
         field({
-          label: 'Closes on',
-          name: 'closes_on',
-          type: 'date',
+          label: "Opens on",
+          name: "opens_on",
+          type: "date",
+          value: existing?.opens_on ?? "",
         }),
       ),
-
+      h(
+        "div",
+        { class: "field-pair" },
+        field({
+          label: "Closes on",
+          name: "closes_on",
+          type: "date",
+          value: existing?.closes_on ?? "",
+        }),
+        h("span"),
+      ),
       field({
-        label:
-          'What the role involves',
-        name: 'description',
-        type: 'textarea',
+        label: "What the role involves",
+        name: "description",
+        type: "textarea",
         rows: 3,
-        hint:
-          'Say what someone would actually do. Do not list prerequisites that would put a beginner off.',
+        value: existing?.description ?? "",
+        hint: "Say what someone would actually do. Do not list prerequisites that would put a beginner off.",
+      }),
+      field({
+        label: "Responsibilities",
+        name: "responsibilities",
+        type: "textarea",
+        rows: 3,
+        value: existing?.responsibilities ?? "",
+        hint: "Optional.",
+      }),
+      field({
+        label: "Requirements",
+        name: "requirements",
+        type: "textarea",
+        rows: 2,
+        value: existing?.requirements ?? "",
+        hint: "Optional. Keep it to what is genuinely needed.",
       }),
     ) as HTMLFormElement;
 
-    const modal =
-      dialog(
-        `New opening — ${project.title}`,
+    const modal = dialog(
+      existing
+        ? `Edit opening — ${existing.title}`
+        : `New opening — ${project.title}`,
+      form,
+      h(
+        "div",
+        { class: "button-row" },
+        action(
+          existing ? "Save opening" : "Create opening",
+          async () => {
+            if (!form.reportValidity()) return;
+            const values = formValues(form);
+            const title = textOf(values, "title").trim();
+            if (!title) {
+              toast("Enter a position title.", "err");
+              return;
+            }
+            const opensOn = textOf(values, "opens_on") || null;
+            const closesOn = textOf(values, "closes_on") || null;
+            if (opensOn && closesOn && opensOn > closesOn) {
+              toast(
+                "The opening date must be on or before the closing date.",
+                "err",
+              );
+              return;
+            }
+            const eligible = [
+              ...eligiblePicker.querySelectorAll<HTMLInputElement>(
+                "input:checked",
+              ),
+            ].map((box) => box.value);
+            const record = {
+              title,
+              category: textOf(values, "category") || "general",
+              lead_position_id: textOf(values, "lead_position_id") || null,
+              openings: Math.max(1, Number(textOf(values, "openings")) || 1),
+              opens_on: opensOn,
+              closes_on: closesOn,
+              description: textOf(values, "description").trim() || null,
+              responsibilities:
+                textOf(values, "responsibilities").trim() || null,
+              requirements: textOf(values, "requirements").trim() || null,
+            };
 
-        form,
-
-        h(
-          'div',
-          {
-            class:
-              'button-row',
-          },
-
-          action(
-            'Create opening',
-
-            async () => {
-              if (
-                !form.reportValidity()
-              ) {
-                return;
+            try {
+              const client = requireClient();
+              let positionId = existing?.event_position_id ?? "";
+              if (existing) {
+                const { error } = await client
+                  .from("event_positions")
+                  .update(record)
+                  .eq("id", positionId);
+                if (error) throw new Error(error.message);
+              } else {
+                const { data, error } = await client
+                  .from("event_positions")
+                  .insert({
+                    ...record,
+                    project_id: project.id,
+                    created_by: viewer.userId,
+                  })
+                  .select("id")
+                  .single();
+                if (error) throw new Error(error.message);
+                positionId = (data as { id: string }).id;
               }
 
-              const values =
-                formValues(
-                  form,
-                );
-
-              try {
-                const {
-                  error,
-                } =
-                  await requireClient()
-                    .from(
-                      'event_positions',
-                    )
-                    .insert({
-                      project_id:
-                        project.id,
-
-                      title:
-                        textOf(
-                          values,
-                          'title',
-                        ).trim(),
-
-                      openings:
-                        Math.max(
-                          1,
-                          Number(
-                            textOf(
-                              values,
-                              'openings',
-                            ),
-                          ) ||
-                          1,
-                        ),
-
-                      closes_on:
-                        textOf(
-                          values,
-                          'closes_on',
-                        ) ||
-                        null,
-
-                      description:
-                        textOf(
-                          values,
-                          'description',
-                        ) ||
-                        null,
-
-                      created_by:
-                        viewer.userId,
-                    });
-
-                if (error) {
-                  throw new Error(
-                    error.message,
+              const cleared = await client
+                .from("event_position_eligible_roles")
+                .delete()
+                .eq("event_position_id", positionId);
+              if (cleared.error) throw new Error(cleared.error.message);
+              if (eligible.length) {
+                const { error } = await client
+                  .from("event_position_eligible_roles")
+                  .insert(
+                    eligible.map((roleId) => ({
+                      event_position_id: positionId,
+                      position_id: roleId,
+                    })),
                   );
-                }
-
-                modal.close();
-
-                toast(
-                  'Opening published to members.',
-                );
-
-                void bestEffortFunctionSync(
-                  'club-records-sheet-sync',
-                  { sheets: ['opportunity_positions'] },
-                );
-
-                await draw();
-              } catch (error) {
-                console.error(
-                  'Could not create event opening:',
-                  error,
-                );
-
-                toast(
-                  `Could not create opening: ${errorMessage(error)}`,
-                  'err',
-                );
+                if (error) throw new Error(error.message);
               }
-            },
 
-            'primary',
-          ),
+              modal.close();
+              toast(
+                existing ? "Opening updated." : "Opening published to members.",
+              );
+              void bestEffortFunctionSync("club-records-sheet-sync", {
+                sheets: ["opportunity_positions"],
+              });
+              await draw();
+            } catch (error) {
+              console.error("Could not save event opening:", error);
+              toast(`Could not save opening: ${errorMessage(error)}`, "err");
+            }
+          },
+          "primary",
         ),
-      );
+      ),
+    );
   }
 
   /* ---------------------------------------------------------------- folders */
 
-  function folderEditor(
-    project: Project,
-    folders: ArchiveFolder[],
-  ): void {
+  function folderEditor(project: Project, folders: ArchiveFolder[]): void {
     const form = h(
-      'form',
+      "form",
       {
-        class: 'portal-form',
+        class: "portal-form",
         novalidate: true,
       },
 
       field({
-        label: 'Folder name',
-        name: 'name',
+        label: "Folder name",
+        name: "name",
         required: true,
         maxlength: 80,
       }),
 
       h(
-        'div',
+        "div",
         {
-          class: 'field-pair',
+          class: "field-pair",
         },
 
         field({
-          label: 'Section',
-          name: 'section',
-          type: 'select',
-          value: 'files',
-          options:
-            SECTIONS,
+          label: "Section",
+          name: "section",
+          type: "select",
+          value: "files",
+          options: SECTIONS,
         }),
 
         field({
-          label: 'Inside',
-          name: 'parent_id',
-          type: 'select',
+          label: "Inside",
+          name: "parent_id",
+          type: "select",
 
           options: [
             {
-              value: '',
-              label:
-                '— top level —',
+              value: "",
+              label: "— top level —",
             },
 
-            ...folders.map(
-              (folder) => ({
-                value:
-                  folder.id,
-                label:
-                  folder.name,
-              }),
-            ),
+            ...folders.map((folder) => ({
+              value: folder.id,
+              label: folder.name,
+            })),
           ],
         }),
       ),
 
       field({
-        label: 'Description',
-        name: 'description',
-        type: 'textarea',
+        label: "Description",
+        name: "description",
+        type: "textarea",
         rows: 2,
       }),
 
       field({
-        label: 'Visibility',
-        name: 'visibility',
-        type: 'select',
-        value: 'internal',
+        label: "Visibility",
+        name: "visibility",
+        type: "select",
+        value: "internal",
 
         options: [
           {
-            value: 'internal',
-            label: 'Internal',
+            value: "internal",
+            label: "Internal",
           },
           {
-            value: 'public',
-            label: 'Public',
+            value: "public",
+            label: "Public",
           },
         ],
       }),
     ) as HTMLFormElement;
 
-    const modal =
-      dialog(
-        `New folder — ${project.title}`,
+    const modal = dialog(
+      `New folder — ${project.title}`,
 
-        form,
+      form,
 
-        h(
-          'div',
-          {
-            class:
-              'button-row',
+      h(
+        "div",
+        {
+          class: "button-row",
+        },
+
+        action(
+          "Create folder",
+
+          async () => {
+            if (!form.reportValidity()) {
+              return;
+            }
+
+            const values = formValues(form);
+
+            const name = textOf(values, "name").trim();
+
+            const slug = slugify(name);
+
+            if (!slug) {
+              toast(
+                "The folder name must contain at least one letter or number.",
+                "err",
+              );
+
+              return;
+            }
+
+            try {
+              const { error } = await requireClient()
+                .from("archive_folders")
+                .insert({
+                  project_id: project.id,
+
+                  parent_id: textOf(values, "parent_id") || null,
+
+                  name,
+                  slug,
+
+                  section: textOf(values, "section"),
+
+                  description: textOf(values, "description") || null,
+
+                  visibility: textOf(values, "visibility"),
+
+                  created_by: viewer.userId,
+                });
+
+              if (error) {
+                throw new Error(error.message);
+              }
+
+              modal.close();
+
+              toast("Folder created.");
+
+              await draw();
+            } catch (error) {
+              console.error("Could not create archive folder:", error);
+
+              toast(`Could not create folder: ${errorMessage(error)}`, "err");
+            }
           },
 
-          action(
-            'Create folder',
-
-            async () => {
-              if (
-                !form.reportValidity()
-              ) {
-                return;
-              }
-
-              const values =
-                formValues(
-                  form,
-                );
-
-              const name =
-                textOf(
-                  values,
-                  'name',
-                ).trim();
-
-              const slug =
-                slugify(
-                  name,
-                );
-
-              if (!slug) {
-                toast(
-                  'The folder name must contain at least one letter or number.',
-                  'err',
-                );
-
-                return;
-              }
-
-              try {
-                const {
-                  error,
-                } =
-                  await requireClient()
-                    .from(
-                      'archive_folders',
-                    )
-                    .insert({
-                      project_id:
-                        project.id,
-
-                      parent_id:
-                        textOf(
-                          values,
-                          'parent_id',
-                        ) ||
-                        null,
-
-                      name,
-                      slug,
-
-                      section:
-                        textOf(
-                          values,
-                          'section',
-                        ),
-
-                      description:
-                        textOf(
-                          values,
-                          'description',
-                        ) ||
-                        null,
-
-                      visibility:
-                        textOf(
-                          values,
-                          'visibility',
-                        ),
-
-                      created_by:
-                        viewer.userId,
-                    });
-
-                if (error) {
-                  throw new Error(
-                    error.message,
-                  );
-                }
-
-                modal.close();
-
-                toast(
-                  'Folder created.',
-                );
-
-                await draw();
-              } catch (error) {
-                console.error(
-                  'Could not create archive folder:',
-                  error,
-                );
-
-                toast(
-                  `Could not create folder: ${errorMessage(error)}`,
-                  'err',
-                );
-              }
-            },
-
-            'primary',
-          ),
+          "primary",
         ),
-      );
+      ),
+    );
   }
 
   /* ------------------------------------------------------------- organizers */
 
-  async function organizerEditor(
-    project: Project,
-  ): Promise<void> {
+  async function organizerEditor(project: Project): Promise<void> {
     let memberList;
 
     try {
-      memberList =
-        await members(
-          '',
-          '',
-        );
+      memberList = await members("", "");
     } catch (error) {
-      console.error(
-        'Could not load members for organizer picker:',
-        error,
-      );
+      console.error("Could not load members for organizer picker:", error);
 
-      toast(
-        `Could not load members: ${errorMessage(error)}`,
-        'err',
-      );
+      toast(`Could not load members: ${errorMessage(error)}`, "err");
 
       return;
     }
 
     const form = h(
-      'form',
+      "form",
       {
-        class: 'portal-form',
+        class: "portal-form",
         novalidate: true,
       },
 
       field({
-        label: 'Person',
-        name: 'user_id',
-        type: 'select',
+        label: "Person",
+        name: "user_id",
+        type: "select",
         required: true,
 
         options: [
           {
-            value: '',
-            label: 'Select…',
+            value: "",
+            label: "Select…",
           },
 
-          ...memberList.map(
-            (member) => ({
-              value:
-                member.id,
+          ...memberList.map((member) => ({
+            value: member.id,
 
-              label:
-                `${member.full_name} — ${member.email}`,
-            }),
-          ),
+            label: `${member.full_name} — ${member.email}`,
+          })),
         ],
       }),
 
       field({
-        label:
-          'Role on this project',
-        name: 'role_text',
-        value: 'Organizer',
+        label: "Role on this project",
+        name: "role_text",
+        value: "Organizer",
         maxlength: 80,
       }),
     ) as HTMLFormElement;
 
-    const modal =
-      dialog(
-        `Add organiser — ${project.title}`,
+    const modal = dialog(
+      `Add organiser — ${project.title}`,
 
-        form,
+      form,
 
-        h(
-          'div',
-          {
-            class:
-              'button-row',
+      h(
+        "div",
+        {
+          class: "button-row",
+        },
+
+        action(
+          "Add",
+
+          async () => {
+            if (!form.reportValidity()) {
+              return;
+            }
+
+            const values = formValues(form);
+
+            try {
+              const { error } = await requireClient()
+                .from("project_organizers")
+                .insert({
+                  project_id: project.id,
+
+                  user_id: textOf(values, "user_id"),
+
+                  role_text: textOf(values, "role_text") || "Organizer",
+
+                  added_by: viewer.userId,
+                });
+
+              if (error) {
+                throw new Error(error.message);
+              }
+
+              modal.close();
+
+              toast("Organiser added.");
+
+              void bestEffortFunctionSync("club-records-sheet-sync", {
+                sheets: ["people", "opportunity_positions"],
+              });
+
+              await draw();
+            } catch (error) {
+              console.error("Could not add project organizer:", error);
+
+              toast(`Could not add organiser: ${errorMessage(error)}`, "err");
+            }
           },
 
-          action(
-            'Add',
-
-            async () => {
-              if (
-                !form.reportValidity()
-              ) {
-                return;
-              }
-
-              const values =
-                formValues(
-                  form,
-                );
-
-              try {
-                const {
-                  error,
-                } =
-                  await requireClient()
-                    .from(
-                      'project_organizers',
-                    )
-                    .insert({
-                      project_id:
-                        project.id,
-
-                      user_id:
-                        textOf(
-                          values,
-                          'user_id',
-                        ),
-
-                      role_text:
-                        textOf(
-                          values,
-                          'role_text',
-                        ) ||
-                        'Organizer',
-
-                      added_by:
-                        viewer.userId,
-                    });
-
-                if (error) {
-                  throw new Error(
-                    error.message,
-                  );
-                }
-
-                modal.close();
-
-                toast(
-                  'Organiser added.',
-                );
-
-                void bestEffortFunctionSync(
-                  'club-records-sheet-sync',
-                  { sheets: ['people', 'opportunity_positions'] },
-                );
-
-                await draw();
-              } catch (error) {
-                console.error(
-                  'Could not add project organizer:',
-                  error,
-                );
-
-                toast(
-                  `Could not add organiser: ${errorMessage(error)}`,
-                  'err',
-                );
-              }
-            },
-
-            'primary',
-          ),
+          "primary",
         ),
-      );
+      ),
+    );
   }
 
   /* -------------------------------------------------- archive visibility */
 
-  function visibilityDialog(
-    item: ArchiveItem,
-  ): void {
-    const next:
-      'public' |
-      'internal' =
-      item.visibility ===
-        'public'
-        ? 'internal'
-        : 'public';
+  function visibilityDialog(item: ArchiveItem): void {
+    const next: "public" | "internal" =
+      item.visibility === "public" ? "internal" : "public";
 
     const form = h(
-      'form',
+      "form",
       {
-        class: 'portal-form',
+        class: "portal-form",
       },
 
       notice(
-        next === 'public'
-          ? 'warn'
-          : 'info',
+        next === "public" ? "warn" : "info",
 
-        next === 'public'
-          ? 'This will make the item visible to anyone on the website. Check it first for student IDs, grades or participant names.'
-          : 'This removes the item from the public website. It stays in the archive for members and admins.',
+        next === "public"
+          ? "This will make the item visible to anyone on the website. Check it first for student IDs, grades or participant names."
+          : "This removes the item from the public website. It stays in the archive for members and admins.",
       ),
 
       reasonField({
-        label:
-          `Why is this being made ${next}?`,
+        label: `Why is this being made ${next}?`,
 
-        hint:
-          'Required. Changing what the public can see is recorded permanently.',
+        hint: "Required. Changing what the public can see is recorded permanently.",
       }),
     ) as HTMLFormElement;
 
-    const modal =
-      dialog(
-        `Make "${item.name}" ${next}`,
+    const modal = dialog(
+      `Make "${item.name}" ${next}`,
 
-        form,
+      form,
 
-        h(
-          'div',
-          {
-            class:
-              'button-row',
+      h(
+        "div",
+        {
+          class: "button-row",
+        },
+
+        action(
+          `Make ${next}`,
+
+          async () => {
+            const reason = checkReason(
+              textOf(formValues(form), "reason"),
+
+              `make this ${next}`,
+            );
+
+            if (!reason) {
+              return;
+            }
+
+            if (
+              next === "public" &&
+              item.storage_path &&
+              item.storage_bucket !== "public-archive"
+            ) {
+              toast(
+                "This item’s file is in private storage. Republish it from Archive Review so the file moves with it.",
+                "err",
+              );
+
+              return;
+            }
+
+            try {
+              await setArchiveVisibility(item.id, next, reason);
+
+              modal.close();
+
+              toast("Visibility updated.");
+
+              await draw();
+            } catch (error) {
+              console.error("Could not update archive visibility:", error);
+
+              toast(
+                `Could not update visibility: ${errorMessage(error)}`,
+                "err",
+              );
+            }
           },
 
-          action(
-            `Make ${next}`,
-
-            async () => {
-              const reason =
-                checkReason(
-                  textOf(
-                    formValues(
-                      form,
-                    ),
-                    'reason',
-                  ),
-
-                  `make this ${next}`,
-                );
-
-              if (!reason) {
-                return;
-              }
-
-              if (
-                next === 'public' &&
-                item.storage_path &&
-                item.storage_bucket !==
-                'public-archive'
-              ) {
-                toast(
-                  'This item’s file is in private storage. Republish it from Archive Review so the file moves with it.',
-                  'err',
-                );
-
-                return;
-              }
-
-              try {
-                await setArchiveVisibility(
-                  item.id,
-                  next,
-                  reason,
-                );
-
-                modal.close();
-
-                toast(
-                  'Visibility updated.',
-                );
-
-                await draw();
-              } catch (error) {
-                console.error(
-                  'Could not update archive visibility:',
-                  error,
-                );
-
-                toast(
-                  `Could not update visibility: ${errorMessage(error)}`,
-                  'err',
-                );
-              }
-            },
-
-            next === 'public'
-              ? 'primary'
-              : 'ghost',
-          ),
+          next === "public" ? "primary" : "ghost",
         ),
-      );
+      ),
+    );
   }
 
   /* ----------------------------------------------------------------- render */
 
   async function draw(): Promise<void> {
-    render(
-      content,
-      loading(),
-    );
+    render(content, loading());
 
     try {
-      const [list, removed] =
-        await Promise.all([
-          projects(),
-          showRemoved
-            ? deletedProjects()
-            : Promise.resolve(
-              [] as Project[],
-            ),
-        ]);
+      const [list, removed] = await Promise.all([
+        projects(),
+        showRemoved ? deletedProjects() : Promise.resolve([] as Project[]),
+      ]);
 
       const selected =
-        list.find(
-          (project) =>
-            project.id ===
-            selectedId,
-        ) ??
-        null;
+        list.find((project) => project.id === selectedId) ?? null;
 
-      const detail:
-        HTMLElement[] =
-        [];
+      const detail: HTMLElement[] = [];
 
       if (selected) {
-        const [
-          folders,
-          items,
-          organizersResult,
-          openingsResult,
-        ] =
+        const [folders, items, organizersResult, openingsResult] =
           await Promise.all([
-            archiveFolders(
-              selected.id,
-            ),
+            archiveFolders(selected.id),
 
             archiveItems({
-              projectId:
-                selected.id,
+              projectId: selected.id,
             }),
 
             requireClient()
-              .from(
-                'project_organizers',
-              )
-              .select(`
+              .from("project_organizers")
+              .select(
+                `
                 id,
                 project_id,
                 user_id,
@@ -1633,645 +1325,456 @@ async function start(): Promise<void> {
                   full_name,
                   email
                 )
-              `)
-              .eq(
-                'project_id',
-                selected.id,
-              ),
+              `,
+              )
+              .eq("project_id", selected.id),
 
             requireClient()
-              .from(
-                'event_position_availability',
-              )
-              .select(
-                '*',
-              )
-              .eq(
-                'project_id',
-                selected.id,
-              ),
+              .from("event_position_availability")
+              .select("*")
+              .eq("project_id", selected.id),
           ]);
 
-        if (
-          organizersResult.error
-        ) {
-          throw new Error(
-            organizersResult
-              .error
-              .message,
-          );
+        if (organizersResult.error) {
+          throw new Error(organizersResult.error.message);
         }
 
-        if (
-          openingsResult.error
-        ) {
-          throw new Error(
-            openingsResult
-              .error
-              .message,
-          );
+        if (openingsResult.error) {
+          throw new Error(openingsResult.error.message);
         }
 
-        const organizers =
-          (
-            organizersResult.data ??
-            []
-          ) as unknown as OrganizerRow[];
+        const organizers = (organizersResult.data ??
+          []) as unknown as OrganizerRow[];
 
-        const openings =
-          (
-            openingsResult.data ??
-            []
-          ) as unknown as OpeningRow[];
+        const openings = (openingsResult.data ?? []) as unknown as OpeningRow[];
 
-        const folderName =
-          new Map(
-            folders.map(
-              (
-                folder:
-                  ArchiveFolder,
-              ) => [
-                  folder.id,
-                  folder.name,
-                ],
-            ),
-          );
+        const folderName = new Map(
+          folders.map((folder: ArchiveFolder) => [folder.id, folder.name]),
+        );
 
         detail.push(
           panel(
             selected.title,
 
             metaList([
-              [
-                'Kind',
-                enumLabel(
-                  selected.kind,
-                ),
-              ],
+              ["Kind", enumLabel(selected.kind)],
+
+              ["Status", statusPill(selected.status)],
 
               [
-                'Status',
+                "Visibility",
                 statusPill(
-                  selected.status,
+                  selected.visibility === "public" ? "active" : "inactive",
                 ),
               ],
 
               [
-                'Visibility',
-                statusPill(
-                  selected.visibility ===
-                    'public'
-                    ? 'active'
-                    : 'inactive',
-                ),
-              ],
-
-              [
-                'Runs',
+                "Runs",
                 `${archiveDate(selected.starts_on)} — ${archiveDate(selected.ends_on)}`,
               ],
 
-              [
-                'Chapter',
-                selected.chapter_year ??
-                '—',
-              ],
+              ["Chapter", selected.chapter_year ?? "—"],
+
+              ["Website page", selected.site_path ?? "—"],
 
               [
-                'Website page',
-                selected.site_path ??
-                '—',
-              ],
-
-              [
-                'Repository',
+                "Repository",
                 selected.repo_url
                   ? h(
-                    'a',
-                    {
-                      href:
-                        selected.repo_url,
-                      rel:
-                        'noopener',
-                      target:
-                        '_blank',
-                    },
-                    selected.repo_url,
-                  )
-                  : '—',
+                      "a",
+                      {
+                        href: selected.repo_url,
+                        rel: "noopener",
+                        target: "_blank",
+                      },
+                      selected.repo_url,
+                    )
+                  : "—",
               ],
             ]),
 
-            selected.summary
-              ? h(
-                'p',
-                selected.summary,
-              )
-              : null,
+            selected.summary ? h("p", selected.summary) : null,
 
             h(
-              'div',
+              "div",
               {
-                class:
-                  'button-row',
+                class: "button-row",
               },
 
               h(
-                'button',
+                "button",
                 {
-                  type: 'button',
-                  class:
-                    'btn-ghost',
+                  type: "button",
+                  class: "btn-ghost",
 
-                  onclick:
-                    () =>
-                      void openProjectEditor(
-                        selected,
-                      ),
+                  onclick: () => void openProjectEditor(selected),
                 },
-                'Edit project',
+                "Edit project",
               ),
 
               h(
-                'button',
+                "button",
                 {
-                  type: 'button',
-                  class:
-                    'btn-ghost btn-danger',
+                  type: "button",
+                  class: "btn-ghost btn-danger",
 
-                  onclick:
-                    () =>
-                      deleteProjectDialog(
-                        selected,
-                      ),
+                  onclick: () => deleteProjectDialog(selected),
                 },
-                'Remove project',
+                "Remove project",
               ),
 
               h(
-                'button',
+                "button",
                 {
-                  type: 'button',
-                  class:
-                    'btn-ghost',
+                  type: "button",
+                  class: "btn-ghost",
 
-                  onclick:
-                    () =>
-                      opportunityEditor(
-                        selected,
-                      ),
+                  onclick: () => void opportunityEditor(selected),
                 },
-                'New opening',
+                "New opening",
               ),
 
               h(
-                'button',
+                "button",
                 {
-                  type: 'button',
-                  class:
-                    'btn-ghost',
+                  type: "button",
+                  class: "btn-ghost",
 
-                  onclick:
-                    () =>
-                      folderEditor(
-                        selected,
-                        folders,
-                      ),
+                  onclick: () => folderEditor(selected, folders),
                 },
-                'New folder',
+                "New folder",
               ),
 
               h(
-                'button',
+                "button",
                 {
-                  type: 'button',
-                  class:
-                    'btn-ghost',
+                  type: "button",
+                  class: "btn-ghost",
 
-                  onclick:
-                    () =>
-                      void organizerEditor(
-                        selected,
-                      ),
+                  onclick: () => void organizerEditor(selected),
                 },
-                'Add organiser',
+                "Add organiser",
               ),
             ),
           ),
 
           panel(
-            'Open positions',
+            "Open positions",
 
             dataTable(
-              [
-                'Role',
-                'Filled',
-                'Pending',
-                'Closes',
-                '',
-              ],
+              ["Role", "Team", "Open to", "Filled", "Pending", "Window", ""],
 
-              openings.map(
-                (
-                  opening,
-                ) => [
-                    opening.title,
+              openings.map((opening) => [
+                h(
+                  "div",
+                  { class: "position-role" },
+                  h("strong", opening.title),
+                  opening.lead_title
+                    ? h(
+                        "p",
+                        { class: "mono-meta dim-text" },
+                        `LEAD: ${opening.lead_title}`,
+                      )
+                    : null,
+                ),
 
-                    h(
-                      'span',
-                      {
-                        class:
-                          'mono-meta',
-                      },
-                      `${opening.filled} / ${opening.openings}`,
-                    ),
+                h(
+                  "span",
+                  { class: "mono-meta" },
+                  categoryLabel(opening.category).toUpperCase(),
+                ),
 
-                    h(
-                      'span',
-                      {
-                        class:
-                          'mono-meta',
-                      },
-                      String(
-                        opening.pending,
-                      ),
-                    ),
+                h(
+                  "span",
+                  { class: "mono-meta" },
+                  (opening.eligible_role_titles ?? []).length
+                    ? opening.eligible_role_titles!.join(" · ")
+                    : "All active members",
+                ),
 
-                    h(
-                      'span',
-                      {
-                        class:
-                          'mono-meta',
-                      },
-                      opening.closes_on
-                        ? archiveDate(
-                          opening.closes_on,
-                        )
-                        : '—',
-                    ),
+                h(
+                  "span",
+                  {
+                    class: "mono-meta",
+                  },
+                  `${opening.filled} / ${opening.openings}`,
+                ),
 
-                    action(
-                      opening.is_open
-                        ? 'CLOSE'
-                        : 'REOPEN',
+                h(
+                  "span",
+                  {
+                    class: "mono-meta",
+                  },
+                  String(opening.pending),
+                ),
 
-                      async () => {
-                        try {
-                          const {
-                            error,
-                          } =
-                            await requireClient()
-                              .from(
-                                'event_positions',
-                              )
-                              .update({
-                                is_open:
-                                  !opening.is_open,
-                              })
-                              .eq(
-                                'id',
-                                opening.event_position_id,
-                              );
+                h(
+                  "span",
+                  {
+                    class: "mono-meta",
+                  },
+                  `${opening.opens_on ? archiveDate(opening.opens_on) : "Now"} → ${
+                    opening.closes_on ? archiveDate(opening.closes_on) : "—"
+                  }`,
+                ),
 
-                          if (error) {
-                            throw new Error(
-                              error.message,
-                            );
-                          }
+                h(
+                  "div",
+                  { class: "button-row" },
+                  h(
+                    "button",
+                    {
+                      type: "button",
+                      class: "btn-ghost",
+                      onclick: () => void opportunityEditor(selected, opening),
+                    },
+                    "EDIT",
+                  ),
+                  action(
+                    opening.is_open ? "CLOSE" : "REOPEN",
 
-                          toast(
-                            opening.is_open
-                              ? 'Opening closed.'
-                              : 'Opening reopened.',
-                          );
+                    async () => {
+                      try {
+                        const { error } = await requireClient()
+                          .from("event_positions")
+                          .update({
+                            is_open: !opening.is_open,
+                          })
+                          .eq("id", opening.event_position_id);
 
-                          void bestEffortFunctionSync(
-                            'club-records-sheet-sync',
-                            { sheets: ['opportunity_positions'] },
-                          );
-
-                          await draw();
-                        } catch (error) {
-                          console.error(
-                            'Could not change opening state:',
-                            error,
-                          );
-
-                          toast(
-                            `Could not update opening: ${errorMessage(error)}`,
-                            'err',
-                          );
+                        if (error) {
+                          throw new Error(error.message);
                         }
-                      },
-                    ),
-                  ],
-              ),
+
+                        toast(
+                          opening.is_open
+                            ? "Opening closed."
+                            : "Opening reopened.",
+                        );
+
+                        void bestEffortFunctionSync("club-records-sheet-sync", {
+                          sheets: ["opportunity_positions"],
+                        });
+
+                        await draw();
+                      } catch (error) {
+                        console.error("Could not change opening state:", error);
+
+                        toast(
+                          `Could not update opening: ${errorMessage(error)}`,
+                          "err",
+                        );
+                      }
+                    },
+                  ),
+                ),
+              ]),
 
               {
                 empty:
-                  'No openings on this project. Create one to make the work visible to members.',
+                  "No openings on this project. Create one to make the work visible to members.",
               },
             ),
           ),
 
           panel(
-            'Organisers',
+            "Organisers",
 
             dataTable(
-              [
-                'Member',
-                'Role',
-                '',
-              ],
+              ["Member", "Role", ""],
 
-              organizers.map(
-                (
-                  row,
-                ) => [
-                    h(
-                      'div',
-                      {},
+              organizers.map((row) => [
+                h(
+                  "div",
+                  {},
 
-                      h(
-                        'strong',
-                        row.member
-                          ?.full_name ??
-                        '—',
-                      ),
+                  h("strong", row.member?.full_name ?? "—"),
 
-                      h(
-                        'p',
-                        {
-                          class:
-                            'mono-meta dim-text',
-                        },
-                        row.member
-                          ?.email ??
-                        '',
-                      ),
-                    ),
+                  h(
+                    "p",
+                    {
+                      class: "mono-meta dim-text",
+                    },
+                    row.member?.email ?? "",
+                  ),
+                ),
 
-                    row.role_text,
+                row.role_text,
 
-                    action(
-                      'REMOVE',
+                action(
+                  "REMOVE",
 
-                      async () => {
-                        const confirmed =
-                          await confirmDialog(
-                            'Remove organiser',
-                            'Remove them from this project’s organiser list?',
-                            'Remove',
-                          );
+                  async () => {
+                    const confirmed = await confirmDialog(
+                      "Remove organiser",
+                      "Remove them from this project’s organiser list?",
+                      "Remove",
+                    );
 
-                        if (
-                          !confirmed
-                        ) {
-                          return;
-                        }
+                    if (!confirmed) {
+                      return;
+                    }
 
-                        try {
-                          const {
-                            error,
-                          } =
-                            await requireClient()
-                              .from(
-                                'project_organizers',
-                              )
-                              .delete()
-                              .eq(
-                                'id',
-                                row.id,
-                              );
+                    try {
+                      const { error } = await requireClient()
+                        .from("project_organizers")
+                        .delete()
+                        .eq("id", row.id);
 
-                          if (error) {
-                            throw new Error(
-                              error.message,
-                            );
-                          }
+                      if (error) {
+                        throw new Error(error.message);
+                      }
 
-                          toast(
-                            'Organiser removed.',
-                          );
+                      toast("Organiser removed.");
 
-                          void bestEffortFunctionSync(
-                            'club-records-sheet-sync',
-                            { sheets: ['people', 'opportunity_positions'] },
-                          );
+                      void bestEffortFunctionSync("club-records-sheet-sync", {
+                        sheets: ["people", "opportunity_positions"],
+                      });
 
-                          await draw();
-                        } catch (error) {
-                          console.error(
-                            'Could not remove organizer:',
-                            error,
-                          );
+                      await draw();
+                    } catch (error) {
+                      console.error("Could not remove organizer:", error);
 
-                          toast(
-                            `Could not remove organiser: ${errorMessage(error)}`,
-                            'err',
-                          );
-                        }
-                      },
+                      toast(
+                        `Could not remove organiser: ${errorMessage(error)}`,
+                        "err",
+                      );
+                    }
+                  },
 
-                      'danger',
-                    ),
-                  ],
-              ),
+                  "danger",
+                ),
+              ]),
 
               {
-                empty:
-                  'No organisers recorded yet.',
+                empty: "No organisers recorded yet.",
               },
             ),
           ),
 
           panel(
-            `Archive — ${items.length} item${items.length === 1 ? '' : 's'}`,
+            `Archive — ${items.length} item${items.length === 1 ? "" : "s"}`,
 
             folders.length
               ? h(
-                'p',
-                {
-                  class:
-                    'mono-meta dim-text',
-                },
-                'FOLDERS: ' +
-                folders
-                  .map(
-                    (
-                      folder:
-                        ArchiveFolder,
-                    ) =>
-                      folder.name,
-                  )
-                  .join(
-                    ' · ',
-                  ),
-              )
+                  "p",
+                  {
+                    class: "mono-meta dim-text",
+                  },
+                  "FOLDERS: " +
+                    folders
+                      .map((folder: ArchiveFolder) => folder.name)
+                      .join(" · "),
+                )
               : null,
 
             dataTable(
-              [
-                'Item',
-                'Folder',
-                'Category',
-                'Size',
-                'Visibility',
-                '',
-              ],
+              ["Item", "Folder", "Category", "Size", "Visibility", ""],
 
-              items.map(
-                (
-                  item:
-                    ArchiveItem,
-                ) => [
-                    h(
-                      'div',
-                      {},
+              items.map((item: ArchiveItem) => [
+                h(
+                  "div",
+                  {},
 
-                      h(
-                        'strong',
-                        item.name,
-                      ),
+                  h("strong", item.name),
 
-                      item.description
-                        ? h(
-                          'p',
-                          {
-                            class:
-                              'mono-meta dim-text',
-                          },
-                          item.description.slice(
-                            0,
-                            110,
-                          ),
-                        )
-                        : null,
-                    ),
-
-                    h(
-                      'span',
-                      {
-                        class:
-                          'mono-meta',
-                      },
-                      item.folder_id
-                        ? folderName.get(
-                          item.folder_id,
-                        ) ??
-                        '—'
-                        : '—',
-                    ),
-
-                    h(
-                      'span',
-                      {
-                        class:
-                          'mono-meta',
-                      },
-                      (
-                        item.category ??
-                        '—'
-                      ).toUpperCase(),
-                    ),
-
-                    h(
-                      'span',
-                      {
-                        class:
-                          'mono-meta',
-                      },
-                      item.size_label ??
-                      fileSize(
-                        item.size_bytes,
-                      ),
-                    ),
-
-                    statusPill(
-                      item.visibility ===
-                        'public'
-                        ? 'active'
-                        : 'inactive',
-                    ),
-
-                    h(
-                      'div',
-                      {
-                        class:
-                          'button-row',
-                      },
-
-                      action(
-                        'OPEN',
-
-                        async () => {
-                          try {
-                            const url =
-                              await itemUrl(
-                                item,
-                              );
-
-                            if (url) {
-                              window.open(
-                                url,
-                                '_blank',
-                                'noopener',
-                              );
-
-                              return;
-                            }
-
-                            toast(
-                              'This item has no file or link on record.',
-                              'err',
-                            );
-                          } catch (error) {
-                            console.error(
-                              'Could not open archive item:',
-                              error,
-                            );
-
-                            toast(
-                              `Could not open item: ${errorMessage(error)}`,
-                              'err',
-                            );
-                          }
-                        },
-                      ),
-
-                      h(
-                        'button',
+                  item.description
+                    ? h(
+                        "p",
                         {
-                          type: 'button',
-                          class:
-                            'btn-ghost',
-
-                          onclick:
-                            () =>
-                              visibilityDialog(
-                                item,
-                              ),
+                          class: "mono-meta dim-text",
                         },
-                        item.visibility ===
-                          'public'
-                          ? 'MAKE INTERNAL'
-                          : 'MAKE PUBLIC',
-                      ),
-                    ),
-                  ],
-              ),
+                        item.description.slice(0, 110),
+                      )
+                    : null,
+                ),
+
+                h(
+                  "span",
+                  {
+                    class: "mono-meta",
+                  },
+                  item.folder_id
+                    ? (folderName.get(item.folder_id) ?? "—")
+                    : "—",
+                ),
+
+                h(
+                  "span",
+                  {
+                    class: "mono-meta",
+                  },
+                  (item.category ?? "—").toUpperCase(),
+                ),
+
+                h(
+                  "span",
+                  {
+                    class: "mono-meta",
+                  },
+                  item.size_label ?? fileSize(item.size_bytes),
+                ),
+
+                statusPill(
+                  item.visibility === "public" ? "active" : "inactive",
+                ),
+
+                h(
+                  "div",
+                  {
+                    class: "button-row",
+                  },
+
+                  action(
+                    "OPEN",
+
+                    async () => {
+                      try {
+                        const url = await itemUrl(item);
+
+                        if (url) {
+                          window.open(url, "_blank", "noopener");
+
+                          return;
+                        }
+
+                        toast(
+                          "This item has no file or link on record.",
+                          "err",
+                        );
+                      } catch (error) {
+                        console.error("Could not open archive item:", error);
+
+                        toast(
+                          `Could not open item: ${errorMessage(error)}`,
+                          "err",
+                        );
+                      }
+                    },
+                  ),
+
+                  h(
+                    "button",
+                    {
+                      type: "button",
+                      class: "btn-ghost",
+
+                      onclick: () => visibilityDialog(item),
+                    },
+                    item.visibility === "public"
+                      ? "MAKE INTERNAL"
+                      : "MAKE PUBLIC",
+                  ),
+                ),
+              ]),
 
               {
-                empty:
-                  'Nothing archived for this project yet.',
+                empty: "Nothing archived for this project yet.",
               },
             ),
           ),
 
-          historyPanel(
-            'project',
-            selected.id,
-          ),
+          historyPanel("project", selected.id),
         );
       }
 
@@ -2279,291 +1782,219 @@ async function start(): Promise<void> {
         content,
 
         pageHeader(
-          'ADMIN / PROJECTS',
-          'Projects & events',
+          "ADMIN / PROJECTS",
+          "Projects & events",
 
           h(
-            'button',
+            "button",
             {
-              type: 'button',
-              class:
-                'btn-submit',
+              type: "button",
+              class: "btn-submit",
               style: {
-                marginTop: '0',
+                marginTop: "0",
               },
 
-              onclick:
-                () =>
-                  void openProjectEditor(
-                    null,
-                  ),
+              onclick: () => void openProjectEditor(null),
             },
-            'New project',
+            "New project",
           ),
         ),
 
         panel(
-          'All projects and events',
+          "All projects and events",
 
           list.length
             ? filterableTable(
-              [
-                'Title',
-                'Kind',
-                'Status',
-                'Chapter',
-                'Runs',
-                'Visibility',
-                '',
-              ],
+                [
+                  "Title",
+                  "Kind",
+                  "Status",
+                  "Chapter",
+                  "Runs",
+                  "Visibility",
+                  "",
+                ],
 
-              list.map(
-                (
-                  project,
-                ) => [
-                    h(
-                      'strong',
-                      project.title,
-                    ),
+                list.map((project) => [
+                  h("strong", project.title),
 
-                    h(
-                      'span',
-                      {
-                        class:
-                          'mono-meta',
+                  h(
+                    "span",
+                    {
+                      class: "mono-meta",
+                    },
+                    enumLabel(project.kind),
+                  ),
+
+                  statusPill(project.status),
+
+                  h(
+                    "span",
+                    {
+                      class: "mono-meta",
+                    },
+                    project.chapter_year ?? "—",
+                  ),
+
+                  h(
+                    "span",
+                    {
+                      class: "mono-meta",
+                    },
+                    archiveDate(project.starts_on),
+                  ),
+
+                  h(
+                    "span",
+                    {
+                      class: "mono-meta",
+                    },
+                    project.visibility.toUpperCase(),
+                  ),
+
+                  h(
+                    "button",
+                    {
+                      type: "button",
+                      class: "link-button",
+
+                      onclick: () => {
+                        selectedId = project.id;
+
+                        history.replaceState(
+                          null,
+                          "",
+                          `?project=${project.id}`,
+                        );
+
+                        void draw();
                       },
-                      enumLabel(
-                        project.kind,
-                      ),
-                    ),
-
-                    statusPill(
-                      project.status,
-                    ),
-
-                    h(
-                      'span',
-                      {
-                        class:
-                          'mono-meta',
-                      },
-                      project.chapter_year ??
-                      '—',
-                    ),
-
-                    h(
-                      'span',
-                      {
-                        class:
-                          'mono-meta',
-                      },
-                      archiveDate(
-                        project.starts_on,
-                      ),
-                    ),
-
-                    h(
-                      'span',
-                      {
-                        class:
-                          'mono-meta',
-                      },
-                      project.visibility
-                        .toUpperCase(),
-                    ),
-
-                    h(
-                      'button',
-                      {
-                        type: 'button',
-                        class:
-                          'link-button',
-
-                        onclick:
-                          () => {
-                            selectedId =
-                              project.id;
-
-                            history.replaceState(
-                              null,
-                              '',
-                              `?project=${project.id}`,
-                            );
-
-                            void draw();
-                          },
-                      },
-                      selectedId ===
-                        project.id
-                        ? 'OPEN'
-                        : 'MANAGE',
-                    ),
-                  ],
-              ),
-            )
+                    },
+                    selectedId === project.id ? "OPEN" : "MANAGE",
+                  ),
+                ]),
+              )
             : emptyState(
-              'No projects yet.',
-              'Create one to start an archive workspace.',
-            ),
+                "No projects yet.",
+                "Create one to start an archive workspace.",
+              ),
         ),
 
         panel(
-          'Removed projects',
+          "Removed projects",
 
           h(
-            'div',
+            "div",
             {
-              class:
-                'button-row',
+              class: "button-row",
             },
 
             h(
-              'button',
+              "button",
               {
-                type: 'button',
-                class:
-                  'btn-ghost',
+                type: "button",
+                class: "btn-ghost",
 
-                onclick:
-                  () => {
-                    showRemoved =
-                      !showRemoved;
+                onclick: () => {
+                  showRemoved = !showRemoved;
 
-                    void draw();
-                  },
+                  void draw();
+                },
               },
-              showRemoved
-                ? 'HIDE REMOVED'
-                : 'SHOW REMOVED',
+              showRemoved ? "HIDE REMOVED" : "SHOW REMOVED",
             ),
 
             h(
-              'span',
+              "span",
               {
-                class:
-                  'mono-meta dim-text',
+                class: "mono-meta dim-text",
               },
-              'NOTHING ATTACHED TO A REMOVED PROJECT IS DELETED.',
+              "NOTHING ATTACHED TO A REMOVED PROJECT IS DELETED.",
             ),
           ),
 
           showRemoved
             ? removed.length
               ? dataTable(
-                [
-                  'Title',
-                  'Kind',
-                  'Removed',
-                  '',
-                ],
+                  ["Title", "Kind", "Removed", ""],
 
-                removed.map(
-                  (
-                    project,
-                  ) => [
-                      h(
-                        'strong',
-                        project.title,
-                      ),
+                  removed.map((project) => [
+                    h("strong", project.title),
 
-                      h(
-                        'span',
-                        {
-                          class:
-                            'mono-meta',
-                        },
-                        enumLabel(
-                          project.kind,
-                        ),
-                      ),
+                    h(
+                      "span",
+                      {
+                        class: "mono-meta",
+                      },
+                      enumLabel(project.kind),
+                    ),
 
-                      h(
-                        'span',
-                        {
-                          class:
-                            'mono-meta',
-                        },
-                        archiveDate(
-                          project.deleted_at,
-                        ),
-                      ),
+                    h(
+                      "span",
+                      {
+                        class: "mono-meta",
+                      },
+                      archiveDate(project.deleted_at),
+                    ),
 
-                      action(
-                        'RESTORE',
+                    action(
+                      "RESTORE",
 
-                        async () => {
-                          try {
-                            await restoreProject(
-                              project.id,
-                            );
+                      async () => {
+                        try {
+                          await restoreProject(project.id);
 
-                            toast(
-                              'Project restored. It comes back archived, with registration still closed.',
-                            );
+                          toast(
+                            "Project restored. It comes back archived, with registration still closed.",
+                          );
 
-                            await draw();
-                          } catch (error) {
-                            console.error(
-                              'Could not restore project:',
-                              error,
-                            );
+                          await draw();
+                        } catch (error) {
+                          console.error("Could not restore project:", error);
 
-                            toast(
-                              `Could not restore: ${errorMessage(error)}`,
-                              'err',
-                            );
-                          }
-                        },
-                      ),
-                    ],
-                ),
-              )
-              : emptyState(
-                'Nothing has been removed.',
-              )
+                          toast(
+                            `Could not restore: ${errorMessage(error)}`,
+                            "err",
+                          );
+                        }
+                      },
+                    ),
+                  ]),
+                )
+              : emptyState("Nothing has been removed.")
             : null,
         ),
 
         ...detail,
       );
     } catch (error) {
-      console.error(
-        'Projects page failed to load:',
-        error,
-      );
+      console.error("Projects page failed to load:", error);
 
       render(
         content,
 
-        pageHeader(
-          'ADMIN / PROJECTS',
-          'Projects unavailable',
-        ),
+        pageHeader("ADMIN / PROJECTS", "Projects unavailable"),
 
         notice(
-          'err',
+          "err",
           `The projects workspace could not load: ${errorMessage(error)}`,
         ),
 
         h(
-          'div',
+          "div",
           {
-            class:
-              'button-row',
+            class: "button-row",
           },
 
           h(
-            'button',
+            "button",
             {
-              type: 'button',
-              class:
-                'btn-ghost',
+              type: "button",
+              class: "btn-ghost",
 
-              onclick:
-                () =>
-                  void draw(),
+              onclick: () => void draw(),
             },
-            'TRY AGAIN',
+            "TRY AGAIN",
           ),
         ),
       );

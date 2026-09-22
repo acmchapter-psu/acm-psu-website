@@ -19,12 +19,12 @@ that away to gain nothing the club needs.
 
 So the shape is:
 
-| Part | Technology | Build step |
-|---|---|---|
-| Public website | Plain HTML/CSS/JS | none |
-| Member & admin portals | TypeScript, bundled by esbuild | `npm run build` |
-| Database, auth, storage | Supabase (Postgres) | migrations |
-| AI review, exports | Supabase Edge Functions (Deno) | `functions deploy` |
+| Part                    | Technology                     | Build step         |
+| ----------------------- | ------------------------------ | ------------------ |
+| Public website          | Plain HTML/CSS/JS              | none               |
+| Member & admin portals  | TypeScript, bundled by esbuild | `npm run build`    |
+| Database, auth, storage | Supabase (Postgres)            | migrations         |
+| AI review, exports      | Supabase Edge Functions (Deno) | `functions deploy` |
 
 The portal bundles are committed, so GitHub Pages still publishes the
 repository as static files. Someone who only edits HTML never needs Node.
@@ -72,13 +72,13 @@ The patterns used throughout:
 Five buckets, separated by audience, because an internal planning document and
 a published handout must not be one policy mistake apart:
 
-| Bucket | Public? | Written by | Read by |
-|---|---|---|---|
-| `public-archive` | yes | admins | anyone |
-| `internal-archive` | no | admins | members, staff |
-| `submissions` | no | the member, own folder | that member, reviewers |
-| `evidence` | no | the member, own folder | that member, reviewers |
-| `avatars` | yes | the member, own folder | anyone |
+| Bucket             | Public? | Written by             | Read by                |
+| ------------------ | ------- | ---------------------- | ---------------------- |
+| `public-archive`   | yes     | admins                 | anyone                 |
+| `internal-archive` | no      | admins                 | members, staff         |
+| `submissions`      | no      | the member, own folder | that member, reviewers |
+| `evidence`         | no      | the member, own folder | that member, reviewers |
+| `avatars`          | yes     | the member, own folder | anyone                 |
 
 Private files are reached only through short-lived signed URLs, so nothing
 private is reachable by guessing a path. Uploads are constrained by bucket
@@ -90,6 +90,7 @@ picker.
 Roughly forty tables; the ones worth knowing:
 
 **Identity**
+
 - `app_users` — one row per sign-in, mirroring `auth.users`
 - `member_profiles` — MEMBER-controlled: bio, links, interests, visibility
 - `memberships` — ACM-controlled: status, start date, chapter
@@ -97,25 +98,30 @@ Roughly forty tables; the ones worth knowing:
 - `admin_assignments` — role grants with a grant/revoke trail
 
 **Joining**
+
 - `applications`, `application_notes` (staff-only)
 
 **Positions**
+
 - `positions` — the catalogue admins edit
-- `position_history` — append-only; stores the title *as it was*
+- `position_history` — append-only; stores the title _as it was_
 - `position_change_requests`
 
 **Work**
+
 - `projects` — events, projects, workshop series and initiatives in one table
 - `project_organizers`, `event_positions`, `event_position_applications`
 - `participations` — the verified record of who took part
 - `contributions`, `contribution_evidence`, `contribution_types`
 
 **Archive**
+
 - `archive_folders` (nested), `archive_items`, `archive_item_contributors`
 - `archive_submissions` — what members submit
 - `archive_submission_ai` — advisory suggestions, deliberately separate
 
 **Inquiries**
+
 - `inquiries` — questions from the website. Anonymous visitors have no policy
   on this table at all; submission goes through `submit_inquiry()`, which
   validates, rate-limits, and controls exactly which columns a stranger fills.
@@ -123,14 +129,48 @@ Roughly forty tables; the ones worth knowing:
   can reach a sender through a column on the inquiry.
 
 **Governance**
+
 - `member_requests`, `app_settings`, `university_exports`
 - `audit_log` — the decision history. Append-only, with an immutable snapshot
   of who the actor was organisationally at the time. See
   [AUDIT.md](AUDIT.md).
 
+### Teams and opportunities
+
+The club runs as four operational teams, each reporting to one lead:
+
+| Lead               | Team                 | Owns                                           |
+| ------------------ | -------------------- | ---------------------------------------------- |
+| Tech Lead          | Tech Team Member     | building things and technical expertise        |
+| Workshop Lead      | Workshop Team Member | turning knowledge into a learning experience   |
+| Media Lead         | Media Team Member    | social media, marketing, public communications |
+| Events Coordinator | Events Team Member   | event operations and logistics                 |
+
+**Member** belongs to no team on purpose, so it can move between every kind of
+opportunity. **Volunteer** is limited, event-specific help. `positions.team`
+and `positions.reports_to` record this, and a person's team is their open
+`position_history` row.
+
+**Workshop Presenter is an opportunity, not a club role.** It lives on a
+specific workshop and can go to a Tech Team Member, a Workshop Team Member or a
+qualified Member.
+
+Each `event_positions` row therefore has two separate fields:
+
+- `category` is its primary team (Tech, Media, Workshops, Events, General).
+  It sets the default lead and the filter it appears under.
+- `event_position_eligible_roles` lists the membership roles that may register.
+  No rows means every active member may.
+
+Cross-team work is normal, which is why visibility is never derived from the
+category alone. `may_register_for_event_position()` is the rule the database
+enforces on registration. Executive officers, leads and staff always pass it.
+The Open Positions page shows Members everything, and shows specialised team
+members their own team's positions plus anything that lists their role.
+
 ### Two decisions worth explaining
 
-**One `projects` table, not Project *and* Event.** Every ACM initiative is
+**One `projects` table, not Project _and_ Event.** Every ACM initiative is
 both: CTF 2.0 is an event that produced a workshop archive; the website is a
 project with organisers. Two tables would mean duplicating organisers,
 participation, opportunities and archive folders on both sides. There is one
