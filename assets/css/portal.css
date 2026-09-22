@@ -3908,3 +3908,8 @@
   align-items: center;
   min-height: 24px;
 }
+
+/* Note above the audit history saying what is hidden, and how to see it. */
+.audit-hidden-note {
+  margin: 0 0 0.75rem;
+}

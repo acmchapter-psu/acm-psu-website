@@ -1142,6 +1142,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
     string,
     { rows: number; status: "updated" | "failed"; error?: string }
   > = {};
+  /* Worksheets written by this refresh, recorded together once it is done. */
+  const refreshed: Array<{ dataset: string; row_count: number }> = [];
   let workbookUrl = "";
   for (const key of requested.filter(
     (key) => key !== "university_export_log",
@@ -1158,23 +1160,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
         status: "updated",
       };
       if (full) {
-        // Export logging may remain unavailable to advisory instructors because
-        // that RPC is intentionally an admin-only audit write. A failed log
-        // entry must not make an otherwise successful workbook refresh fail.
-        const { error: logError } = await caller.rpc(
-          "record_university_export",
-          {
-            dataset: key,
-            format: "google_sheet",
-            row_count: Math.max(matrix.length - 1, 0),
-            destination: workbookUrl,
-            reason: "Manual full club records refresh",
-          },
-        );
-        if (logError)
-          console.warn(
-            `Could not record ${key} workbook export: ${logError.message}`,
-          );
+        // Collected here, recorded once after the loop. Logging each worksheet
+        // separately wrote about eleven audit entries for one press of
+        // "refresh", which buried the actual decisions in the log.
+        refreshed.push({
+          dataset: key,
+          row_count: Math.max(matrix.length - 1, 0),
+        });
       }
     } catch (error) {
       results[NAMES[key]] = {
@@ -1203,6 +1195,30 @@ Deno.serve(async (req: Request): Promise<Response> => {
       };
     }
   }
+  /*
+   * One entry for the refresh, written after every worksheet is done, rather
+   * than one per worksheet inside the loop. The per-dataset detail still lands
+   * in university_exports, which is the ledger the University Records page
+   * reads; the audit log records the decision to refresh.
+   *
+   * Export logging stays unavailable to advisory instructors, because that RPC
+   * is intentionally an admin-only audit write. A failed log entry must not
+   * make an otherwise successful workbook refresh fail.
+   */
+  if (full && refreshed.length) {
+    const { error: logError } = await caller.rpc(
+      "record_club_records_refresh",
+      {
+        datasets: refreshed,
+        format: "google_sheet",
+        destination: workbookUrl,
+        reason: "Manual full club records refresh",
+      },
+    );
+    if (logError)
+      console.warn(`Could not record the workbook refresh: ${logError.message}`);
+  }
+
   const success = Object.values(results).every(
     (result) => result.status === "updated",
   );

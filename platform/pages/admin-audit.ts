@@ -147,6 +147,19 @@ async function start(): Promise<void> {
   /** Reset whenever the filters change, since draw() refetches from the top. */
   let historyPage = 1;
 
+  /*
+   * Routine exports are bookkeeping, not decisions. A full club-records
+   * refresh used to write one entry per worksheet, so 114 of the club's first
+   * 143 entries were export noise and the 29 real decisions sat six pages
+   * deep. They are hidden unless asked for, and still counted below so it is
+   * obvious they exist. Choosing Exports in the category filter overrides
+   * this — asking for them is asking for them.
+   */
+  let showRoutineExports = false;
+
+  /** Which collapsed runs the reader has opened, by their first entry's id. */
+  const openGroups = new Set<number>();
+
   function openEntry(entry: AuditEntry): void {
     const related: Array<[string, string]> = [];
 
@@ -461,6 +474,39 @@ async function start(): Promise<void> {
     );
   }
 
+  /**
+   * A run of entries that says one thing.
+   *
+   * Eleven "Inquiries exported / Contributions exported / …" entries a second
+   * apart are one refresh. Consecutive entries with the same action, actor and
+   * reason, inside the same minute, collapse into a single row that expands.
+   * Nothing is dropped: the group carries its members, and the count is shown.
+   */
+  interface EntryGroup {
+    lead: AuditEntry;
+    members: AuditEntry[];
+  }
+
+  function groupRuns(rows: AuditEntry[]): EntryGroup[] {
+    const groups: EntryGroup[] = [];
+    for (const entry of rows) {
+      const previous = groups[groups.length - 1];
+      const sameRun =
+        previous &&
+        previous.lead.action === entry.action &&
+        previous.lead.actor_id === entry.actor_id &&
+        (previous.lead.reason ?? "") === (entry.reason ?? "") &&
+        Math.abs(
+          new Date(previous.lead.created_at).getTime() -
+            new Date(entry.created_at).getTime(),
+        ) <= 60_000;
+
+      if (sameRun) previous.members.push(entry);
+      else groups.push({ lead: entry, members: [entry] });
+    }
+    return groups;
+  }
+
   async function draw(): Promise<void> {
     historyPage = 1;
 
@@ -584,17 +630,86 @@ async function start(): Promise<void> {
        * matter how many years of entries the club has accumulated.
        */
       function drawHistory(): void {
-        const slice = pageSlice(entries, historyPage, HISTORY_PAGE_SIZE);
+        /*
+         * Hidden routine exports, then collapsed runs, then paging — in that
+         * order, so a page is 25 things that happened rather than 25 rows.
+         */
+        const visible =
+          showRoutineExports || filters.category === "exports"
+            ? entries
+            : entries.filter((entry) => entry.category !== "exports");
+
+        const groups = groupRuns(visible);
+
+        /* Open groups contribute their members; closed ones a single row. */
+        const displayed: Array<{ entry: AuditEntry; group: EntryGroup | null }> =
+          [];
+        for (const group of groups) {
+          if (group.members.length === 1) {
+            displayed.push({ entry: group.lead, group: null });
+          } else if (openGroups.has(group.lead.id)) {
+            displayed.push({ entry: group.lead, group });
+            for (const member of group.members.slice(1))
+              displayed.push({ entry: member, group: null });
+          } else {
+            displayed.push({ entry: group.lead, group });
+          }
+        }
+
+        const hiddenExports = entries.length - visible.length;
+        const slice = pageSlice(displayed, historyPage, HISTORY_PAGE_SIZE);
         historyPage = slice.page;
 
         render(
           historyBody,
 
+          hiddenExports && !showRoutineExports
+            ? h(
+                "p",
+                { class: "mono-meta dim-text audit-hidden-note" },
+                `${hiddenExports} routine export entr${
+                  hiddenExports === 1 ? "y is" : "ies are"
+                } hidden. `,
+                h(
+                  "button",
+                  {
+                    type: "button",
+                    class: "link-button",
+                    onclick: () => {
+                      showRoutineExports = true;
+                      historyPage = 1;
+                      drawHistory();
+                    },
+                  },
+                  "SHOW THEM",
+                ),
+              )
+            : hiddenExports || showRoutineExports
+              ? h(
+                  "p",
+                  { class: "mono-meta dim-text audit-hidden-note" },
+                  "Routine exports are shown. ",
+                  h(
+                    "button",
+                    {
+                      type: "button",
+                      class: "link-button",
+                      onclick: () => {
+                        showRoutineExports = false;
+                        historyPage = 1;
+                        drawHistory();
+                      },
+                    },
+                    "HIDE THEM",
+                  ),
+                )
+              : null,
+
           slice.rows.length
             ? dataTable(
                 ["When", "Admin", "Action", "Target", "Decision", "Reason"],
 
-                slice.rows.map((entry) => [
+                slice.rows.map(({ entry, group }) => [
                   h(
                     "div",
                     {
@@ -670,15 +785,49 @@ async function start(): Promise<void> {
                     "div",
                     {},
 
-                    h("strong", entry.entity_label ?? "—"),
+                    h(
+                      "strong",
+                      group && group.members.length > 1
+                        ? `${group.members.length} entries — ${
+                            entry.entity_label ?? "—"
+                          }`
+                        : (entry.entity_label ?? "—"),
+                    ),
 
                     h(
                       "p",
                       {
                         class: "mono-meta dim-text",
                       },
-                      (entry.summary ?? "").slice(0, 90),
+                      group && group.members.length > 1
+                        ? group.members
+                            .map((member) => member.entity_label ?? "—")
+                            .join(", ")
+                            .slice(0, 90)
+                        : (entry.summary ?? "").slice(0, 90),
                     ),
+
+                    group && group.members.length > 1
+                      ? h(
+                          "button",
+                          {
+                            type: "button",
+                            class: "link-button",
+                            "aria-expanded": openGroups.has(entry.id)
+                              ? "true"
+                              : "false",
+                            onclick: () => {
+                              if (openGroups.has(entry.id))
+                                openGroups.delete(entry.id);
+                              else openGroups.add(entry.id);
+                              drawHistory();
+                            },
+                          },
+                          openGroups.has(entry.id)
+                            ? "COLLAPSE"
+                            : `SHOW ALL ${group.members.length}`,
+                        )
+                      : null,
                   ),
 
                   entry.decision
@@ -729,11 +878,13 @@ async function start(): Promise<void> {
               )
             : emptyState(
                 "No entries match these filters.",
-                "Try widening the date range or clearing the category filter.",
+                showRoutineExports
+                  ? "Try widening the date range or clearing the category filter."
+                  : "Routine exports are hidden; widen the dates, clear the category filter, or show them.",
               ),
 
           paginationControls(
-            entries.length,
+            displayed.length,
             historyPage,
             (page) => {
               historyPage = page;
