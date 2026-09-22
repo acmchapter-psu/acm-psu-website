@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Content-Security-Policy.
+         GitHub Pages cannot set response headers, so the policy is stated here.
+         The load-bearing directive is script-src 'self': every script on this
+         page is a file in this repository, so a "javascript:" URL or an
+         injected <script> that reaches the DOM through stored content simply
+         does not run. That is the second line of defence behind safeHref()
+         and the database URL constraints, and the one that holds if either is
+         ever bypassed.
+
+         style-src keeps 'unsafe-inline' because the pages and the portal set
+         style attributes directly; inline CSS is not an execution path, and
+         removing it would buy nothing here.
+
+         *.supabase.co rather than the project ref, so moving projects does not
+         mean editing every page; the ref is public in assets/js/app/env.js
+         either way. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
+        default-src 'self';
+        base-uri 'self';
+        object-src 'none';
+        form-action 'self';
+        script-src 'self';
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+        font-src 'self' https://fonts.gstatic.com;
+        img-src 'self' data: blob: https://*.supabase.co;
+        connect-src 'self' https://*.supabase.co wss://*.supabase.co;
+        frame-src 'none';
+    "
+    />
+    <title>Team — ACM PSU</title>
+    <meta name="description" content="Team lead workspace." />
+    <meta name="robots" content="noindex, nofollow" />
+
+    <link rel="icon" href="/assets/img/favicon.ico" sizes="any" />
+    <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml" />
+    <link
+      rel="mask-icon"
+      href="/assets/img/safari-pinned-tab.svg?v=20260916-1"
+      color="#5bbad5"
+    />
+    <link
+      rel="apple-touch-icon"
+      href="/assets/img/apple-touch-icon.png?v=20260916"
+    />
+    <meta name="theme-color" content="#050507" />
+
+    <script src="/assets/js/theme.js?v=20260922-1"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@500;700&family=Tajawal:wght@400;500;700&display=swap" />
+    <link rel="stylesheet" href="/assets/css/main.css?v=20260922-4" />
+    <link rel="stylesheet" href="/assets/css/portal.css?v=20260922-8" />
+  </head>
+
+  <body class="portal-body">
+    <noscript>
+      <div class="noscript-notice">
+        <h1>JavaScript required</h1>
+        <p>
+          The ACM member portal needs JavaScript. The
+          <a href="/index.html">public website</a> works without it.
+        </p>
+      </div>
+    </noscript>
+
+    <div id="app" class="app-root"></div>
+
+    <script src="/assets/js/app/env.js?v=20260922-9"></script>
+    <script
+      type="module"
+      src="/assets/js/app/team-lead.js?v=20260922-9"
+    ></script>
+  </body>
+</html>

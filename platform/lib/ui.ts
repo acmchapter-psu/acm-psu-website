@@ -64,6 +64,14 @@ function memberLinks(viewer: Viewer): NavLink[] {
       { href: "/portal/submissions.html", label: "Archive Submissions" },
       { href: "/portal/requests.html", label: "Requests" },
     );
+    /*
+     * A lead's own team workspace. The database decides what it contains —
+     * current_lead_team() — so showing the link is only a shortcut, never a
+     * grant. Leads with no team (the Treasurer) never see it.
+     */
+    if (viewer.currentPositionCategory === "lead" && viewer.currentTeam) {
+      links.push({ href: "/portal/team.html", label: "My Team" });
+    }
     if (isAdvisoryInstructor(viewer)) {
       links.push(
         { href: "/admin/advisor.html", label: "Instructor Workspace" },

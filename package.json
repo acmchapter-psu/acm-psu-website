@@ -19,7 +19,8 @@
     "test:registration": "node tests/event-registration.test.mjs",
     "test:sheets": "node tests/google-sheets-push.test.mjs",
     "test": "npm run test:registration && npm run test:sheets && npm run test:provisioning",
-    "test:provisioning": "node tests/registration-provisioning.test.mjs"
+    "test:provisioning": "node tests/registration-provisioning.test.mjs",
+    "test:authorization": "supabase db query --linked -f tests/authorization.test.sql"
   },
   "devDependencies": {
     "esbuild": "^0.28.2",
