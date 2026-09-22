@@ -35,7 +35,7 @@ import {
   requestPositionChange,
   saveProfile,
 } from "../lib/api.js";
-import { requireClient } from "../lib/supabase.js";
+import { requireClient, sitePath } from "../lib/supabase.js";
 import { loadViewer } from "../lib/session.js";
 import { myInquiries, STATUS_LABELS } from "../lib/inquiries.js";
 import { archiveDate, enumLabel } from "../lib/format.js";
@@ -566,7 +566,7 @@ async function start(): Promise<void> {
           { class: "button-row" },
           h(
             "a",
-            { class: "btn-ghost", href: "/contact.html" },
+            { class: "btn-ghost", href: sitePath("/contact.html") },
             "Ask a question",
           ),
         ),

@@ -1,17 +1,27 @@
 User-agent: *
 Allow: /
 
+# NOTE ON THIS FILE'S REACH
+# Crawlers read robots.txt only from the host root. While the site is served
+# from acmchapter-psu.github.io/acm-psu-website/, this file sits one level down
+# and is never fetched, so nothing below is in force there — the portal and
+# admin pages carry <meta name="robots" content="noindex, nofollow"> and that
+# is what actually keeps them out of the index. These rules apply when the site
+# is served from a domain of its own (acm-psu.shoug-tech.com), which is why the
+# paths are written from the domain root.
+
 # Raw competition report PDFs are mirrored as HTML pages that carry the
 # canonical content. Keep the binaries out of the index so they do not
 # compete with, or outrank, the pages that describe them.
 Disallow: /assets/reports/
+
+# Workshop hand-out templates: bulky source files behind pages that already
+# describe them. These two paths previously pointed at folders that do not
+# exist (/projects/ctf-3.0/..., /projects/ctf-2.0/), so they excluded nothing.
 Disallow: /projects/web-development/webforge-2026/workshop-content/workshop-notion-template/
-Disallow: /projects/ctf-3.0/workshop-material/
-Disallow: /projects/ctf-2.0/
+Disallow: /projects/ctfs/ctf-3.0/workshop-material/workshop-notion-template/
 
 # The member portal and admin console are application surfaces behind a login.
-# They also carry <meta name="robots" content="noindex, nofollow">; this keeps
-# crawlers from spending requests on them at all.
 Disallow: /portal/
 Disallow: /admin/
 

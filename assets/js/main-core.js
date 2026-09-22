@@ -75,6 +75,19 @@
         toggle.setAttribute("aria-expanded", "false");
       }
     });
+
+    /*
+     * Escape closes the menu and puts focus back on the button that opened it.
+     * Without this a keyboard user who opened the menu had no way out of it
+     * except tabbing through every link — the usual escape hatch for an
+     * expanded disclosure did nothing.
+     */
+    document.addEventListener("keydown", function (event) {
+      if (event.key !== "Escape" || !links.classList.contains("open")) return;
+      links.classList.remove("open");
+      toggle.setAttribute("aria-expanded", "false");
+      toggle.focus();
+    });
   }
 
   /* Footer readout: local render time, refreshed once a minute. */

@@ -243,9 +243,10 @@
       photoBox(person, "") +
       "</div>" +
       '<div class="member-info">' +
-      '<h4 class="member-name">' +
+      /* h3: these cards sit inside an h2 section, and h4 skipped a level. */
+      '<h3 class="member-name">' +
       esc(person.name) +
-      "</h4>" +
+      "</h3>" +
       '<div class="mono-meta">' +
       esc(person.role || "") +
       "</div>" +

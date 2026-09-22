@@ -88,6 +88,9 @@
     />
 
     <script src="assets/js/theme.js?v=20260922-1"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@500;700&family=Tajawal:wght@400;500;700&display=swap" />
     <link rel="stylesheet" href="assets/css/main.css?v=20260922-4" />
   </head>
 
@@ -153,6 +156,13 @@
     <main id="main">
       <section class="roster-section container reveal">
         <div id="roster">
+          <!--
+            The faculty section is fetched and prepended by public-roster.ts,
+            which used to push the whole roster down once the data arrived
+            (CLS 0.19). This reserves its height so the swap is invisible;
+            the script removes it as it inserts the real section.
+          -->
+          <div class="faculty-slot" aria-hidden="true"></div>
           <div class="section-label">
             <h2>Executive Council</h2>
             <span class="mono-meta">LEVEL_01 // ADMINISTRATION</span>

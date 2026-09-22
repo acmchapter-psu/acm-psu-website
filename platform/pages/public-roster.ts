@@ -183,7 +183,7 @@ function card(
     h(
       "div",
       { class: "member-info" },
-      h("h4", { class: "member-name" }, member.name),
+      h("h3", { class: "member-name" }, member.name),
       h("div", { class: "mono-meta" }, member.current_position ?? "Member"),
       h(
         "div",
@@ -358,7 +358,7 @@ function adopt(
   if (info) {
     info.replaceChildren(
       ...[
-        h("h4", { class: "member-name" }, name),
+        h("h3", { class: "member-name" }, name),
         h("div", { class: "mono-meta" }, role || "Member"),
         id
           ? h(
@@ -527,6 +527,13 @@ async function start(): Promise<void> {
       h("div", { class: "members-grid" }, faculty.map(build)),
     );
   }
+
+  /*
+   * The slot reserved this section's height so prepending it would not shove
+   * the roster down the page. Its job is done either way — including when no
+   * faculty came back, where leaving it would hold open empty space.
+   */
+  roster.querySelector(".faculty-slot")?.remove();
 
   document.dispatchEvent(new CustomEvent("acm:rosterupdated"));
 }

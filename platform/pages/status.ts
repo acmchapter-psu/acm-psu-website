@@ -24,6 +24,7 @@ import {
   isReviewer,
 } from "../lib/session.js";
 import { myApplication, setting } from "../lib/api.js";
+import { sitePath } from "../lib/supabase.js";
 import { myDecisions } from "../lib/audit.js";
 import { memberDecisionList } from "../lib/history.js";
 import { archiveDate, enumLabel } from "../lib/format.js";
@@ -89,7 +90,7 @@ async function start(): Promise<void> {
             ),
             h(
               "a",
-              { class: "btn-ghost", href: "/index.html" },
+              { class: "btn-ghost", href: sitePath("/index.html") },
               "Public website",
             ),
           ),
@@ -117,7 +118,7 @@ async function start(): Promise<void> {
           ),
           h(
             "a",
-            { class: "btn-ghost", href: "/join.html" },
+            { class: "btn-ghost", href: sitePath("/join.html") },
             "What membership involves",
           ),
         ),

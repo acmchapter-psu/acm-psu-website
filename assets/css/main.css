@@ -3,7 +3,8 @@
    Consolidated from the four page templates in design-template/.
    ========================================================================== */
 
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@500;700&family=Tajawal:wght@400;500;700&display=swap");
+/* Fonts are requested from each page's <head> (with preconnect) so the
+ * download starts alongside this file rather than after it. PERF-03. */
 
 :root {
   /* Follows the system theme; theme.js pins one via data-theme. */
@@ -771,6 +772,8 @@ html[dir="rtl"] select {
 .link-arrow {
   display: inline-flex;
   align-items: center;
+  /* Standalone call to action, so it carries a full-size target. */
+  min-height: 24px;
   gap: 0.5rem;
   font-family: var(--font-mono);
   font-size: 0.875rem;
@@ -958,7 +961,12 @@ html[dir="rtl"] select {
    which leaves a less lopsided gap on a desktop width. */
 .charter-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  /*
+   * min() rather than a bare 340px: on a 320px phone the track was wider than
+   * the viewport, which is where the homepage's 36px of sideways scroll came
+   * from. Above ~370px this behaves exactly as before.
+   */
+  grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr));
   gap: 1.25rem;
 }
 
@@ -2277,6 +2285,8 @@ html[dir="rtl"] .person-profile-timeline li::after {
   text-transform: uppercase;
   display: flex;
   align-items: center;
+  /* 24px is the WCAG 2.5.8 minimum; the text alone was 18px tall. */
+  min-height: 24px;
   gap: 0.5rem;
   color: var(--text-main);
 }
@@ -2511,6 +2521,20 @@ textarea:focus {
   border-color: var(--accent-blue);
 }
 
+/*
+ * The rule above drops the outline for every form control, and because it is
+ * more specific than the global :focus-visible ring it took that ring with it:
+ * a keyboard user tabbing through the contact form saw only a 1px border tint,
+ * which fails WCAG 2.4.7. Give the ring back to keyboard focus while mouse
+ * focus keeps the quieter tint.
+ */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
 input::placeholder,
 textarea::placeholder {
   color: var(--text-dark);
@@ -2568,6 +2592,7 @@ textarea::placeholder {
   gap: 3rem;
 }
 
+.sidebar-section h2,
 .sidebar-section h3 {
   font-family: var(--font-mono);
   font-size: 0.8rem;
@@ -3306,18 +3331,33 @@ svg {
   overflow-x: auto;
 }
 
-.archive-tabs a {
+/*
+ * These are filters, not links: they were <a href="#">, which announced them
+ * as navigation and jumped to the top of the page. They are <button> now, so
+ * the selectors carry both while any un-migrated page catches up.
+ */
+.archive-tabs a,
+.archive-tabs button {
+  appearance: none;
+  background: none;
+  border: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
   color: var(--text-muted);
   padding-bottom: 0.5rem;
   border-bottom: 1px solid transparent;
   white-space: nowrap;
 }
 
-.archive-tabs a:hover {
+.archive-tabs a:hover,
+.archive-tabs button:hover {
   color: var(--text-main);
 }
 
-.archive-tabs a.active {
+.archive-tabs a.active,
+.archive-tabs button.active {
   color: var(--accent-blue);
   border-bottom-color: var(--accent-blue);
 }
@@ -4780,5 +4820,116 @@ a.position-apply:hover {
   .resource-links-grid,
   .resource-links-grid--templates {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Navigation collapse — UI-01
+ *
+ * The header's contents need about 1091px: logo, seven links, the chapter
+ * status line and three utility buttons. The collapse to the hamburger only
+ * happened at 768px, so between 769 and 1099 the row was wider than the
+ * viewport: "About" sat on top of the PSU wordmark and the search, language
+ * and theme buttons were cut off past the right edge. Measured across widths
+ * before choosing 1099 — at 1100 the row fits exactly.
+ *
+ * These are the same declarations as the 768px block; this query just starts
+ * them earlier. Below 768 both apply and agree.
+ * ------------------------------------------------------------------------ */
+@media (max-width: 1099px) {
+  .nav-meta {
+    display: none;
+  }
+
+  .nav-utilities {
+    margin-left: auto;
+  }
+
+  html[dir="rtl"] .nav-utilities {
+    margin-left: 0;
+    margin-right: auto;
+  }
+
+  .nav-toggle {
+    display: inline-flex;
+    min-width: 44px;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .nav-links {
+    position: fixed;
+    top: var(--nav-height);
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    gap: 0;
+    background: light-dark(rgba(246, 248, 251, 0.97), rgba(5, 5, 7, 0.97));
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-color);
+    padding: 0.5rem 1.25rem 1.5rem;
+    display: none;
+  }
+
+  .nav-links.open {
+    display: flex;
+  }
+
+  .nav-links a {
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 1rem;
+  }
+
+  .nav-links a::after {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Very narrow phones — UI-01 (continued)
+ *
+ * At 320px the header row needs 322px of its 288px of usable width, so the
+ * theme toggle was clipped off the right edge. The language control is the
+ * widest of the three utilities; tightening its padding and the row gaps buys
+ * back the ~34px without dropping a control.
+ * ------------------------------------------------------------------------ */
+@media (max-width: 360px) {
+  .nav-inner {
+    gap: 0.25rem;
+  }
+
+  .nav-utilities {
+    gap: 0.25rem;
+  }
+
+  .lang-toggle {
+    padding: 0.48rem 0.4rem;
+    gap: 0.2rem;
+    letter-spacing: 0;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Reserved space for the asynchronously rendered Faculty Advisors section
+ * (PERF-02). The heights are measured from the rendered section at each
+ * breakpoint; public-roster.ts removes this element as it inserts the real
+ * one, so a small mismatch costs a small shift rather than a full-page jump.
+ * ------------------------------------------------------------------------ */
+.faculty-slot {
+  min-height: 475px;
+}
+
+@media (max-width: 900px) {
+  .faculty-slot {
+    min-height: 559px;
+  }
+}
+
+@media (max-width: 560px) {
+  .faculty-slot {
+    min-height: 1081px;
   }
 }

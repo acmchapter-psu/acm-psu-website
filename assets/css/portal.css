@@ -446,6 +446,14 @@
   border-color: var(--accent-blue);
 }
 
+/* Keyboard focus keeps a real ring — see the note in main.css. */
+.form-field input:focus-visible,
+.form-field select:focus-visible,
+.form-field textarea:focus-visible {
+  outline: 3px solid light-dark(#1d4ed8, #8ac4ff);
+  outline-offset: 2px;
+}
+
 .form-field input:disabled,
 .form-field select:disabled,
 .form-field textarea:disabled {
@@ -3873,4 +3881,30 @@
   .tour-spotlight {
     transition: none;
   }
+}
+
+/* ---------------------------------------------------------------------------
+ * Sign-in and sign-up on a small phone — UI-03
+ *
+ * The card carries 40px of padding inside a shell with 24px of its own, which
+ * leaves its content less room than it needs at 320px: the card could not
+ * shrink below ~302px and pushed 6px past the right edge. Less padding at the
+ * narrow end, same layout everywhere else.
+ * ------------------------------------------------------------------------ */
+@media (max-width: 400px) {
+  .auth-shell {
+    padding: 2.5rem 1rem;
+  }
+
+  .auth-card {
+    padding: 1.5rem;
+  }
+}
+
+/* The sign-in / sign-up cross-links sit alone under the form, so they are
+ * standalone targets rather than inline text — 24px minimum. A11Y-03. */
+.auth-card a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
 }

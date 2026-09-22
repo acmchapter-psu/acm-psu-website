@@ -33,7 +33,7 @@
   var openLink = document.querySelector("[data-preview-open]"),
     downloadLink = document.querySelector("[data-preview-download]");
   var tabs = Array.prototype.slice.call(
-    document.querySelectorAll(".archive-tabs a"),
+    document.querySelectorAll(".archive-tabs a, .archive-tabs button"),
   );
   var filters = Array.prototype.slice.call(
     document.querySelectorAll(".type-filter"),
@@ -323,8 +323,10 @@
       event.preventDefault();
       tabs.forEach(function (t) {
         t.classList.remove("active");
+        t.setAttribute("aria-pressed", "false");
       });
       tab.classList.add("active");
+      tab.setAttribute("aria-pressed", "true");
       section = tab.dataset.section || "all";
       render();
     });
@@ -364,7 +366,9 @@
       type = "all";
       if (search) search.value = "";
       tabs.forEach(function (t) {
-        t.classList.toggle("active", t.dataset.section === "all");
+        var isAll = t.dataset.section === "all";
+        t.classList.toggle("active", isAll);
+        t.setAttribute("aria-pressed", String(isAll));
       });
       filters.forEach(function (b) {
         var active = b.dataset.type === "all";

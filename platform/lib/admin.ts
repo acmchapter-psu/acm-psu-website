@@ -260,34 +260,51 @@ export async function members(search = "", status = ""): Promise<MemberRow[]> {
     );
   }
 
-  const [usersResult, membershipsResult, profilesResult, positionsResult] =
-    await Promise.all([
-      usersQuery,
+  const [
+    usersResult,
+    membershipsResult,
+    internalNotesResult,
+    profilesResult,
+    positionsResult,
+  ] = await Promise.all([
+    usersQuery,
 
-      client.from("memberships").select(`
-        user_id,
-        status,
-        started_on,
-        ended_on,
-        member_no,
-        chapter_year,
-        internal_note
-      `),
+    client.from("memberships").select(`
+      user_id,
+      status,
+      started_on,
+      ended_on,
+      member_no,
+      chapter_year
+    `),
 
-      client.from("member_profiles").select(`
-        user_id,
-        visibility,
-        academic_year
-      `),
+    /*
+     * The staff note is deliberately not a column on memberships any more:
+     * a row policy cannot hide a column, so the member it described could
+     * read it off their own row. It lives in internal_notes, which members
+     * have no policy on at all. See SEC-01 and
+     * 20260923100000_internal_notes_are_staff_only.sql.
+     */
+    client
+      .from("internal_notes")
+      .select("entity_id, note")
+      .eq("entity_type", "membership"),
 
-      client
-        .from("position_history")
-        .select("user_id, title_snapshot, ended_on")
-        .is("ended_on", null),
-    ]);
+    client.from("member_profiles").select(`
+      user_id,
+      visibility,
+      academic_year
+    `),
+
+    client
+      .from("position_history")
+      .select("user_id, title_snapshot, ended_on")
+      .is("ended_on", null),
+  ]);
 
   const users = unwrap(usersResult) ?? [];
   const membershipRows = unwrap(membershipsResult) ?? [];
+  const internalNoteRows = unwrap(internalNotesResult) ?? [];
   const profileRows = unwrap(profilesResult) ?? [];
   const positionRows = unwrap(positionsResult) ?? [];
 
@@ -297,6 +314,9 @@ export async function members(search = "", status = ""): Promise<MemberRow[]> {
 
   const profileByUser = new Map(
     profileRows.map((profile) => [profile.user_id, profile]),
+  );
+  const internalNoteByUser = new Map(
+    internalNoteRows.map((row) => [row.entity_id, row.note]),
   );
   const positionByUser = new Map(
     positionRows.map((position) => [position.user_id, position.title_snapshot]),
@@ -322,7 +342,7 @@ export async function members(search = "", status = ""): Promise<MemberRow[]> {
             ended_on: membership.ended_on,
             member_no: membership.member_no,
             chapter_year: membership.chapter_year,
-            internal_note: membership.internal_note,
+            internal_note: internalNoteByUser.get(user.id) ?? null,
           }
         : null,
 

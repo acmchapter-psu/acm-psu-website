@@ -42,6 +42,9 @@
     />
     <meta name="twitter:card" content="summary_large_image" />
     <script src="assets/js/theme.js?v=20260922-1"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@500;700&family=Tajawal:wght@400;500;700&display=swap" />
     <link rel="stylesheet" href="assets/css/main.css" />
   </head>
   <body class="archive-body">
@@ -93,9 +96,10 @@
           </div>
         </div>
         <nav class="archive-tabs" aria-label="Archive sections">
-          <a href="#" class="active" data-section="all">All Files</a
-          ><a href="#" data-section="workshops">Workshop Content</a
-          ><a href="#" data-section="results">Results</a>
+          <button type="button" class="active" data-section="all" aria-pressed="true">All Files</button>
+          <button type="button" data-section="workshops" aria-pressed="false">Workshop Content</button>
+          <button type="button" data-section="results" aria-pressed="false">Results</button>
+        
         </nav>
       </header>
       <main id="main" class="archive-main">

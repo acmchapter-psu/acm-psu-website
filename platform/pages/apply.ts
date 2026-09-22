@@ -9,7 +9,7 @@ import {
   loading,
 } from "../lib/ui.js";
 import { requireSignedIn } from "../lib/session.js";
-import { isConfigured, requireClient } from "../lib/supabase.js";
+import { isConfigured, requireClient, sitePath } from "../lib/supabase.js";
 import { myApplication, setting } from "../lib/api.js";
 import {
   INTERESTS,
@@ -128,7 +128,7 @@ async function start(): Promise<void> {
       ),
       h(
         "a",
-        { class: "btn-ghost", href: "/index.html" },
+        { class: "btn-ghost", href: sitePath("/index.html") },
         "Back to the website",
       ),
     );

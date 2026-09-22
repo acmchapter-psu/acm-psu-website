@@ -38,6 +38,7 @@ import {
   supabase,
   requireClient,
   siteUrl,
+  sitePath,
   readableError,
 } from "../lib/supabase.js";
 import { applySignupMetadata } from "../lib/signup-profile.js";
@@ -258,7 +259,7 @@ async function start(): Promise<void> {
       "div",
       { class: "auth-links" },
       h("a", { href: "/portal/login.html" }, "ALREADY HAVE AN ACCOUNT"),
-      h("a", { href: "/join.html" }, "ABOUT MEMBERSHIP"),
+      h("a", { href: sitePath("/join.html") }, "ABOUT MEMBERSHIP"),
     ),
   );
 }
