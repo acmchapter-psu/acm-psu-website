@@ -889,7 +889,10 @@ async function start(): Promise<void> {
                   h(
                     "span",
                     { class: "mono-meta accent-text" },
-                    member.current_position ?? "MEMBER",
+                    // Only an active membership earns the default label;
+                    // signed-up accounts without one are not members yet.
+                    member.current_position ??
+                      (member.membership?.status === "active" ? "MEMBER" : "—"),
                   ),
 
                   h(
