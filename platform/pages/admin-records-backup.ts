@@ -440,7 +440,8 @@ async function start(): Promise<void> {
         : "ALL SEMESTERS";
 
       // Public event signups are collected in the club records workbook's own
-      // jam26/ctf30 tabs by Apps Script, and copied here as they arrive.
+      // event tabs (jam26 → WebForge26, ctf30, …) by Apps Script, and copied
+      // here as they arrive.
       // Anything submitted before that copy existed is recovered on demand
       // rather than automatically: it reads Google, so it is a deliberate act
       // and not something a page load should do.
@@ -476,7 +477,7 @@ async function start(): Promise<void> {
             h(
               "span",
               { class: "mono-meta dim-text" },
-              "READS THE JAM26/CTF30 TABS AND ADDS ANYTHING MISSING HERE.",
+              "READS EVERY EVENT’S REGISTRATION TAB AND ADDS ANYTHING MISSING HERE.",
             ),
           )
         : null;

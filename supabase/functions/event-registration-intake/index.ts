@@ -50,6 +50,8 @@ const TIMESTAMP_HEADER = "Timestamp";
 
 type Form = {
   event_key: string;
+  /** The worksheet tab, which need not match the key (jam26 → WebForge26). */
+  sheet_name: string;
   label: string;
   headers: string[];
   is_active: boolean;
@@ -130,7 +132,7 @@ function serviceClient(): SupabaseClient {
 async function forms(service: SupabaseClient): Promise<Form[]> {
   const { data, error } = await service
     .from("event_registration_forms")
-    .select("event_key, label, headers, is_active")
+    .select("event_key, sheet_name, label, headers, is_active")
     .order("rank");
   if (error)
     throw new Error(`Registration forms could not be read: ${error.message}`);
@@ -188,6 +190,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   let body: {
     mode?: string;
     event?: string;
+    sheet?: string;
     requestId?: string;
     fields?: Record<string, unknown>;
   } = {};
@@ -233,7 +236,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     > = {};
     for (const form of await forms(service)) {
       try {
-        const matrix = await readGoogleSheet(spreadsheetId, form.event_key);
+        const matrix = await readGoogleSheet(spreadsheetId, form.sheet_name);
         const headers = (matrix[0] ?? []).map(cell);
         if (!headers.length) {
           imported[form.label] = { added: 0, already: 0 };
@@ -280,8 +283,16 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return fail("Not authorized.", 401, origin);
   }
 
+  // The Apps Script sends the key the form posted and the tab it wrote to.
+  // Either identifies the event: a form may post the tab name instead of the
+  // key. Tab names are compared without regard to case, as Sheets does.
   const eventKey = String(body.event ?? "");
-  const form = (await forms(service)).find((f) => f.event_key === eventKey);
+  const sheet = String(body.sheet ?? "").toLowerCase();
+  const form = (await forms(service)).find(
+    (f) =>
+      f.event_key === eventKey ||
+      (sheet !== "" && f.sheet_name.toLowerCase() === sheet),
+  );
   if (!form) return fail(`Unknown event "${eventKey}".`, 400, origin);
   if (!form.is_active)
     return fail(`Registration for "${eventKey}" is closed.`, 409, origin);

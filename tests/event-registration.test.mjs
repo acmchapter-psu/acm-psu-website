@@ -7,6 +7,7 @@ const sources = ["Code.gs", "EventRegistration.gs"]
     readFileSync(new URL("../apps-script/" + f, import.meta.url), "utf8"),
   )
   .join("\n");
+const TAB_NAMES = { jam26: "WebForge26" };
 function fixture(properties = {}) {
   const sheets = {},
     cache = new Map(),
@@ -39,6 +40,7 @@ function fixture(properties = {}) {
       getScriptCache: () => ({
         get: (k) => cache.get(k),
         put: (k, v) => cache.set(k, v),
+        remove: (k) => cache.delete(k),
       }),
     },
     Utilities: {
@@ -68,7 +70,17 @@ function fixture(properties = {}) {
     SpreadsheetApp: {
       openById(id) {
         assert.equal(id, "1wXP3WvqcjnDEOe_sDSGXR-Z6HKvjnufarA4r-CovVEU");
-        return { getSheetByName: (n) => sheets[n] };
+        // Tabs are named as in the live workbook: jam26 writes to WebForge26.
+        const tabs = () =>
+          Object.entries(sheets).map(([key, tab]) => {
+            if (!tab.getName) tab.getName = () => TAB_NAMES[key] ?? key;
+            return tab;
+          });
+        return {
+          getSheetByName: (n) =>
+            tabs().find((tab) => tab.getName() === n) ?? sheets[n],
+          getSheets: tabs,
+        };
       },
       flush() {
         flushed++;
@@ -227,13 +239,13 @@ for (const [name, payload, pattern] of [
   [
     "bad teammate email",
     { ...jam, teamMembers: "invalid" },
-    /valid team member emails/,
+    /valid emails separated by commas/,
   ],
   ["length limit", { ...jam, fullName: "a".repeat(121) }, /too long/],
   ["honeypot", { ...jam, website: "bot" }, /not be accepted/],
-  ["canonical target", { ...jam, event: "People" }, /unsupported/],
+  ["canonical target", { ...jam, event: "People" }, /not open/],
   ["no event", { ...jam, event: "" }, /unsupported/],
-  ["prototype target", { ...jam, event: "constructor" }, /unsupported/],
+  ["prototype target", { ...jam, event: "constructor" }, /not open/],
   ["bad requestId", { ...jam, requestId: "bad" }, /invalid request/],
 ])
   test(name + " never writes", () => {
@@ -242,11 +254,10 @@ for (const [name, payload, pattern] of [
     assert.equal(f.sheets.jam26.rows.length, 1);
     assert.equal(f.sheets.ctf30.rows.length, 1);
   });
-test("exact header mismatch refuses writes without mutation", () => {
+test("a missing column refuses writes without mutation", () => {
   for (const mutate of [
-    (h) => h.reverse(),
-    (h) => (h[0] += " "),
-    (h) => h.push("Extra"),
+    (h) => (h[h.indexOf("Team Members")] = "Extra"),
+    (h) => h.pop(),
   ]) {
     const f = fixture();
     mutate(f.sheets.jam26.rows[0]);
@@ -254,6 +265,17 @@ test("exact header mismatch refuses writes without mutation", () => {
     assert.match(f.post(jam), /not ready/);
     assert.equal(JSON.stringify(f.sheets.jam26.rows), before);
   }
+});
+test("columns are found by heading, whatever their order", () => {
+  const f = fixture();
+  const headers = f.sheets.jam26.rows[0];
+  headers.reverse();
+  headers.push("Notes");
+  assert.equal(f.post(jam), "OK");
+  const row = f.sheets.jam26.rows[1];
+  assert.equal(row[headers.indexOf("Full Name")], jam.fullName);
+  assert.equal(row[headers.indexOf("Team Members")], jam.teamMembers);
+  assert.equal(row[headers.indexOf("Notes")], "");
 });
 test("formula cells stored as literal text", () => {
   const f = fixture();
@@ -267,7 +289,7 @@ test("formula cells stored as literal text", () => {
 });
 test("burst throttle and lock failure never append", () => {
   const f = fixture();
-  f.cache.set("event-burst:jam26:" + Math.floor(Date.now() / 60000), "120");
+  f.cache.set("event-burst:" + Math.floor(Date.now() / 60000), "240");
   assert.match(f.post(jam), /busy/);
   f.context.LockService.getScriptLock = () => ({
     waitLock() {
@@ -284,7 +306,7 @@ test("storage/flush failure never acknowledges OK", () => {
     throw Error("private details");
   };
   const result = f.post(jam);
-  assert.match(result, /not be confirmed/);
+  assert.match(result, /could not be saved/);
   assert.doesNotMatch(result, /private details/);
 });
 test("setup leaves event rows intact and refuses header mismatch including blank row1 with data", () => {
@@ -392,7 +414,7 @@ test("health version and single entrypoints", () => {
   assert.deepEqual(JSON.parse(f.context.doGet().text), {
     status: "ok",
     message: "ACM PSU event registration endpoint is live.",
-    version: "2026-09-05.1",
+    version: "2026-09-29.4",
   });
   assert.equal((sources.match(/function doPost\(/g) || []).length, 1);
   assert.equal((sources.match(/function doGet\(/g) || []).length, 1);
@@ -415,6 +437,7 @@ test("accepted registration is mirrored to the platform without changing the rep
   assert.equal(call.options.muteHttpExceptions, true);
   const body = JSON.parse(call.options.payload);
   assert.equal(body.event, "jam26");
+  assert.equal(body.sheet, "WebForge26");
   assert.equal(body.requestId, requestId);
   assert.equal(body.fields["Full Name"], jam.fullName);
   assert.equal(body.fields["Team Members"], jam.teamMembers);
