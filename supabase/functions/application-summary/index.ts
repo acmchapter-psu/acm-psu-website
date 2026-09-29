@@ -152,6 +152,72 @@ function normalizeSummary(parsed: unknown): ApplicantSummary {
   };
 }
 
+const FALLBACK_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
+
+/** Parses a model's JSON answer, tolerating code fences and stray text around it. */
+function parseModelJson(raw: string): unknown {
+  const text = raw.trim();
+  try {
+    return JSON.parse(text);
+  } catch {
+    const first = text.indexOf("{");
+    const last = text.lastIndexOf("}");
+    if (first === -1 || last <= first)
+      throw new Error("The AI returned an unreadable answer.");
+    try {
+      return JSON.parse(text.slice(first, last + 1));
+    } catch {
+      throw new Error("The AI returned an unreadable answer.");
+    }
+  }
+}
+
+async function runModel(
+  accountId: string,
+  token: string,
+  model: string,
+  userPrompt: string,
+): Promise<unknown> {
+  const response = await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${model}`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: userPrompt },
+        ],
+        response_format: {
+          type: "json_schema",
+          json_schema: SUMMARY_SCHEMA,
+        },
+        max_tokens: 700,
+        temperature: 0.1,
+      }),
+      signal: AbortSignal.timeout(30_000),
+    },
+  );
+
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(
+      payload?.errors?.[0]?.message ??
+        payload?.messages?.[0]?.message ??
+        `HTTP ${response.status}`,
+    );
+  }
+
+  const raw = payload?.result?.response;
+  // Cloudflare JSON Mode returns the validated object directly here.
+  if (raw && typeof raw === "object") return raw;
+  if (typeof raw === "string" && raw.trim()) return parseModelJson(raw);
+  throw new Error("Cloudflare returned no structured response.");
+}
+
 Deno.serve(async (req: Request): Promise<Response> => {
   const origin = req.headers.get("Origin");
   if (req.method === "OPTIONS")
@@ -204,57 +270,24 @@ Deno.serve(async (req: Request): Promise<Response> => {
     `What they want from ACM: ${application.goal_text ?? "(none provided)"}`,
   ].join("\n");
 
-  try {
-    const response = await fetch(
-      `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${model}`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messages: [
-            { role: "system", content: SYSTEM_PROMPT },
-            { role: "user", content: userPrompt },
-          ],
-          response_format: {
-            type: "json_schema",
-            json_schema: SUMMARY_SCHEMA,
-          },
-          max_tokens: 700,
-          temperature: 0.1,
-        }),
-        signal: AbortSignal.timeout(30_000),
-      },
-    );
-
-    const payload = await response.json();
-    if (!response.ok) {
-      const cloudflareMessage =
-        payload?.errors?.[0]?.message ??
-        payload?.messages?.[0]?.message ??
-        `HTTP ${response.status}`;
-      throw new Error(cloudflareMessage);
+  // Small models sometimes break JSON Mode (runaway blank lines, missing
+  // commas), so one bad answer falls back to the larger model once.
+  const models = [...new Set([model, FALLBACK_MODEL])];
+  let lastError = "Workers AI request failed.";
+  for (const candidate of models) {
+    try {
+      const parsed = await runModel(accountId, token, candidate, userPrompt);
+      const result = normalizeSummary(parsed);
+      return json(
+        { summary: result, model: candidate, advisory: true },
+        200,
+        origin,
+      );
+    } catch (error) {
+      lastError =
+        error instanceof Error ? error.message : "Workers AI request failed.";
+      console.error(`application-summary: ${candidate} failed: ${lastError}`);
     }
-
-    const raw = payload?.result?.response;
-    let parsed: unknown;
-
-    if (raw && typeof raw === "object") {
-      // Cloudflare JSON Mode returns the validated object directly here.
-      parsed = raw;
-    } else if (typeof raw === "string" && raw.trim()) {
-      parsed = JSON.parse(raw);
-    } else {
-      throw new Error("Cloudflare returned no structured response.");
-    }
-
-    const result = normalizeSummary(parsed);
-    return json({ summary: result, model, advisory: true }, 200, origin);
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Workers AI request failed.";
-    return fail(message, 502, origin);
   }
+  return fail(lastError, 502, origin);
 });
