@@ -28,6 +28,7 @@ import {
 } from "../lib/admin.js";
 import { requireClient } from "../lib/supabase.js";
 import { archiveDate } from "../lib/format.js";
+import { setting } from "../lib/api.js";
 
 type ApplicationWithExperience = ApplicationRow & {
   experience_status?: "none" | "some" | "not_provided" | null;
@@ -187,6 +188,10 @@ async function start(): Promise<void> {
   const positionTitle = new Map(
     positionList.map((position) => [position.id, position.title]),
   );
+  // Shared switch with the submissions AI review; off while Workers AI is down.
+  const aiEnabled = await setting<boolean>("ai_review_enabled", false).catch(
+    () => false,
+  );
 
   let filter = 0;
 
@@ -204,7 +209,19 @@ async function start(): Promise<void> {
         body: { application_id: application.id },
       },
     );
-    if (error) throw new Error(error.message);
+    if (error) {
+      // supabase-js only says "non-2xx"; the function's own reason is in the body.
+      const response = (error as { context?: unknown }).context;
+      const detail =
+        response instanceof Response
+          ? await response
+              .clone()
+              .json()
+              .then((body) => (body as { error?: string })?.error)
+              .catch(() => undefined)
+          : undefined;
+      throw new Error(detail || error.message);
+    }
 
     const result = data?.summary as AiApplicantSummary | undefined;
     if (!result) throw new Error("The AI worker returned no summary.");
@@ -297,7 +314,7 @@ async function start(): Promise<void> {
     const decided =
       application.status === "approved" || application.status === "rejected";
     const aiPanel = h("div", {});
-    let aiComplete = false;
+    let aiComplete = !aiEnabled;
     let interviewButton: HTMLButtonElement | null = null;
     const preferredRole = application.preferred_position_id
       ? (positionTitle.get(application.preferred_position_id) ??
@@ -365,7 +382,7 @@ async function start(): Promise<void> {
           application.goal_text || "No response provided.",
         ),
       ),
-      section("AI application check", aiPanel),
+      aiEnabled ? section("AI application check", aiPanel) : null,
       section(
         "Activity",
         historyPanel("application", application.id, application.user_id),
@@ -400,7 +417,7 @@ async function start(): Promise<void> {
         },
         "primary",
       ) as HTMLButtonElement;
-      interviewButton.disabled = true;
+      interviewButton.disabled = !aiComplete;
       footer.append(interviewButton);
     }
 
@@ -549,6 +566,7 @@ async function start(): Promise<void> {
     modal.style.maxWidth = "72rem";
     modal.style.margin = "auto";
 
+    if (!aiEnabled) return;
     try {
       await generateAiSummary(application, aiPanel);
       aiComplete = true;
@@ -704,7 +722,7 @@ async function start(): Promise<void> {
         ),
         notice(
           "info",
-          "Workflow: review the submitted information → AI checks clarity/completeness → contact for interview → record the interview outcome. General membership and standing club roles are separate from event-specific positions.",
+          `Workflow: review the submitted information → ${aiEnabled ? "AI checks clarity/completeness → " : ""}contact for interview → record the interview outcome. General membership and standing club roles are separate from event-specific positions.`,
         ),
       );
     } catch (error) {

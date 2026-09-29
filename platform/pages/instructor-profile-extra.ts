@@ -14,6 +14,7 @@ import {
   advisorActivities,
   positionHistory,
   privateSetting,
+  setting,
 } from "../lib/api.js";
 import { archiveDate, enumLabel } from "../lib/format.js";
 import { requireClient } from "../lib/supabase.js";
@@ -137,7 +138,11 @@ async function enhanceProfilePage(
 
   const bio = about.querySelector<HTMLTextAreaElement>('textarea[name="bio"]');
   const bioField = bio?.closest<HTMLElement>(".form-field");
-  if (bio && bioField) {
+  // Same switch as the admin AI features; off while Workers AI is down.
+  const aiEnabled = await setting<boolean>("ai_review_enabled", false).catch(
+    () => false,
+  );
+  if (bio && bioField && aiEnabled) {
     const formatterStatus = h("div");
     const formatter = h(
       "button",

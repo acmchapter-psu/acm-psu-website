@@ -11,7 +11,7 @@
   });
 
   var assistant = document.createElement("script");
-  assistant.src = "/assets/js/public-assistant-loader.js?v=20260922-2";
+  assistant.src = "/assets/js/public-assistant-loader.js?v=20260929-1";
   assistant.defer = true;
   document.body.appendChild(assistant);
 })();

@@ -2,6 +2,10 @@
 (function () {
   "use strict";
 
+  // Hidden while Workers AI is unavailable; set to true to bring the guide back.
+  var ENABLED = true;
+  if (!ENABLED) return;
+
   if (document.querySelector("[data-acm-ai-guide]")) return;
   var page = document.querySelector(".membership-hero");
   if (!page) return;

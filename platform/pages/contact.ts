@@ -74,7 +74,7 @@ function notice(
 function mountPublicAssistant(): void {
   if (document.querySelector("script[data-public-assistant-loader]")) return;
   const script = document.createElement("script");
-  script.src = "/assets/js/public-assistant-loader.js?v=20260922-2";
+  script.src = "/assets/js/public-assistant-loader.js?v=20260929-1";
   script.defer = true;
   script.dataset.publicAssistantLoader = "true";
   document.body.appendChild(script);
