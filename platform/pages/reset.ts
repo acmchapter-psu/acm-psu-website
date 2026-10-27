@@ -124,6 +124,20 @@ async function start(): Promise<void> {
     window.location.hash.includes("type=recovery") ||
     new URLSearchParams(window.location.search).has("code") ||
     new URLSearchParams(window.location.search).get("type") === "recovery";
+  // An expired or already-used link comes back with an error instead of a
+  // session (mail scanners that open links early cause the second). Say so,
+  // rather than silently showing the request form as if nothing happened.
+  const linkError = (() => {
+    const params = new URLSearchParams(
+      window.location.hash.replace(/^#/, "") || window.location.search,
+    );
+    const code = params.get("error_code") || params.get("error");
+    if (!code) return null;
+    return code === "otp_expired"
+      ? "That reset link has expired or was already used. Request a new one below and open it straight away."
+      : params.get("error_description") ||
+          "That reset link could not be used. Request a new one below.";
+  })();
   let recoveryEvent = false;
   const { data: listener } = supabase.auth.onAuthStateChange((event) => {
     if (event === "PASSWORD_RECOVERY") recoveryEvent = true;
@@ -148,6 +162,7 @@ async function start(): Promise<void> {
   authShell(
     "Reset password",
     "We will email you a link to choose a new one.",
+    ...(linkError ? [notice("err", linkError)] : []),
     requestForm(),
     h(
       "div",
