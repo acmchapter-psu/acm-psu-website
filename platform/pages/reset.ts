@@ -116,12 +116,25 @@ async function start(): Promise<void> {
     return;
   }
 
-  // Arriving from a recovery link leaves a session in place.
+  // Arriving from a recovery link leaves a session in place. The client reads
+  // the link's token and then erases it from the address bar, and getSession()
+  // only resolves after that, so the URL has to be read before awaiting. The
+  // PASSWORD_RECOVERY event covers any link shape the URL check misses.
+  const fromLink =
+    window.location.hash.includes("type=recovery") ||
+    new URLSearchParams(window.location.search).has("code") ||
+    new URLSearchParams(window.location.search).get("type") === "recovery";
+  let recoveryEvent = false;
+  const { data: listener } = supabase.auth.onAuthStateChange((event) => {
+    if (event === "PASSWORD_RECOVERY") recoveryEvent = true;
+  });
+
   const { data } = await supabase.auth.getSession();
-  const recovering =
-    Boolean(data.session) &&
-    (window.location.hash.includes("type=recovery") ||
-      window.location.search.includes("code="));
+  // The event is queued with setTimeout(0) after the session is saved.
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  listener.subscription.unsubscribe();
+
+  const recovering = Boolean(data.session) && (fromLink || recoveryEvent);
 
   if (recovering) {
     authShell(

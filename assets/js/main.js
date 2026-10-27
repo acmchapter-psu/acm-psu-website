@@ -74,7 +74,7 @@
   }
 
   var runtime = document.createElement("script");
-  runtime.src = "/assets/js/main-core.js?v=20260922-2";
+  runtime.src = "/assets/js/main-core.js?v=20261027-1";
   runtime.async = false;
   runtime.addEventListener("load", function () {
     var registration = document.createElement("script");

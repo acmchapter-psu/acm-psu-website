@@ -8,7 +8,7 @@ const sources = ["Code.gs", "EventRegistration.gs"]
   )
   .join("\n");
 const TAB_NAMES = { jam26: "WebForge26" };
-function fixture(properties = {}) {
+function fixture(properties = {}, { closed = {} } = {}) {
   const sheets = {},
     cache = new Map(),
     fetches = [];
@@ -88,6 +88,9 @@ function fixture(properties = {}) {
     },
   });
   vm.runInContext(sources, context);
+  // The contract below is written against jam26; tests that care about a
+  // closed event say so explicitly.
+  context.REGISTRATION_CLOSED_EVENTS = closed;
   function sheet(rows) {
     return {
       rows,
@@ -384,9 +387,9 @@ test("complete third member, team duplicate and optional email validation", () =
     f.post({
       ...ctf,
       captainEmail: "other@psu.edu.sa",
-      captainId: "100000",
+      captainId: "100000000",
       member2Email: "other2@psu.edu.sa",
-      member2Id: "100001",
+      member2Id: "100000001",
     }),
     /team name/,
   );
@@ -414,7 +417,7 @@ test("health version and single entrypoints", () => {
   assert.deepEqual(JSON.parse(f.context.doGet().text), {
     status: "ok",
     message: "ACM PSU event registration endpoint is live.",
-    version: "2026-09-29.4",
+    version: "2026-10-27.1",
   });
   assert.equal((sources.match(/function doPost\(/g) || []).length, 1);
   assert.equal((sources.match(/function doGet\(/g) || []).length, 1);
@@ -663,4 +666,39 @@ test("every setNumberFormat call in the source is guarded", () => {
   );
 });
 
+
+test("a closed event refuses sign-ups, writes nothing and mirrors nothing", () => {
+  const f = fixture(
+    {
+      PLATFORM_INTAKE_URL: "https://example.test/intake",
+      PLATFORM_INTAKE_TOKEN: "shared-secret",
+    },
+    { closed: { jam26: true } },
+  );
+  assert.match(f.post(jam), /registration for this event is closed/);
+  assert.match(f.post({ ...jam, event: "JAM26" }), /closed/);
+  assert.equal(f.sheets.jam26.rows.length, 1);
+  assert.equal(f.fetches.length, 0);
+  assert.equal(f.post(ctf), "OK");
+});
+test("jam26 ships closed", () => {
+  assert.match(sources, /var REGISTRATION_CLOSED_EVENTS = \{ jam26: true \};/);
+});
+for (const [name, payload, pattern] of [
+  ["non-PSU email", { ...jam, universityEmail: "someone@gmail.com" }, /@psu\.edu\.sa/],
+  ["short university ID", { ...jam, universityId: "12345" }, /exactly 9 digits/],
+  ["bad phone", { ...jam, phoneNumber: "12345" }, /10 digits/],
+  ["four team members", { ...jam, teamMembers: "a@psu.edu.sa, b@psu.edu.sa, c@psu.edu.sa, d@psu.edu.sa" }, /up to 3/],
+])
+  test(name + " never writes", () => {
+    const f = fixture();
+    assert.match(f.post(payload), pattern);
+    assert.equal(f.sheets.jam26.rows.length, 1);
+  });
+test("phone accepts spaces, dashes and the 9-digit form", () => {
+  for (const phoneNumber of ["050 000 0000", "050-000-0000", "500000000"]) {
+    const f = fixture();
+    assert.equal(f.post({ ...jam, phoneNumber }), "OK");
+  }
+});
 console.log(`${count} server contract tests passed`);
