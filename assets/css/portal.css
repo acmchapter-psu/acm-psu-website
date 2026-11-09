@@ -3913,3 +3913,21 @@
 .audit-hidden-note {
   margin: 0 0 0.75rem;
 }
+
+/*
+ * A framed preview and its escape hatch. .preview-box centres a single child,
+ * so the iframe and the "open in a new tab" link go in one column together
+ * rather than fighting each other for the same grid cell.
+ */
+.preview-stack {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+
+.preview-stack .review-link {
+  padding: 0.5rem 0.75rem;
+  border-top: 1px solid var(--border-color);
+  text-align: center;
+}

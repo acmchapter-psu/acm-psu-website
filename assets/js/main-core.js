@@ -21,6 +21,26 @@
     return raw;
   }
 
+  /*
+   * A path stored in the database is a path on this website, not a URL. The
+   * site is served from /acm-psu-website/ on GitHub Pages, so "/projects/x"
+   * handed straight to an href asks the domain root for it and gets GitHub's
+   * 404 page. Resolve it against the base the site is actually running under
+   * — which is "/" on a local server, so the same code works in both places.
+   */
+  function sitePath(path) {
+    var base =
+      (window.ACM_ENV && window.ACM_ENV.siteBase) || "/";
+    if (window.location.pathname.indexOf(base) !== 0) base = "/";
+    var raw = String(path == null ? "" : path);
+    if (!raw || raw.indexOf(base) === 0) return raw;
+    if (raw.charAt(0) !== "/") return raw;
+    return new URL(
+      raw.replace(/^\/+/, ""),
+      new URL(base, window.location.origin),
+    ).href;
+  }
+
   /* Reveal sections as they scroll into view. */
   var revealables = document.querySelectorAll(".reveal");
 
@@ -377,9 +397,11 @@
     }
     grid.innerHTML = upcoming
       .map(function (event) {
-        var href = safeHref(
-          event.external_url || event.site_path || "projects.html",
-        );
+        var href = event.external_url
+          ? safeHref(event.external_url)
+          : event.site_path
+            ? sitePath(safeHref(event.site_path))
+            : "projects.html";
         var target = /^https?:\/\//.test(href)
           ? ' target="_blank" rel="noopener"'
           : "";
@@ -497,12 +519,21 @@
           );
         })
         .forEach(function (event) {
+          /*
+           * Structured data needs an absolute URL. The site's own address is
+           * in ACM_ENV rather than written out here, so this keeps working if
+           * the chapter moves to its own domain — the hard-coded base would
+           * have pointed search engines at the old one.
+           */
+          var siteUrl = (
+            (window.ACM_ENV && window.ACM_ENV.siteUrl) ||
+            window.location.origin
+          ).replace(/\/+$/, "");
           var url =
             event.external_url ||
             (event.site_path
-              ? "https://acmchapter-psu.github.io/acm-psu-website" +
-                event.site_path
-              : "https://acmchapter-psu.github.io/acm-psu-website/projects.html");
+              ? siteUrl + event.site_path
+              : siteUrl + "/projects.html");
           graph.push({
             "@type": "Event",
             name: event.title,

@@ -983,13 +983,44 @@ async function start(): Promise<void> {
         }
 
         if (mime === "application/pdf" || mime === "text/html") {
+          /*
+           * The page's CSP has to name Supabase storage in frame-src for this
+           * to appear at all; with frame-src 'none' the browser drew "This
+           * content is blocked" and a reviewer could not see what they were
+           * approving.
+           *
+           * An uploaded HTML file is a member's own markup, so it is framed
+           * with sandbox: no script, and no navigating this page away from
+           * inside the frame. A PDF is left unsandboxed because the browser's
+           * built-in viewer is what renders it, and sandboxing stops that
+           * viewer loading in Chrome.
+           *
+           * The link below is the escape hatch either way — a browser that
+           * will not render a PDF inline (mobile Safari, a blocked viewer)
+           * leaves an empty box otherwise.
+           */
           render(
             preview,
-            h("iframe", {
-              src: url,
-              title: `${row.title} preview`,
-              loading: "lazy",
-            }),
+            h(
+              "div",
+              { class: "preview-stack" },
+              h("iframe", {
+                src: url,
+                title: `${row.title} preview`,
+                loading: "lazy",
+                ...(mime === "text/html" ? { sandbox: "" } : {}),
+              }),
+              h(
+                "a",
+                {
+                  class: "review-link",
+                  href: url,
+                  target: "_blank",
+                  rel: "noopener",
+                },
+                "Open in a new tab",
+              ),
+            ),
           );
 
           return;

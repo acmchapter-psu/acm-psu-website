@@ -5,7 +5,7 @@
  * browser asks the database for is readable in one file. None of these
  * functions grant anything: row level security decides what comes back.
  */
-import { requireClient, readableError } from "./supabase.js";
+import { requireClient, readableError, sitePath } from "./supabase.js";
 import { safeHref } from "./format.js";
 import type {
   Application,
@@ -798,7 +798,18 @@ export async function signedUrl(
  */
 export async function itemUrl(item: ArchiveItem): Promise<string | null> {
   if (item.external_url) return safeHref(item.external_url);
-  if (item.site_path) return safeHref(item.site_path);
+  if (item.site_path) {
+    /*
+     * A site path is a path on this website — "/projects/…/day-2-handout.pdf"
+     * — not a URL. GitHub Pages serves the site under /acm-psu-website/, so
+     * handing that string to the browser as-is asked for it at the domain
+     * root and returned GitHub's own 404. sitePath() resolves it against
+     * wherever the site is actually being served from, which is also how it
+     * keeps working on a local server at "/".
+     */
+    const safe = safeHref(item.site_path);
+    return safe.startsWith("/") ? sitePath(safe) : safe;
+  }
   if (!item.storage_path || !item.storage_bucket) return null;
   if (item.storage_bucket === "public-archive") {
     const { data } = requireClient()

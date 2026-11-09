@@ -19,7 +19,15 @@
 
          *.supabase.co rather than the project ref, so moving projects does not
          mean editing every page; the ref is public in assets/js/app/env.js
-         either way. -->
+         either way.
+
+         frame-src names Supabase storage because this is the page that
+         previews a submitted file: a PDF is shown in an iframe pointed at a
+         short-lived signed URL. With frame-src 'none' the browser blocked it
+         and drew "This content is blocked", with no way for a reviewer to see
+         what they were approving. object-src stays 'none' — the preview is an
+         iframe, never a plugin — and an uploaded HTML file is framed with
+         sandbox so it cannot run script or navigate this page away. -->
     <meta
       http-equiv="Content-Security-Policy"
       content="
@@ -32,7 +40,7 @@
         font-src 'self' https://fonts.gstatic.com;
         img-src 'self' data: blob: https://*.supabase.co;
         connect-src 'self' https://*.supabase.co wss://*.supabase.co;
-        frame-src 'none';
+        frame-src https://*.supabase.co;
     "
     />
     <title>Archive review — ACM PSU</title>
